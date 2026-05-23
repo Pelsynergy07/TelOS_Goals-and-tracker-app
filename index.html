@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'bg': '#0a0a0f',
+            'surface': '#121218',
+            'border': '#1e1e28',
+            'text': '#f0f0f4',
+            'text-dim': '#8888a0',
+            'green': '#22d3a0',
+            'blue': '#60a5fa',
+            'amber': '#f59e0b',
+            'red': '#f87171',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="ambient-orb ambient-orb-one"></div>
+<div class="ambient-orb ambient-orb-two"></div>
+
+<div class="app-shell">
+<!-- Desktop Sidebar (fixed, no scroll) -->
+<aside class="hidden md:flex flex-col w-[236px] app-sidebar p-4 justify-between fixed top-0 left-0 h-screen overflow-hidden z-30">
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="brand-lockup mb-6">
+      <div class="telos-mark" aria-hidden="true"></div>
+      <div class="min-w-0">
+        <p class="telos-wordmark" id="sidebar-title">TelOS</p>
+        <p class="telos-subtitle" id="sidebar-subtitle">Goal Operating System</p>
+      </div>
+    </div>
+    <nav class="space-y-1">
+      <button onclick="switchTab('today')" id="nav-today" class="nav-btn nav-active"><i data-lucide="play-circle"></i><span>Execution</span></button>
+      <button onclick="switchTab('review')" id="nav-review" class="nav-btn"><i data-lucide="bar-chart-3"></i><span>Progress</span></button>
+    </nav>
+    <div class="mt-auto space-y-4">
+      <nav class="space-y-1">
+        <button onclick="switchTab('career')" id="nav-career" class="nav-btn"><i data-lucide="map"></i><span>Blueprint</span></button>
+        <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn"><i data-lucide="settings"></i><span>System</span></button>
+      </nav>
+      <div class="sidebar-streak-pill">
+        <i data-lucide="flame" class="w-4 h-4 text-green"></i>
+        <span class="text-[11px] font-semibold text-text"><span id="sidebar-streak-val">0</span> day streak</span>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="app-frame min-h-screen md:p-4 md:ml-[236px]">
+
+<!-- Mobile header -->
+<header class="md:hidden bg-surface/90 border-b border-border px-4 py-3 flex items-center justify-between sticky top-0 z-50 backdrop-blur-xl">
+  <div class="mobile-brand">
+    <span class="telos-mark telos-mark-mobile" aria-hidden="true"></span>
+    <span class="telos-wordmark-mobile" id="mobile-header-title">TelOS</span>
+  </div>
+  <div class="flex items-center gap-1 bg-white/5 border border-border px-2.5 py-1 rounded-full text-[10px] font-semibold">
+    <span id="mobile-streak-val">0</span>d streak
+  </div>
+</header>
+
+<!-- Mobile Bottom Nav -->
+<nav class="md:hidden bg-surface/95 border-t border-border fixed bottom-0 left-0 right-0 z-50 flex justify-around py-1.5 px-2 backdrop-blur-xl">
+  <button onclick="switchTab('today')" id="mob-nav-today" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
+    <i data-lucide="play-circle" class="w-4 h-4"></i><span>Execution</span>
+  </button>
+  <button onclick="switchTab('review')" id="mob-nav-review" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
+    <i data-lucide="bar-chart-3" class="w-4 h-4"></i><span>Progress</span>
+  </button>
+  <button onclick="switchTab('career')" id="mob-nav-career" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
+    <i data-lucide="map" class="w-4 h-4"></i><span>Blueprint</span>
+  </button>
+  <button onclick="switchTab('settings')" id="mob-nav-settings" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
+    <i data-lucide="settings" class="w-4 h-4"></i><span>System</span>
+  </button>
+</nav>
+
+<!-- Main Content -->
+  <main class="overflow-y-auto mb-16 md:mb-0 h-screen">
+<div class="app-content mx-auto max-w-[1180px] px-4 py-5 md:px-8 md:py-8 space-y-6">
+
+
+  <!-- ==================== TAB: TODAY ==================== -->
+  <section id="tab-today" class="space-y-6">
+
+    <div>
+      <span class="text-[11px] text-text-dim font-bold uppercase tracking-[0.15em]">Execution Hub</span>
+      <h2 class="font-display text-3xl md:text-5xl text-text leading-none mt-1" style="font-family:'Newsreader',serif" id="today-day-header">Saturday</h2>
+      <p class="text-text-dim text-sm mt-2" id="today-date-header">May 23, 2026</p>
+    </div>
+
+    <!-- Today's Deadlines -->
+    <div id="today-deadlines-container" class="hidden"></div>
+
+    <!-- All Goals Countdown -->
+    <div class="card hidden" id="today-goals-countdown">
+      <div class="flex items-center justify-between card-header !border-0 !p-0">
+        <span><i data-lucide="target" class="w-3.5 h-3.5 inline mr-1.5"></i>Goals Countdown <span class="font-normal text-text-dim/60 text-[10px]">(due within 20 days)</span></span>
+        <button onclick="toggleAllGoals()" id="toggle-all-goals-btn" class="text-[9px] font-bold text-blue/60 hover:text-blue">View all goals</button>
+      </div>
+      <div id="goals-countdown-body" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-3"></div>
+    </div>
+
+    <!-- Habit month grids -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="today-habit-cards-container">    </div>
+
+    <!-- Reflection Section: daily always + weekly/monthly extra -->
+    <div class="card" id="reflection-container">
+      <!-- Daily Reflection (always shown) -->
+      <div id="reflection-daily">
+        <div class="card-header">Daily Mindset & Reflection</div>
+        <div class="space-y-1.5">
+          <span class="text-xs font-bold text-text-dim">How are you?</span>
+          <div class="flex gap-2" id="mood-selector">
+            <button type="button" data-value="5" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setFeeling(5, this)">Great</button>
+            <button type="button" data-value="4" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setFeeling(4, this)">Good</button>
+            <button type="button" data-value="3" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setFeeling(3, this)">Okay</button>
+            <button type="button" data-value="2" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setFeeling(2, this)">Rough</button>
+            <button type="button" data-value="1" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setFeeling(1, this)">Tough</button>
+          </div>
+        </div>
+        <div class="space-y-3 border-t border-border pt-4 mt-4">
+          <div class="space-y-1">
+            <label class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Biggest win of the day</label>
+            <input type="text" id="field-biggestWin" placeholder="What went right today?" class="w-full text-xs" onblur="autoSaveField('biggestWin', this.value)">
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Biggest learning of the day</label>
+            <textarea id="field-biggestLearning" rows="2" placeholder="What did you learn today?" class="w-full text-xs resize-none" onblur="autoSaveField('biggestLearning', this.value)"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly extra (shown on Fridays) -->
+      <div id="reflection-weekly" class="hidden border-t border-border pt-4 mt-4">
+        <div class="card-header">Weekly Pulse Check</div>
+        <p class="text-xs text-text-dim mb-4">Quick check before the weekend.</p>
+        <div class="space-y-3">
+          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">Top win this week</label><input type="text" id="weekly-win" placeholder="e.g. Hit 4 gym sessions" class="w-full text-xs" onblur="saveWeeklyReflectionField('win', this.value)"></div>
+          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">Biggest struggle</label><input type="text" id="weekly-struggle" placeholder="e.g. YouTube binge on Monday" class="w-full text-xs" onblur="saveWeeklyReflectionField('struggle', this.value)"></div>
+          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">One adjustment</label><input type="text" id="weekly-adjustment" placeholder="e.g. Sleep by 8:45 PM" class="w-full text-xs" onblur="saveWeeklyReflectionField('adjustment', this.value)"></div>
+        </div>
+      </div>
+
+      <!-- Monthly extra (shown on last day of month) -->
+      <div id="reflection-monthly" class="hidden border-t border-border pt-4 mt-4">
+        <div class="card-header">Monthly Review</div>
+        <p class="text-xs text-text-dim mb-4">End-of-month. Celebrate progress, recalibrate.</p>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-text-dim uppercase tracking-wider mb-2">Are we on track?</label>
+            <div class="flex gap-2" id="monthly-track-selector">
+              <button type="button" data-value="yes" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setMonthlyTrack('yes', this)">On Track</button>
+              <button type="button" data-value="partial" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setMonthlyTrack('partial', this)">Partial</button>
+              <button type="button" data-value="no" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setMonthlyTrack('no', this)">Off Track</button>
+            </div>
+          </div>
+          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">What needs to change</label><textarea id="monthly-change" rows="2" placeholder="What's not working? What to adjust?" class="w-full text-xs resize-none" onblur="saveMonthlyReflectionField('change', this.value)"></textarea></div>
+          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">What did this month teach you</label><textarea id="monthly-lesson" rows="2" placeholder="Key insight from this month" class="w-full text-xs resize-none" onblur="saveMonthlyReflectionField('lesson', this.value)"></textarea></div>
+          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">Goal for next month</label><input type="text" id="monthly-goal" placeholder="e.g. 6-day gym streak consistency" class="w-full text-xs" onblur="saveMonthlyReflectionField('goal', this.value)"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TAB: REVIEW ==================== -->
+  <section id="tab-review" class="hidden space-y-6">
+
+    <div class="pb-5 border-b border-border">
+      <h2 class="font-bold text-2xl text-text">Progress</h2>
+      <p class="text-xs text-text-dim">Track momentum, checkpoints, and reflections.</p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Review tabs -->
+      <div class="flex items-center gap-1 border border-border rounded p-1 bg-surface">
+        <button onclick="setReviewTab('weekly')" id="review-tab-weekly" class="text-[10px] px-3 py-1.5 rounded font-bold bg-green/15 text-green">Weekly</button>
+        <button onclick="setReviewTab('monthly')" id="review-tab-monthly" class="text-[10px] px-3 py-1.5 rounded font-bold text-text-dim hover:text-text">Monthly</button>
+        <button onclick="setReviewTab('cascade')" id="review-tab-cascade" class="text-[10px] px-3 py-1.5 rounded font-bold text-text-dim hover:text-text">Cascade</button>
+      </div>
+      <!-- Period selector (shown for weekly/monthly) -->
+      <div id="review-period-selector" class="flex items-center gap-1 border border-border rounded p-1 bg-surface"></div>
+    </div>
+
+    <!-- Goal vs Actual Metrics (weekly/monthly only) -->
+    <div class="card" id="review-metrics-section">
+      <div class="card-header text-green">Goal vs Actual</div>
+      <p class="text-xs text-text-dim mb-3">Targets vs progress for this period.</p>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="review-metrics-container"></div>
+    </div>
+
+    <!-- Cascade Impact (cascade tab only) -->
+    <div class="card hidden" id="review-cascade-card">
+      <div class="card-header text-blue"><i data-lucide="layers" class="w-3.5 h-3.5 inline mr-1"></i>Cascade Impact</div>
+      <p class="text-xs text-text-dim mb-3">Your goal cascade across all levels for the selected period.</p>
+      <div id="review-cascade-container" class="space-y-6"></div>
+    </div>
+
+    <!-- Calendar + Details (weekly/monthly only) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="review-calendar-section">
+      <div class="lg:col-span-2 card">
+        <div class="grid grid-cols-7 text-center text-[10px] font-bold text-text-dim uppercase tracking-wider mb-3">
+          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+        </div>
+        <div class="calendar-grid" id="review-calendar-days-container"></div>
+      </div>
+      <div class="card" id="review-selected-day-details">
+        <div class="card-header">Day Details</div>
+        <p class="text-xs text-text-dim">Pick a day to view logged data.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== TAB: CAREER ==================== -->
+  <section id="tab-career" class="hidden space-y-6">
+
+    <div class="flex items-start justify-between gap-3 border-b border-border pb-5 flex-wrap">
+      <div class="min-w-0">
+        <h2 class="font-bold text-2xl text-text">Blueprint</h2>
+        <p class="text-xs text-text-dim">Your goal cascade: North Star → 6-Month → 3-Month → Daily Habits</p>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap shrink-0">
+        <button id="career-edit-btn" onclick="toggleCareerEdit()" class="btn btn-outline shrink-0"><i data-lucide="pencil" class="w-3.5 h-3.5" id="career-edit-icon"></i> <span id="career-edit-label">Edit</span></button>
+        <button onclick="openAIGoalImport()" class="btn btn-outline shrink-0 text-blue border-blue/30 hover:bg-blue/[0.06]"><i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> <span>Plan with ChatGPT</span></button>
+        <button onclick="openAIGoalGenerator()" class="btn btn-outline shrink-0 text-amber border-amber/30 hover:bg-amber/[0.06]"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> <span>Generate with AI</span></button>
+      </div>
+    </div>
+
+    <!-- Cascade Levels (rendered by JS) -->
+    <div id="cascade-container" class="space-y-3"></div>
+  </section>
+
+  <!-- ==================== TAB: SETTINGS ==================== -->
+  <section id="tab-settings" class="hidden space-y-6">
+    <div>
+      <h2 class="font-bold text-2xl text-text">System</h2>
+      <p class="text-xs text-text-dim">Credentials, backup, and reset controls.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- Supabase Cloud Sync -->
+        <div class="card">
+          <div class="flex items-center justify-between border-b border-border pb-3">
+            <div class="card-header border-0 p-0 m-0">Supabase Cloud Sync</div>
+            <span id="sync-status-badge" class="text-[9px] bg-border px-2 py-0.5 rounded font-bold uppercase tracking-wider text-text-dim">Local Mode</span>
+          </div>
+          <p class="text-xs text-text-dim leading-relaxed mb-4">Connect Supabase to sync your data across devices.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">API URL</label><input type="password" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
+            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Anon Key</label><input type="password" id="settings-supabase-key" placeholder="eyJhbGciOi..." class="w-full text-xs"></div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="testAndSaveSupabaseConnection()" class="btn btn-primary">Verify &amp; Connect</button>
+            <button onclick="disconnectSupabase()" id="settings-supabase-disconnect" class="btn btn-danger hidden">Disconnect</button>
+            <span id="supabase-msg" class="text-xs font-semibold"></span>
+          </div>
+        </div>
+
+        <!-- AI Goal Generator -->
+        <div class="card">
+          <div class="flex items-center justify-between border-b border-border pb-3">
+            <div class="card-header border-0 p-0 m-0"><i data-lucide="sparkles" class="w-4 h-4 text-amber inline mr-1.5"></i>AI Goal Generator</div>
+          </div>
+          <p class="text-xs text-text-dim leading-relaxed mb-4">Connect any OpenAI-compatible API to generate your goal cascade from a questionnaire. Your key stays local — you pay for tokens.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">API Key <span class="text-text-dim/40 font-normal normal-case" title="Find this in your AI provider's dashboard under API keys">ⓘ</span></label><input type="password" id="settings-ai-key" placeholder="sk-..." class="w-full text-xs"></div>
+            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Endpoint <span class="text-text-dim/40 font-normal normal-case" title="Base URL from your provider's docs, e.g. https://openrouter.ai/api/v1 or https://api.deepseek.com">ⓘ</span></label><input type="text" id="settings-ai-endpoint" placeholder="https://openrouter.ai/api/v1" class="w-full text-xs"></div>
+            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Model <span class="text-text-dim/40 font-normal normal-case" title="The model name from your provider, e.g. deepseek/deepseek-v4-flash, gpt-4o-mini">ⓘ</span></label><input type="text" id="settings-ai-model" placeholder="deepseek/deepseek-v4-flash" class="w-full text-xs"></div>
+            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Speech Model <span class="text-text-dim/40 font-normal normal-case" title="Optional transcription model for voice-to-text. Leave blank to reuse the main model if your provider supports it.">â“˜</span></label><input type="text" id="settings-ai-speech-model" placeholder="gpt-4o-mini-transcribe" class="w-full text-xs"></div>
+          </div>
+          <div class="flex items-center gap-3">
+            <button onclick="saveAISettings()" class="btn btn-primary">Save</button>
+            <span id="ai-msg" class="text-xs font-semibold"></span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Backups & Danger Zone -->
+      <div class="space-y-6">
+        <div class="card">
+          <div class="card-header">Backup</div>
+          <div class="space-y-2">
+            <button onclick="exportDataJSON()" class="w-full bg-[rgba(255,255,255,0.02)] hover:bg-white/5 border border-border text-xs font-bold py-2.5 px-3 rounded flex items-center justify-between transition-colors">
+              <span class="flex items-center gap-2"><i data-lucide="file-json" class="w-4 h-4 text-blue"></i> Export JSON</span>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-text-dim"></i>
+            </button>
+            <button onclick="exportLogsCSV()" class="w-full bg-[rgba(255,255,255,0.02)] hover:bg-white/5 border border-border text-xs font-bold py-2.5 px-3 rounded flex items-center justify-between transition-colors">
+              <span class="flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-green"></i> Export CSV</span>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-text-dim"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Restore</div>
+          <p class="text-xs text-text-dim leading-relaxed mb-3">Import a JSON backup to restore your data.</p>
+          <label for="import-file-input" class="w-full bg-[rgba(255,255,255,0.02)] border border-border hover:bg-white/5 text-xs font-bold py-2.5 px-3 rounded flex items-center justify-center gap-2 cursor-pointer transition-colors">
+            <i data-lucide="upload" class="w-4 h-4 text-amber"></i> Choose Backup File
+          </label>
+          <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDataJSON(event)">
+          <span id="import-msg" class="block text-center text-[10px] mt-2 font-medium"></span>
+        </div>
+
+        <div class="card">
+          <div class="card-header text-red">Destructive Actions</div>
+          <div class="space-y-2">
+            <button onclick="confirmReset('week')" class="btn btn-danger w-full justify-center">Reset This Week</button>
+            <button onclick="confirmReset('month')" class="btn btn-danger w-full justify-center">Reset This Month</button>
+            <button onclick="confirmReset('all')" class="w-full bg-red/15 hover:bg-red/20 border border-red/30 text-red text-xs font-bold py-2.5 px-3 rounded flex items-center justify-center gap-2 transition-colors">Wipe All Local Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+</main>
+</div>
+</div>
+
+<!-- AI Goal Generator Modal -->
+<div id="ai-modal" class="fixed inset-0 bg-bg/85 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" style="display:none" onclick="if(event.target===this)closeAIModal()">
+  <div class="bg-surface border border-border w-full max-w-2xl rounded-lg p-5 space-y-4 shadow-xl">
+    <div class="flex items-center justify-between border-b border-border pb-3">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber inline mr-1.5"></i>AI Goal Generator</h3>
+      <button onclick="closeAIModal()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div id="ai-question-container" class="min-h-[180px]"></div>
+  </div>
+</div>
+
+<!-- Add Goal Modal -->
+<div id="add-goal-modal" class="fixed inset-0 bg-bg/85 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" style="display:none" onclick="if(event.target===this)closeAddGoalModal()">
+  <div class="bg-surface border border-border w-full max-w-lg rounded-lg p-5 space-y-4 shadow-xl">
+    <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">Add New Goal</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="md:col-span-2"><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Goal Name</label><input type="text" id="goal-form-name" placeholder="e.g. Build Portfolios" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Level</label><select id="goal-form-type" class="w-full text-xs" onchange="validateGoalForm()"><option value="sixMonth">6-Month</option><option value="threeMonth">3-Month</option></select></div>
+      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">North Star</label><select id="goal-form-northstar" class="w-full text-xs" onchange="validateGoalForm()"></select></div>
+      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Target</label><input type="number" id="goal-form-target" min="1" placeholder="e.g. 5" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Unit</label><input type="text" id="goal-form-unit" placeholder="projects" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Deadline</label><input type="date" id="goal-form-deadline" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div class="md:col-span-2 text-[9px] text-text-dim/60 italic">Goals flow down from North Star pillars to keep everything connected.</div>
+    </div>
+    <div class="flex items-center gap-3 pt-1">
+      <button id="goal-add-btn" onclick="addNewGoal()" class="btn btn-primary flex-1 justify-center" disabled><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Goal</button>
+      <button onclick="closeAddGoalModal()" class="btn btn-outline flex-1 justify-center">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Checkpoint Completion Modal -->
+<div id="checkpoint-complete-modal" class="fixed inset-0 bg-bg/85 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" style="display:none" onclick="if(event.target===this)closeCheckpointCompleteModal()">
+  <div class="bg-surface border border-border w-full max-w-md rounded-lg p-5 space-y-4 shadow-xl">
+    <div class="space-y-2">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">Complete Checkpoint</h3>
+      <p id="checkpoint-complete-title" class="text-sm font-bold text-text"></p>
+      <p class="text-sm text-text">Type in <span class="font-bold text-green">yea boi</span> in the text box below to mark this checkpoint as complete.</p>
+    </div>
+    <div class="space-y-2">
+      <input
+        type="text"
+        id="checkpoint-complete-input"
+        placeholder="yea boi"
+        class="w-full text-xs"
+        onkeydown="if(event.key==='Enter')submitCheckpointComplete()"
+      >
+      <span id="checkpoint-complete-msg" class="block text-xs font-semibold"></span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="submitCheckpointComplete()" class="btn btn-primary flex-1 justify-center">Submit</button>
+      <button onclick="closeCheckpointCompleteModal()" class="btn btn-outline flex-1 justify-center">Not yet</button>
+    </div>
+  </div>
+</div>
+
+<!-- North Star Review Completion Modal -->
+<div id="northstar-review-complete-modal" class="fixed inset-0 bg-bg/85 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" style="display:none" onclick="if(event.target===this)closeNorthStarReviewModal()">
+  <div class="bg-surface border border-border w-full max-w-md rounded-lg p-5 space-y-4 shadow-xl">
+    <div class="space-y-2">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">Complete North Star</h3>
+      <p id="northstar-review-complete-title" class="text-sm font-bold text-text"></p>
+      <p class="text-sm text-text">Type in <span class="font-bold text-green">yea boi</span> in the text box below to mark this goal as complete.</p>
+    </div>
+    <div class="space-y-2">
+      <input
+        type="text"
+        id="northstar-review-complete-input"
+        placeholder="yea boi"
+        class="w-full text-xs"
+        onkeydown="if(event.key==='Enter')submitNorthStarReviewComplete()"
+      >
+      <span id="northstar-review-complete-msg" class="block text-xs font-semibold"></span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="submitNorthStarReviewComplete()" class="btn btn-primary flex-1 justify-center">Submit</button>
+      <button onclick="closeNorthStarReviewModal()" class="btn btn-outline flex-1 justify-center">Not yet</button>
+    </div>
+  </div>
+</div>
+
+<script src="mockData.js?v=2"></script>
+<script src="js/config.js?v=2"></script>
+<script src="js/state.js?v=2"></script>
+<script src="js/utils.js?v=2"></script>
+<script src="js/tabs/today.js?v=2"></script>
+<script src="js/tabs/review.js?v=2"></script>
+<script src="js/tabs/career.js?v=2"></script>
+<script src="js/tabs/settings.js?v=2"></script>
+<script src="js/ai-goal-prompt.js?v=2"></script>
+<script src="js/ai-goals.js?v=2"></script>
+<script src="app.js?v=2"></script>
+</body>
+</html>
