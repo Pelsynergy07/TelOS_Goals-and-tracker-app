@@ -17,7 +17,7 @@ const APP_CONFIG = {
   // ─── Local Storage ────────────────────────────────────
   // All your data is saved in your browser under this key.
   // Change it only if you know what you're doing.
-  storageKey: 'life_os_data',
+  storageKey: 'telos_data',
 
   // ─── Supabase Cloud Sync (optional) ──────────────────
   // Leave these empty for local-only mode.
