@@ -8,12 +8,13 @@
 let careerEditMode = false;
 
 const cascadeLevels = [
-  { key: "northStar",  label: "North Star",       icon: "star",       color: "blue",     isCardGrid: true },
-  { key: "sixMonth",   label: "6-Month Goals",     icon: "calendar",   color: "amber",    isCardGrid: false },
-  { key: "threeMonth", label: "3-Month Goals",     icon: "target",     color: "green",    isCardGrid: false },
+  { key: "northStar",  label: "North Star",            icon: "star",     color: "blue",   isCardGrid: true },
+  { key: "sixMonth",   label: "6-Month Checkpoints",   icon: "calendar",  color: "amber",  isCardGrid: false },
+  { key: "threeMonth", label: "3-Month Checkpoints",   icon: "target",    color: "green",  isCardGrid: false },
+  { key: "oneMonth",   label: "1-Month Checkpoints",   icon: "flag",   color: "purple", isCardGrid: false },
 ];
 
-const levelColors = { northStar: "blue", sixMonth: "amber", threeMonth: "green" };
+const levelColors = { northStar: "blue", sixMonth: "amber", threeMonth: "green", oneMonth: "purple" };
 
 function toggleCareerEdit() {
   careerEditMode = !careerEditMode;
@@ -48,21 +49,27 @@ function renderGoalsHub() {
   renderNorthStar();
   renderGoalList("goals-sixMonth-list", appState.goals.sixMonth, "sixMonth");
   renderGoalList("goals-threeMonth-list", appState.goals.threeMonth, "threeMonth");
+  renderGoalList("goals-oneMonth-list", appState.goals.oneMonth, "oneMonth");
   renderLinkedHabitsList();
 
-  // Edit button
+  // Edit button (hide if nothing exists to edit)
   const btn = document.getElementById("career-edit-btn");
-  const label = document.getElementById("career-edit-label");
-  const icon = document.getElementById("career-edit-icon");
-  const iconEl = document.querySelector("#career-edit-btn i");
+  const hasContent = appState.goals.northStar.length > 0
+    || appState.goals.sixMonth.length > 0
+    || appState.goals.threeMonth.length > 0
+    || appState.goals.oneMonth.length > 0
+    || appState.goals.linkedHabits.length > 0;
   if (btn) {
+    btn.style.display = hasContent || careerEditMode ? "" : "none";
     if (careerEditMode) {
       btn.className = "btn btn-primary";
-      label.textContent = "Done Editing";
+      document.getElementById("career-edit-label").textContent = "Done Editing";
+      const iconEl = document.querySelector("#career-edit-btn i");
       if (iconEl) iconEl.setAttribute("data-lucide", "check");
     } else {
       btn.className = "btn btn-outline";
-      label.textContent = "Edit";
+      document.getElementById("career-edit-label").textContent = "Edit";
+      const iconEl = document.querySelector("#career-edit-btn i");
       if (iconEl) iconEl.setAttribute("data-lucide", "pencil");
     }
   }
@@ -123,7 +130,7 @@ function renderNorthStar() {
       card.className = "northstar-card" + (done ? " completed" : "");
       card.innerHTML = `
         <span class="text-xs font-bold ${done ? 'text-green' : 'text-text'}">${item.title}</span>
-        <p class="text-[10px] text-text-dim mt-0.5">${item.description}</p>
+        <p class="text-[11px] text-text-dim mt-0.5">${item.description}</p>
       `;
     }
     list.appendChild(card);
@@ -141,19 +148,19 @@ function renderNorthStar() {
 
 function addNorthStar() {
   appState.goals.northStar.push({ id: "ns_" + Date.now(), title: "New Pillar", description: "Describe this vision pillar", completed: false });
-  saveStateLocally();
+  persistState();
   renderGoalsHub();
 }
 
 function updateNorthStar(idx, field, val) {
   appState.goals.northStar[idx][field] = val;
-  saveStateLocally();
+  persistState();
 }
 
 function deleteNorthStar(idx) {
   if (!confirm(`Delete "${appState.goals.northStar[idx].title}"?`)) return;
   appState.goals.northStar.splice(idx, 1);
-  saveStateLocally();
+  persistState();
   renderGoalsHub();
 }
 
@@ -165,7 +172,7 @@ function renderGoalList(containerId, goals, type) {
   container.innerHTML = "";
 
   if (goals.length === 0 && !careerEditMode) {
-    container.innerHTML = '<p class="text-[10px] text-text-dim italic py-2">No goals set yet. Tap Edit to add one.</p>';
+    container.innerHTML = '<p class="text-[11px] text-text-dim italic py-2">No checkpoints set yet. Tap Edit to add one.</p>';
     return;
   }
 
@@ -184,7 +191,7 @@ function renderGoalList(containerId, goals, type) {
           <input type="text" value="${goal.name}" onchange="updateGoalName(${idx},'${type}',this.value)" class="career-edit-name text-xs font-bold bg-transparent text-text border-b border-transparent focus:border-blue py-0.5">
           <button onclick="deleteGoal(${idx},'${type}')" class="text-red hover:bg-red/10 p-1 rounded shrink-0"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
-        <div class="career-edit-grid mb-2 text-[9px]">
+        <div class="career-edit-grid mb-2 text-[10px]">
           <select onchange="updateGoalNorthStar(${idx},'${type}',this.value)" class="career-edit-select bg-transparent text-text-dim border border-border rounded py-1 px-1">
             <option value="">— North Star —</option>
             ${appState.goals.northStar.map(n => `<option value="${n.id}" ${n.id === goal.northStarId ? 'selected' : ''}>${n.title}</option>`).join("")}
@@ -201,9 +208,9 @@ function renderGoalList(containerId, goals, type) {
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
             <span class="text-xs font-bold text-text block break-words leading-relaxed">${goal.name}</span>
-            ${ns ? `<span class="text-[9px] text-blue/70 whitespace-nowrap">★ ${ns.title}</span>` : ''}
+            ${ns ? `<span class="text-[10px] text-blue/70 whitespace-nowrap">★ ${ns.title}</span>` : ''}
           </div>
-          <span class="text-[9px] font-bold shrink-0 ${overdue ? 'text-red' : 'text-text-dim'}">${daysLeft}</span>
+          <span class="text-[10px] font-bold shrink-0 ${overdue ? 'text-red' : 'text-text-dim'}">${daysLeft}</span>
         </div>`;
     }
     container.appendChild(item);
@@ -216,7 +223,7 @@ function renderLinkedHabits() {
   return `
     <div class="cascade-card">
       <div class="cascade-card-header">
-        <div class="cascade-card-title"><i data-lucide="activity" class="w-4 h-4 text-green"></i><span class="text-green">Daily Habits Supporting These Goals</span></div>
+        <div class="cascade-card-title"><i data-lucide="activity" class="w-4 h-4 text-green"></i><span class="text-green">Daily Habits</span></div>
       </div>
       <div id="linked-habits-list" class="space-y-1.5"></div>
     </div>`;
@@ -227,37 +234,96 @@ function renderLinkedHabitsList() {
   if (!container) return;
   container.innerHTML = "";
 
-  appState.settings.scheduleBlocks.forEach(block => {
-    const link = appState.goals.linkedHabits.find(l => l.habitId === block.id);
-    const linkedNsId = link?.northStarId || "";
-    const ns = appState.goals.northStar.find(n => n.id === linkedNsId);
-    const row = document.createElement("div");
-    row.className = `career-habit-row py-1.5 px-2 rounded hover:bg-white/[0.02]${careerEditMode ? ' editing' : ''}`;
+  const linkedBlocks = appState.goals.linkedHabits.map(l => {
+    const block = appState.settings.scheduleBlocks.find(b => b.id === l.habitId);
+    const ns = appState.goals.northStar.find(n => n.id === l.northStarId);
+    return { ...l, block, ns };
+  }).filter(l => l.block && l.ns);
 
-    let rightHtml = '<span class="text-[9px] text-text-dim/50 italic">Not linked</span>';
-    if (ns) {
-      rightHtml = `<span class="text-[9px] font-bold text-blue">★ ${ns.title}</span>`;
+  if (linkedBlocks.length === 0 && !careerEditMode) {
+    container.innerHTML = '<p class="text-[11px] text-text-dim italic py-2">Link habits to your North Star goals to see them here.</p>';
+    return;
+  }
+
+  appState.goals.northStar.forEach(ns => {
+    const nsLinked = linkedBlocks.filter(l => l.ns.id === ns.id);
+    if (nsLinked.length === 0 && !careerEditMode) return;
+
+    const section = document.createElement("div");
+    section.className = "mb-3";
+    const header = document.createElement("div");
+    header.className = "flex items-center gap-1.5 mb-1.5";
+    header.innerHTML = `<i data-lucide="star" class="w-3 h-3 text-blue"></i><span class="text-[10px] font-bold text-blue">${ns.title}</span>`;
+    section.appendChild(header);
+
+    if (nsLinked.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "text-[10px] text-text-dim/50 italic pl-5";
+      empty.textContent = "No habits linked yet.";
+      section.appendChild(empty);
+    } else {
+      const list = document.createElement("div");
+      list.className = "space-y-1";
+      nsLinked.forEach(l => {
+        const row = document.createElement("div");
+        row.className = `career-habit-row py-1 px-2 rounded hover:bg-white/[0.02]${careerEditMode ? ' editing' : ''}`;
+        if (careerEditMode) {
+          const nsOptions = appState.goals.northStar.map(n =>
+            `<option value="${n.id}" ${n.id === l.northStarId ? 'selected' : ''}>${n.title}</option>`
+          ).join("");
+          row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${l.block.name}</span></div>
+            <div class="career-habit-controls">
+              <select onchange="linkHabit('${l.block.id}', this.value);renderLinkedHabitsList()" class="career-habit-select text-[10px] bg-transparent border border-border rounded py-0.5 px-1">
+                <option value="">— Not linked —</option>
+                ${nsOptions}
+              </select>
+            </div>`;
+        } else {
+          row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${l.block.name}</span>${l.block.time ? `<span class="text-[10px] text-text-dim/60">${l.block.time}</span>` : ''}</div>`;
+        }
+        list.appendChild(row);
+      });
+      section.appendChild(list);
     }
-
-    if (careerEditMode) {
-      const nsOptions = appState.goals.northStar.map(n =>
-        `<option value="${n.id}" ${n.id === linkedNsId ? 'selected' : ''}>${n.title}</option>`
-      ).join("");
-      rightHtml = `<input type="text" value="${block.time || ''}" placeholder="e.g. 04:00 AM" onchange="updateBlockTime('${block.id}', this.value)" class="career-habit-time text-[9px] bg-transparent text-text-dim border border-border rounded py-0.5 px-1">
-        <select onchange="linkHabit('${block.id}', this.value)" class="career-habit-select text-[9px] bg-transparent border border-border rounded py-0.5 px-1">
-          <option value="">— Not linked —</option>
-          ${nsOptions}
-        </select>`;
-    }
-
-    row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${block.name}</span>${block.time && !careerEditMode ? `<span class="text-[9px] text-text-dim/60">${block.time}</span>` : ''}</div><div class="career-habit-controls">${rightHtml}</div>`;
-    container.appendChild(row);
+    container.appendChild(section);
   });
+
+  if (careerEditMode) {
+    const unlinked = appState.settings.scheduleBlocks.filter(b =>
+      !appState.goals.linkedHabits.some(l => l.habitId === b.id)
+    );
+    if (unlinked.length > 0) {
+      const section = document.createElement("div");
+      section.className = "mt-3 pt-2 border-t border-border/50";
+      const header = document.createElement("div");
+      header.className = "flex items-center gap-1.5 mb-1.5";
+      header.innerHTML = `<span class="text-[10px] font-bold text-text-dim/60">Available Habits</span>`;
+      section.appendChild(header);
+      unlinked.forEach(block => {
+        const row = document.createElement("div");
+        row.className = "career-habit-row py-1.5 px-2 rounded hover:bg-white/[0.02] editing";
+        const nsOptions = appState.goals.northStar.map(n =>
+          `<option value="${n.id}">${n.title}</option>`
+        ).join("");
+        row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${block.name}</span></div>
+          <div class="career-habit-controls">
+            <select onchange="linkHabit('${block.id}', this.value);renderLinkedHabitsList()" class="career-habit-select text-[10px] bg-transparent border border-border rounded py-0.5 px-1">
+              <option value="">— Link to North Star —</option>
+              ${nsOptions}
+            </select>
+          </div>`;
+        section.appendChild(row);
+      });
+      container.appendChild(section);
+    }
+  }
+
+  lucide.createIcons();
 }
 
 function updateBlockTime(blockId, val) {
   const block = appState.settings.scheduleBlocks.find(b => b.id === blockId);
-  if (block) { block.time = val; saveStateLocally(); pushToCloud(); }
+  if (block) { block.time = val; persistState(); }
 }
 
 function linkHabit(habitId, northStarId) {
@@ -268,7 +334,7 @@ function linkHabit(habitId, northStarId) {
   } else if (northStarId) {
     appState.goals.linkedHabits.push({ habitId, northStarId });
   }
-  saveStateLocally();
+  persistState();
 }
 
 // ─── Goal CRUD ────────────────────────────────────────────
@@ -314,45 +380,47 @@ function addNewGoal() {
   if (type === "yearly") appState.goals.yearly.push(goal);
   else if (type === "sixMonth") appState.goals.sixMonth.push(goal);
   else if (type === "threeMonth") appState.goals.threeMonth.push(goal);
+  else if (type === "oneMonth") appState.goals.oneMonth.push(goal);
 
-  saveStateLocally();
-  pushToCloud();
+  persistState();
   closeAddGoalModal();
   renderGoalsHub();
 }
 
+function getGoalsByType(type) {
+  if (type === "yearly") return appState.goals.yearly;
+  if (type === "sixMonth") return appState.goals.sixMonth;
+  if (type === "threeMonth") return appState.goals.threeMonth;
+  return appState.goals.oneMonth;
+}
+
 function updateGoalProgress(idx, type, val) {
-  const goals = type === "yearly" ? appState.goals.yearly : type === "sixMonth" ? appState.goals.sixMonth : appState.goals.threeMonth;
+  const goals = getGoalsByType(type);
   const prev = goals[idx].progress;
   goals[idx].progress = Number(val);
   if (prev < goals[idx].target && goals[idx].progress >= goals[idx].target) celebrate();
-  saveStateLocally();
-  pushToCloud();
+  persistState();
 }
 
 function updateGoalName(idx, type, val) {
-  const goals = type === "yearly" ? appState.goals.yearly : type === "sixMonth" ? appState.goals.sixMonth : appState.goals.threeMonth;
-  goals[idx].name = val;
-  saveStateLocally();
+  getGoalsByType(type)[idx].name = val;
+  persistState();
 }
 
 function updateGoalDeadline(idx, type, val) {
-  const goals = type === "yearly" ? appState.goals.yearly : type === "sixMonth" ? appState.goals.sixMonth : appState.goals.threeMonth;
-  goals[idx].deadline = val;
-  saveStateLocally();
+  getGoalsByType(type)[idx].deadline = val;
+  persistState();
 }
 
 function updateGoalNorthStar(idx, type, val) {
-  const goals = type === "yearly" ? appState.goals.yearly : type === "sixMonth" ? appState.goals.sixMonth : appState.goals.threeMonth;
-  goals[idx].northStarId = val;
-  saveStateLocally();
+  getGoalsByType(type)[idx].northStarId = val;
+  persistState();
 }
 
 function deleteGoal(idx, type) {
-  const goals = type === "yearly" ? appState.goals.yearly : type === "sixMonth" ? appState.goals.sixMonth : appState.goals.threeMonth;
+  const goals = getGoalsByType(type);
   if (!confirm(`Delete "${goals[idx].name}"?`)) return;
   goals.splice(idx, 1);
-  saveStateLocally();
-  pushToCloud();
+  persistState();
   renderGoalsHub();
 }

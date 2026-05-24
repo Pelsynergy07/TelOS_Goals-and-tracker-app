@@ -9,7 +9,7 @@ let appState = {
   logs: {},
   weeklyReviews: {},
   monthlyReviews: {},
-  goals: { northStar: [], yearly: [], sixMonth: [], threeMonth: [], linkedHabits: [] },
+  goals: { northStar: [], yearly: [], sixMonth: [], threeMonth: [], oneMonth: [], linkedHabits: [] },
   settings: {
     scheduleBlocks: [],
     supabaseUrl: "",
@@ -39,9 +39,10 @@ function loadLocalData() {
         appState.goals.threeMonth = appState.goals.ninetyDay || [];
       }
       delete appState.goals.ninetyDay;
+      if (!appState.goals.oneMonth) appState.goals.oneMonth = [];
       if (!appState.goals.linkedHabits) appState.goals.linkedHabits = [];
       if (!appState.monthlyReviews) appState.monthlyReviews = {};
-      ["yearly", "sixMonth", "threeMonth"].forEach(level => {
+      ["yearly", "sixMonth", "threeMonth", "oneMonth"].forEach(level => {
         (appState.goals[level] || []).forEach(goal => {
           if (goal.completed === undefined) goal.completed = false;
         });
@@ -51,12 +52,15 @@ function loadLocalData() {
     }
   } else {
     appState = JSON.parse(JSON.stringify(initialMockData));
-    saveStateLocally();
+    persistState();
   }
 }
 
-function saveStateLocally() {
+function persistState() {
   localStorage.setItem(APP_CONFIG.storageKey, JSON.stringify(appState));
+  if (dbClient && appState.settings.supabaseUrl && appState.settings.supabaseKey) {
+    pushToCloud();
+  }
 }
 
 function initSupabase() {
@@ -107,7 +111,7 @@ async function pullFromCloud() {
     const { data } = await dbClient.from('life_os_sync').select('data').eq('id', 'life_os_data').maybeSingle();
     if (data && data.data && data.data.logs && data.data.goals) {
       appState = data.data;
-      saveStateLocally();
+      persistState();
       renderAll();
     }
   } catch (e) { console.error("Cloud pull failed", e); }

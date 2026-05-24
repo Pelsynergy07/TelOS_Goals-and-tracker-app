@@ -62,7 +62,7 @@ Output schema:
   ],
   "linkedHabits": [
     {
-      "habitId": "wake_up",
+      "habitId": "habit_id_here",
       "northStarId": "matching_north_star_id"
     }
   ]
@@ -73,7 +73,7 @@ Rules:
 - Set sixMonth deadlines roughly within the next 6 months.
 - Set threeMonth deadlines roughly within the next 3 months.
 - Use only these habit ids in linkedHabits:
-  ["wake_up","deep_learning","reading","gym","youtube","walk","sleep"]
+  {{HABIT_IDS}}
 - Use realistic targets and units.
 - Keep ids short, stable, and slug-like.
 - Every sixMonth and threeMonth goal must map to a valid northStarId.

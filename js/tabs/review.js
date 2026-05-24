@@ -126,7 +126,7 @@ function renderReview() {
         }
 
         const deadlinesCount = getDeadlinesForDate(cellDateStr).length;
-        cell.innerHTML = `<div class="flex justify-between items-start w-full"><span class="day-number ${cellDateStr === todayStr ? 'text-blue' : ''}">${i}</span>${deadlinesCount > 0 ? '<span class="w-1.5 h-1.5 rounded-full bg-red mt-1" title="Goal due"></span>' : ''}</div>`;
+        cell.innerHTML = `<div class="flex justify-between items-start w-full"><span class="day-number ${cellDateStr === todayStr ? 'text-blue' : ''}">${i}</span>${deadlinesCount > 0 ? '<span class="w-1.5 h-1.5 rounded-full bg-red mt-1" title="Checkpoint due"></span>' : ''}</div>`;
         if (bgStyle) cell.setAttribute("style", bgStyle);
 
         cell.onclick = () => {
@@ -160,19 +160,28 @@ function renderReviewMetrics() {
     }
   }
 
-  const iconMap = { gym: "dumbbell", deep_learning: "brain", reading: "book-open", sleep: "moon", youtube: "video", wake_up: "sun" };
   const multiplier = reviewMode === "monthly" ? Math.ceil(dates.length / 7) : 1;
 
-  appState.settings.scheduleBlocks.forEach(b => {
+  if (getLinkedBlocks().length === 0) {
+    container.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-8 text-center col-span-full">
+        <i data-lucide="map" class="w-8 h-8 text-text-dim/30 mb-2"></i>
+        <p class="text-xs font-bold text-text-dim mb-1">No habits linked yet</p>
+        <p class="text-[10px] text-text-dim/60">Link habits to your North Stars on the Blueprint page.</p>
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  getLinkedBlocks().forEach(b => {
     const target = getBlockWeeklyTarget(b.id) * multiplier;
     const actual = getBlockActual(b.id, dates);
     const pct = target > 0 ? Math.min(Math.round((actual / target) * 100), 100) : 0;
-    const icon = iconMap[b.id] || "check-circle";
     const card = document.createElement("div");
     card.className = "metric-card";
     card.innerHTML = `
       <div class="flex items-center gap-2 mb-1">
-        <i data-lucide="${icon}" class="w-3.5 h-3.5 text-text-dim shrink-0"></i>
+        <i data-lucide="activity" class="w-3.5 h-3.5 text-text-dim shrink-0"></i>
         <span class="label">${b.name}</span>
       </div>
       <div class="value ${pct >= 100 ? 'text-green' : pct >= 50 ? 'text-amber' : 'text-red'}">${formatBlockActual(b.id, actual)} / ${formatBlockTarget(b.id, target)}</div>
@@ -196,13 +205,11 @@ function getPeriodDates() {
 }
 
 function getHabitCompletionInPeriod(blockId, dates) {
+  const block = appState.settings.scheduleBlocks.find(b => b.id === blockId);
+  if (!block) return 0;
   let completed = 0;
   dates.forEach(dStr => {
-    const log = appState.logs[dStr];
-    if (!log) return;
-    if (blockId === "deep_learning") { if ((log[blockId]?.minutes || 0) > 0) completed++; }
-    else if (blockId === "youtube") { if ((log[blockId]?.minutes || 0) <= 90 && (log[blockId]?.minutes || 0) > 0) completed++; }
-    else if (log[blockId]?.completed) completed++;
+    if (isBlockCompleted(block, appState.logs[dStr]?.[blockId])) completed++;
   });
   return completed;
 }
@@ -210,7 +217,8 @@ function getHabitCompletionInPeriod(blockId, dates) {
 function getGoalsByNorthStar(northStarId) {
   const levels = [
     { key: "sixMonth", label: "6-Month" },
-    { key: "threeMonth", label: "3-Month" }
+    { key: "threeMonth", label: "3-Month" },
+    { key: "oneMonth", label: "1-Month" }
   ];
   const result = [];
   levels.forEach(l => {
@@ -226,7 +234,8 @@ function getGoalsByNorthStar(northStarId) {
 function getConfiguredCheckpoints() {
   const levels = [
     { key: "sixMonth", label: "6-Month" },
-    { key: "threeMonth", label: "3-Month" }
+    { key: "threeMonth", label: "3-Month" },
+    { key: "oneMonth", label: "1-Month" }
   ];
   const checkpoints = [];
   levels.forEach(level => {
@@ -276,8 +285,7 @@ function toggleNorthStarReviewComplete(id, completed) {
   const northStar = appState.goals.northStar.find(n => n.id === id);
   if (!northStar) return;
   northStar.completed = completed;
-  saveStateLocally();
-  pushToCloud();
+  persistState();
   renderReview();
   if (typeof renderGoalsHub === "function") renderGoalsHub();
 }
@@ -309,15 +317,14 @@ function renderCascadeImpact() {
   const pillars = appState.goals.northStar;
 
   if (pillars.length === 0) {
-    container.innerHTML = '<p class="text-[10px] text-text-dim italic">No North Star pillars defined. Set them up in Career tab.</p>';
+    container.innerHTML = '<p class="text-xs text-text-dim italic">No North Star pillars defined. Set them up in Career tab.</p>';
     return;
   }
 
   function dotColor(habitId, dStr) {
-    const log = appState.logs[dStr];
-    if (!log) return "bg-white/[0.04]";
-    if (habitId === "deep_learning" || habitId === "youtube") return (log[habitId]?.minutes || 0) > 0 ? "bg-green" : "bg-white/[0.04]";
-    return log[habitId]?.completed ? "bg-green" : "bg-white/[0.04]";
+    const block = appState.settings.scheduleBlocks.find(b => b.id === habitId);
+    if (!block) return "bg-white/[0.04]";
+    return isBlockCompleted(block, appState.logs[dStr]?.[habitId]) ? "bg-green" : "bg-white/[0.04]";
   }
 
   const checkpoints = getConfiguredCheckpoints();
@@ -344,7 +351,7 @@ function renderCascadeImpact() {
     </div>`;
 
     if (goals.length === 0 && linkedHabits.length === 0) {
-      html += '<p class="text-[9px] text-text-dim italic flex-1">No links yet.</p>';
+      html += '<p class="text-[10px] text-text-dim italic flex-1">No links yet.</p>';
     }
 
     if (goals.length > 0) {
@@ -388,7 +395,7 @@ function renderCascadeImpact() {
 
     html += `<div class="mt-auto pt-3">
       <button onclick="${pillar.completed ? `toggleNorthStarReviewComplete('${pillar.id}',false)` : `openNorthStarReviewModal('${pillar.id}')`}" class="w-full text-[10px] font-bold px-3 py-2 rounded-full border transition-colors ${pillar.completed ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
-        ${pillar.completed ? 'Completed' : 'Goal Achieved'}
+        ${pillar.completed ? 'Completed' : 'Checkpoint Achieved'}
       </button>
     </div>`;
 
@@ -402,11 +409,11 @@ function renderCascadeImpact() {
       <div class="flex items-center justify-between gap-3 border-b border-border pb-3">
         <div>
           <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-text-dim/70">Configured Checkpoints</div>
-          <p class="text-xs text-text-dim mt-1">All 3-month and 6-month milestones defined on the Career page.</p>
+          <p class="text-xs text-text-dim mt-1">All milestones defined on the Blueprint page.</p>
         </div>
         <div class="text-right shrink-0">
           <div class="text-lg font-bold text-text">${completedCheckpoints}/${checkpoints.length}</div>
-          <div class="text-[9px] uppercase tracking-[0.16em] text-text-dim/60">Completed</div>
+          <div class="text-[10px] uppercase tracking-[0.16em] text-text-dim/60">Completed</div>
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">`;
@@ -453,20 +460,22 @@ function renderReviewDayDetails(dateStr) {
 
   let deadlinesHtml = "";
   if (deadlines.length > 0) {
-    deadlinesHtml = `<div class="border-t border-border pt-2 mt-2"><p class="text-[9px] text-red font-bold uppercase tracking-wider">Goal Deadlines</p><ul class="list-disc list-inside text-xs mt-1 text-text space-y-1">${deadlines.map(d => `<li>${d.name} (${d.target} ${d.unit || ''})</li>`).join('')}</ul></div>`;
+    deadlinesHtml = `<div class="border-t border-border pt-2 mt-2"><p class="text-[10px] text-red font-bold uppercase tracking-wider">Checkpoint Deadlines</p><ul class="list-disc list-inside text-xs mt-1 text-text space-y-1">${deadlines.map(d => `<li>${d.name} (${d.target} ${d.unit || ''})</li>`).join('')}</ul></div>`;
   }
 
   let blocksHtml = "";
-  appState.settings.scheduleBlocks.forEach(b => {
+  if (getLinkedBlocks().length === 0) {
+    blocksHtml = '<p class="text-[10px] text-text-dim/50 italic py-2">No habits linked yet.</p>';
+  } else {
+  getLinkedBlocks().forEach(b => {
     const logData = log[b.id] || {};
-    let ok = false;
-    if (b.id === "deep_learning" || b.id === "youtube") ok = (logData.minutes || 0) > 0;
-    else ok = !!logData.completed;
+    let ok = isBlockCompleted(b, logData);
     blocksHtml += `<div class="flex items-center justify-between text-xs py-1.5 px-2 rounded ${ok ? 'bg-green/[0.06]' : 'bg-[rgba(255,255,255,0.015)]'}">
       <span class="${ok ? 'text-text font-bold' : 'text-text-dim/40'}">${b.name}</span>
       <span class="${ok ? 'text-green' : 'text-text-dim/30'}">${ok ? '✓' : '—'}</span>
     </div>`;
   });
+  }
 
   const moodLabel = {5:"Great",4:"Good",3:"Okay",2:"Rough",1:"Tough"};
 

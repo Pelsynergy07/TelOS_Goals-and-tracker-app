@@ -11,6 +11,7 @@ const initialMockData = {
     yearly: [],
     sixMonth: [],
     threeMonth: [],
+    oneMonth: [],
     linkedHabits: []
   },
 
@@ -98,3 +99,84 @@ const initialMockData = {
     aiSpeechModel: ""
   }
 };
+
+function buildSampleData() {
+  const nsId1 = "ns_sample_career", nsId2 = "ns_sample_health", nsId3 = "ns_sample_learning";
+  const today = new Date();
+  const y = today.getFullYear(), m = String(today.getMonth() + 1).padStart(2, '0');
+  const logs = {};
+  for (let day = 1; day <= today.getDate(); day++) {
+    const dStr = `${y}-${m}-${String(day).padStart(2,'0')}`;
+    if (dStr > getLocalDateString()) break;
+    logs[dStr] = {
+      feelingScore: Math.floor(Math.random() * 3) + 3,
+      biggestWin: ["Finished deep work early", "Hit gym PR", "Great client call", "Read 50 pages", "Meditated"][Math.floor(Math.random() * 5)],
+      biggestLearning: ["Focus on one thing", "Rest is productive", "Say no more often", "Plan ahead", "Batch tasks"][Math.floor(Math.random() * 5)],
+      wake_up: { completed: Math.random() > 0.2 },
+      deep_learning: { minutes: Math.random() > 0.3 ? 60 + Math.floor(Math.random() * 60) : 0, notes: Math.random() > 0.5 ? "Deep focus session" : "" },
+      reading: { completed: Math.random() > 0.4 },
+      gym: { completed: Math.random() > 0.5 },
+      office_rule: { completed: Math.random() > 0.25 },
+      youtube: { minutes: Math.random() > 0.4 ? 20 + Math.floor(Math.random() * 40) : 0 },
+      walk: { completed: Math.random() > 0.35 },
+      sleep: { completed: Math.random() > 0.3 }
+    };
+  }
+
+  return {
+    logs,
+    weeklyReviews: {},
+    monthlyReviews: {},
+    goals: {
+      northStar: [
+        { id: nsId1, title: "Career Growth", description: "Become a recognized expert in my field and lead impactful projects.", completed: false },
+        { id: nsId2, title: "Health & Vitality", description: "Build sustainable fitness, sleep, and nutrition habits.", completed: false },
+        { id: nsId3, title: "Continuous Learning", description: "Deepen knowledge through daily reading and deliberate practice.", completed: false }
+      ],
+      yearly: [],
+      sixMonth: [
+        { id: "g_s1", name: "Ship 2 major features at work", progress: 1, target: 2, unit: "features", deadline: "", northStarId: nsId1, completed: false },
+        { id: "g_s2", name: "Run a half marathon", progress: 0, target: 1, unit: "race", deadline: "", northStarId: nsId2, completed: false },
+        { id: "g_s3", name: "Complete AWS Solutions Architect cert", progress: 0, target: 1, unit: "cert", deadline: "", northStarId: nsId3, completed: false }
+      ],
+      threeMonth: [
+        { id: "g_t1", name: "Lead code review for team project", progress: 60, target: 100, unit: "%", deadline: "", northStarId: nsId1, completed: false },
+        { id: "g_t2", name: "Reach 5 pull-ups consistently", progress: 3, target: 5, unit: "reps", deadline: "", northStarId: nsId2, completed: false },
+        { id: "g_t3", name: "Read 4 technical books", progress: 2, target: 4, unit: "books", deadline: "", northStarId: nsId3, completed: false }
+      ],
+      oneMonth: [
+        { id: "g_o1", name: "Complete Q2 performance review doc", progress: 0, target: 1, unit: "doc", deadline: "", northStarId: nsId1, completed: false },
+        { id: "g_o2", name: "Average 7h sleep per night", progress: 0, target: 7, unit: "hours", deadline: "", northStarId: nsId2, completed: false },
+        { id: "g_o3", name: "Finish 'Deep Work' book", progress: 0, target: 1, unit: "book", deadline: "", northStarId: nsId3, completed: false }
+      ],
+      linkedHabits: [
+        { habitId: "wake_up", northStarId: nsId2 },
+        { habitId: "deep_learning", northStarId: nsId1 },
+        { habitId: "reading", northStarId: nsId3 },
+        { habitId: "gym", northStarId: nsId2 },
+        { habitId: "office_rule", northStarId: nsId1 },
+        { habitId: "youtube", northStarId: nsId3 },
+        { habitId: "walk", northStarId: nsId2 },
+        { habitId: "sleep", northStarId: nsId2 }
+      ]
+    },
+    settings: JSON.parse(JSON.stringify(initialMockData.settings))
+  };
+}
+
+function loadSampleData() {
+  if (!confirm("This will replace all your current data with sample data. Continue?")) return;
+  appState = buildSampleData();
+  persistState();
+  renderAll();
+  lucide.createIcons();
+}
+
+function clearAllData() {
+  if (!confirm("This will permanently delete ALL your data. Are you sure?")) return;
+  if (!confirm("Really? There is no undo. Clear everything?")) return;
+  appState = JSON.parse(JSON.stringify(initialMockData));
+  persistState();
+  renderAll();
+  lucide.createIcons();
+}

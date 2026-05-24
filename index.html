@@ -6,7 +6,7 @@
   <title>Life OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -25,13 +25,14 @@
             'green': '#22d3a0',
             'blue': '#60a5fa',
             'amber': '#f59e0b',
+            'purple': '#a78bfa',
             'red': '#f87171',
           }
         }
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 
@@ -51,7 +52,7 @@
     </div>
     <nav class="space-y-1">
       <button onclick="switchTab('today')" id="nav-today" class="nav-btn nav-active"><i data-lucide="play-circle"></i><span>Execution</span></button>
-      <button onclick="switchTab('review')" id="nav-review" class="nav-btn"><i data-lucide="bar-chart-3"></i><span>Progress</span></button>
+      <button onclick="switchTab('review')" id="nav-review" class="nav-btn"><i data-lucide="trending-up"></i><span>Progress</span></button>
     </nav>
     <div class="mt-auto space-y-4">
       <nav class="space-y-1">
@@ -85,7 +86,7 @@
     <i data-lucide="play-circle" class="w-4 h-4"></i><span>Execution</span>
   </button>
   <button onclick="switchTab('review')" id="mob-nav-review" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
-    <i data-lucide="bar-chart-3" class="w-4 h-4"></i><span>Progress</span>
+    <i data-lucide="trending-up" class="w-4 h-4"></i><span>Progress</span>
   </button>
   <button onclick="switchTab('career')" id="mob-nav-career" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
     <i data-lucide="map" class="w-4 h-4"></i><span>Blueprint</span>
@@ -115,8 +116,8 @@
     <!-- All Goals Countdown -->
     <div class="card hidden" id="today-goals-countdown">
       <div class="flex items-center justify-between card-header !border-0 !p-0">
-        <span><i data-lucide="target" class="w-3.5 h-3.5 inline mr-1.5"></i>Goals Countdown <span class="font-normal text-text-dim/60 text-[10px]">(due within 20 days)</span></span>
-        <button onclick="toggleAllGoals()" id="toggle-all-goals-btn" class="text-[9px] font-bold text-blue/60 hover:text-blue">View all goals</button>
+        <span><i data-lucide="target" class="w-3.5 h-3.5 inline mr-1.5"></i>Checkpoints Countdown <span class="font-normal text-text-dim/60 text-[10px]">(due within 20 days)</span></span>
+        <button onclick="toggleAllGoals()" id="toggle-all-goals-btn" class="text-[9px] font-bold text-blue/60 hover:text-blue">View all checkpoints</button>
       </div>
       <div id="goals-countdown-body" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-3"></div>
     </div>
@@ -237,12 +238,14 @@
     <div class="flex items-start justify-between gap-3 border-b border-border pb-5 flex-wrap">
       <div class="min-w-0">
         <h2 class="font-bold text-2xl text-text">Blueprint</h2>
-        <p class="text-xs text-text-dim">Your goal cascade: North Star → 6-Month → 3-Month → Daily Habits</p>
+        <p class="text-xs text-text-dim">Your goal cascade: North Star → 6-Month → 3-Month → 1-Month → Daily Habits</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap shrink-0">
         <button id="career-edit-btn" onclick="toggleCareerEdit()" class="btn btn-outline shrink-0"><i data-lucide="pencil" class="w-3.5 h-3.5" id="career-edit-icon"></i> <span id="career-edit-label">Edit</span></button>
         <button onclick="openAIGoalImport()" class="btn btn-outline shrink-0 text-blue border-blue/30 hover:bg-blue/[0.06]"><i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> <span>Plan with ChatGPT</span></button>
         <button onclick="openAIGoalGenerator()" class="btn btn-outline shrink-0 text-amber border-amber/30 hover:bg-amber/[0.06]"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> <span>Generate with AI</span></button>
+        <button onclick="loadSampleData()" class="btn btn-outline shrink-0 text-purple border-purple/30 hover:bg-purple/[0.06]"><i data-lucide="database" class="w-3.5 h-3.5"></i> <span>Load Sample</span></button>
+        <button onclick="clearAllData()" class="btn btn-outline shrink-0 text-red border-red/30 hover:bg-red/[0.06]"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> <span>Clear Data</span></button>
       </div>
     </div>
 
@@ -363,7 +366,7 @@
       <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Target</label><input type="number" id="goal-form-target" min="1" placeholder="e.g. 5" class="w-full text-xs" oninput="validateGoalForm()"></div>
       <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Unit</label><input type="text" id="goal-form-unit" placeholder="projects" class="w-full text-xs" oninput="validateGoalForm()"></div>
       <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Deadline</label><input type="date" id="goal-form-deadline" class="w-full text-xs" oninput="validateGoalForm()"></div>
-      <div class="md:col-span-2 text-[9px] text-text-dim/60 italic">Goals flow down from North Star pillars to keep everything connected.</div>
+      <div class="md:col-span-2 text-[9px] text-text-dim/60 italic">Checkpoints flow down from North Star pillars to keep everything connected.</div>
     </div>
     <div class="flex items-center gap-3 pt-1">
       <button id="goal-add-btn" onclick="addNewGoal()" class="btn btn-primary flex-1 justify-center" disabled><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Goal</button>
@@ -422,16 +425,16 @@
   </div>
 </div>
 
-<script src="mockData.js?v=2"></script>
-<script src="js/config.js?v=2"></script>
-<script src="js/state.js?v=2"></script>
-<script src="js/utils.js?v=2"></script>
-<script src="js/tabs/today.js?v=2"></script>
-<script src="js/tabs/review.js?v=2"></script>
-<script src="js/tabs/career.js?v=2"></script>
-<script src="js/tabs/settings.js?v=2"></script>
-<script src="js/ai-goal-prompt.js?v=2"></script>
-<script src="js/ai-goals.js?v=2"></script>
-<script src="app.js?v=2"></script>
+<script src="mockData.js?v=4"></script>
+<script src="js/config.js?v=4"></script>
+<script src="js/state.js?v=4"></script>
+<script src="js/utils.js?v=8"></script>
+<script src="js/tabs/today.js?v=9"></script>
+<script src="js/tabs/review.js?v=9"></script>
+<script src="js/tabs/career.js?v=4"></script>
+<script src="js/tabs/settings.js?v=8"></script>
+<script src="js/ai-goal-prompt.js?v=8"></script>
+<script src="js/ai-goals.js?v=8"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>

@@ -33,7 +33,19 @@ function renderHabitMonthGrids() {
   const todayStr = getLocalDateString();
   const today = new Date(todayStr);
 
-  appState.settings.scheduleBlocks.forEach(block => {
+  if (getLinkedBlocks().length === 0) {
+    container.innerHTML = `
+      <div class="card flex flex-col items-center justify-center py-12 text-center">
+        <i data-lucide="map" class="w-10 h-10 text-text-dim/30 mb-3"></i>
+        <p class="text-sm font-bold text-text-dim mb-1">No habits set up yet</p>
+        <p class="text-xs text-text-dim/60 mb-4">Link habits to your North Stars in the Blueprint page.</p>
+        <button onclick="switchTab('career')" class="btn btn-green text-xs">Set up your goals</button>
+      </div>`;
+    lucide.createIcons();
+    return;
+  }
+
+  getLinkedBlocks().forEach(block => {
     const year = today.getFullYear();
     const month = today.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -50,12 +62,7 @@ function renderHabitMonthGrids() {
     for (let i = 1; i <= daysInMonth; i++) {
       const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
       const log = appState.logs[dStr];
-      let checked = false;
-      if (block.id === "deep_learning" || block.id === "youtube") {
-        checked = (log?.[block.id]?.minutes || 0) > 0;
-      } else {
-        checked = !!log?.[block.id]?.completed;
-      }
+      let checked = isBlockCompleted(block, log?.[block.id]);
       const isToday = dStr === todayStr;
       const isFuture = dStr > todayStr;
 
@@ -92,20 +99,19 @@ function renderHabitMonthGrids() {
 function toggleBlockQuickCompletion(dateStr, blockId, checked) {
   if (dateStr > getLocalDateString()) return;
   if (!appState.logs[dateStr]) appState.logs[dateStr] = {};
+  if (checked) playTapSound();
   const log = appState.logs[dateStr];
   log[blockId] = log[blockId] || {};
-  if (blockId === "deep_learning") {
-    log[blockId].minutes = checked ? 120 : 0;
-    if (checked && !log[blockId].notes) log[blockId].notes = "Completed deep learning study session.";
-  } else if (blockId === "youtube") {
-    log[blockId].minutes = checked ? 45 : 0;
+  const block = appState.settings.scheduleBlocks.find(b => b.id === blockId);
+  const numberField = block?.fields.find(f => f.type === "number");
+  if (numberField) {
+    log[blockId][numberField.id] = checked ? 60 : 0;
   } else {
     log[blockId].completed = checked;
   }
-  saveStateLocally();
+  persistState();
   calculateStreaks();
   renderToday();
-  pushToCloud();
 }
 
 // ─── Reflection ──────────────────────────────────────────
@@ -180,9 +186,8 @@ function setFeeling(val, btn) {
 function autoSaveField(fieldKey, value) {
   if (!appState.logs[trackerDate]) appState.logs[trackerDate] = {};
   appState.logs[trackerDate][fieldKey] = value;
-  saveStateLocally();
+  persistState();
   calculateStreaks();
-  pushToCloud();
 }
 
 function loadWeeklyReflection() {
@@ -199,7 +204,7 @@ function saveWeeklyReflectionField(key, val) {
   const wId = getWeekID(trackerDate);
   if (!appState.weeklyReviews[wId]) appState.weeklyReviews[wId] = { score: 0, reflection: {} };
   appState.weeklyReviews[wId].reflection[key] = val;
-  saveStateLocally();
+  persistState();
 }
 
 function loadMonthlyReflection() {
@@ -223,7 +228,7 @@ function saveMonthlyReflectionField(key, val) {
   const monthKey = `${new Date(trackerDate).getFullYear()}-${String(new Date(trackerDate).getMonth() + 1).padStart(2, "0")}`;
   if (!appState.monthlyReviews[monthKey]) appState.monthlyReviews[monthKey] = {};
   appState.monthlyReviews[monthKey][key] = val;
-  saveStateLocally();
+  persistState();
 }
 
 function setMonthlyTrack(val, btn) {
@@ -323,7 +328,8 @@ function getGoalsDueOnDate(dateStr) {
   const result = [];
   const levels = [
     { key: "sixMonth", label: "6-Month" },
-    { key: "threeMonth", label: "3-Month" }
+    { key: "threeMonth", label: "3-Month" },
+    { key: "oneMonth", label: "1-Month" }
   ];
   levels.forEach(level => {
     (appState.goals[level.key] || []).forEach(g => {
@@ -339,7 +345,8 @@ function getUpcomingDeadlines(fromDate, daysAhead) {
   const result = [];
   const levels = [
     { key: "sixMonth", label: "6-Month" },
-    { key: "threeMonth", label: "3-Month" }
+    { key: "threeMonth", label: "3-Month" },
+    { key: "oneMonth", label: "1-Month" }
   ];
   const from = new Date(fromDate);
   const until = new Date(from);
@@ -359,13 +366,13 @@ function getUpcomingDeadlines(fromDate, daysAhead) {
 
 function dismissUpcoming() {
   appState.settings.upcomingHidden = true;
-  saveStateLocally();
+  persistState();
   renderToday();
 }
 
 function showUpcoming() {
   appState.settings.upcomingHidden = false;
-  saveStateLocally();
+  persistState();
   renderToday();
 }
 
@@ -375,8 +382,7 @@ function toggleGoalDeadline(type, id, checked) {
   const goal = goals.find(g => g.id === id);
   if (!goal) return;
   goal.completed = checked;
-  saveStateLocally();
-  pushToCloud();
+  persistState();
   renderToday();
   if (typeof renderGoalsHub === "function") renderGoalsHub();
   if (typeof renderReview === "function") renderReview();
@@ -435,7 +441,7 @@ function renderAllGoalsCountdown() {
 
   const dateStr = trackerDate || getLocalDateString();
   const today = new Date(dateStr);
-  const levels = [{ key: "sixMonth", label: "6-Month" }, { key: "threeMonth", label: "3-Month" }];
+  const levels = [{ key: "sixMonth", label: "6-Month" }, { key: "threeMonth", label: "3-Month" }, { key: "oneMonth", label: "1-Month" }];
 
   const all = [];
   levels.forEach(l => {
@@ -471,7 +477,7 @@ function renderAllGoalsCountdown() {
     html += `<div class="border ${done ? 'border-green/30 bg-green/[0.04]' : 'border-border bg-[rgba(255,255,255,0.02)]'} rounded-[14px] px-[14px] py-5 flex flex-col justify-between gap-3 min-h-[148px]">
       <div class="space-y-1.5">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-[9px] uppercase tracking-[0.18em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${g.type === 'sixMonth' ? '6-Month' : '3-Month'}</span>
+          <span class="text-[9px] uppercase tracking-[0.18em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${g.type === 'sixMonth' ? '6-Month' : g.type === 'threeMonth' ? '3-Month' : '1-Month'}</span>
           <span class="text-[11px] ${accent}/80 font-bold">${done ? 'Completed' : diff < 0 ? Math.abs(diff) + 'd overdue' : diff + 'd left'}</span>
         </div>
         <div class="text-sm font-bold ${done ? 'text-green' : 'text-text'} leading-snug">${g.name}</div>
@@ -488,6 +494,6 @@ function renderAllGoalsCountdown() {
 
 function toggleAllGoals() {
   appState.settings.goalsCountdownCollapsed = !appState.settings.goalsCountdownCollapsed;
-  saveStateLocally();
+  persistState();
   renderAllGoalsCountdown();
 }

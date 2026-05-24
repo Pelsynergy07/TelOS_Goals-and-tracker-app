@@ -33,7 +33,7 @@ function saveAISettings() {
   appState.settings.aiEndpoint = endpoint;
   appState.settings.aiModel = model;
   appState.settings.aiSpeechModel = speechModel;
-  saveStateLocally();
+  persistState();
   if (msgEl) { msgEl.className = "text-xs font-semibold text-green"; msgEl.textContent = "Saved."; setTimeout(() => msgEl.textContent = "", 2000); }
 }
 
@@ -53,7 +53,7 @@ async function testAndSaveSupabaseConnection() {
     appState.settings.supabaseKey = key;
     appState.settings.syncEnabled = true;
     dbClient = testClient;
-    saveStateLocally();
+    persistState();
     updateSyncStatusBadge(true);
     await pushToCloud();
     if (msgEl) { msgEl.className = "text-xs font-semibold text-green"; msgEl.textContent = "Connected."; }
@@ -69,7 +69,7 @@ function disconnectSupabase() {
     appState.settings.supabaseKey = "";
     appState.settings.syncEnabled = false;
     dbClient = null;
-    saveStateLocally();
+    persistState();
     updateSyncStatusBadge(false);
     const urlEl = document.getElementById("settings-supabase-url");
     const keyEl = document.getElementById("settings-supabase-key");
@@ -95,13 +95,13 @@ function executeReset(type) {
   } else if (type === "all") {
     localStorage.removeItem(APP_CONFIG.storageKey);
     appState = JSON.parse(JSON.stringify(initialMockData));
-    saveStateLocally();
+    persistState();
     initSupabase();
     renderAll();
     alert("Reset completed.");
     return;
   }
-  saveStateLocally(); pushToCloud(); renderAll();
+  persistState(); renderAll();
 }
 
 function exportDataJSON() {
@@ -121,8 +121,15 @@ function exportLogsCSV() {
     appState.settings.scheduleBlocks.forEach(b => {
       const bVal = log[b.id] || {};
       let val = "", note = "";
-      if (b.id === "deep_learning" || b.id === "youtube") { val = bVal.minutes !== undefined ? bVal.minutes : ""; note = bVal.notes || ""; }
-      else { val = bVal.completed ? "Checked" : "Unchecked"; note = bVal.notes || bVal.actual_time || ""; }
+      const hasNumber = b.fields.some(f => f.type === "number");
+      if (hasNumber) {
+        const numField = b.fields.find(f => f.type === "number");
+        val = bVal[numField.id] !== undefined ? bVal[numField.id] : "";
+        note = bVal.notes || "";
+      } else {
+        val = bVal.completed ? "Checked" : "Unchecked";
+        note = bVal.notes || bVal.actual_time || "";
+      }
       row.push(`"${val}"`); row.push(`"${note.replace(/"/g,'""')}"`);
     });
     csvContent += row.join(",") + "\r\n";
@@ -143,7 +150,7 @@ function importDataJSON(event) {
       const imported = JSON.parse(e.target.result);
       if (imported.logs && imported.goals && imported.settings) {
         appState = imported;
-        saveStateLocally();
+        persistState();
         initSupabase();
         renderAll();
         if (statusMsg) { statusMsg.className = "block text-center text-[10px] mt-2 font-medium text-green"; statusMsg.textContent = "Backup imported successfully."; }

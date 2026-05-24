@@ -224,7 +224,7 @@ function renderAIImportMode() {
       </div>
       <div class="space-y-2">
         <label class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Paste generated JSON</label>
-        <textarea id="ai-import-json" rows="12" class="w-full text-xs" placeholder='{"northStar":[...],"sixMonth":[...],"threeMonth":[...],"linkedHabits":[...]}'></textarea>
+        <textarea id="ai-import-json" rows="12" class="w-full text-xs" placeholder='{"northStar":[...],"sixMonth":[...],"threeMonth":[...],"oneMonth":[...],"linkedHabits":[...]}'></textarea>
       </div>
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <button onclick="closeAIModal()" class="text-[10px] font-bold text-text-dim hover:text-text">Cancel</button>
@@ -245,7 +245,9 @@ function nextAIStep() {
 }
 
 function getAIGoalImportPrompt() {
-  return AI_GOAL_IMPORT_PROMPT_TEMPLATE.replace("{{TODAY}}", getLocalDateString());
+  return AI_GOAL_IMPORT_PROMPT_TEMPLATE
+    .replace("{{TODAY}}", getLocalDateString())
+    .replace("{{HABIT_IDS}}", JSON.stringify(appState.settings.scheduleBlocks.map(b => b.id)));
 }
 
 async function copyAIGoalPrompt() {
@@ -304,10 +306,10 @@ function applyGeneratedGoalCascade(content) {
   appState.goals.northStar = northStar;
   appState.goals.sixMonth = normalizeGoalItems(content.sixMonth, "g").map(mapGoal);
   appState.goals.threeMonth = normalizeGoalItems(content.threeMonth, "g").map(mapGoal);
+  appState.goals.oneMonth = (content.oneMonth || []).map(mapGoal);
   appState.goals.linkedHabits = (content.linkedHabits || []).filter(link => link?.habitId && validNorthStarIds.has(link.northStarId));
 
-  saveStateLocally();
-  pushToCloud();
+  persistState();
   closeAIModal();
   renderGoalsHub();
   if (typeof renderReview === "function") renderReview();
@@ -342,7 +344,8 @@ Rules:
 - northStar: Array of 3-5 pillar objects { id: string, title: string, description: string, completed: false }
 - sixMonth: Array of 3-6 goals { id: string, name: string, progress: 0, target: number, unit: string, deadline: string (YYYY-MM-DD, ~6 months from now), northStarId: string (match a northStar id), completed: false }
 - threeMonth: Array of 3-6 goals { id: string, name: string, progress: 0, target: number, unit: string, deadline: string (YYYY-MM-DD, ~3 months from now), northStarId: string (match a northStar id), completed: false }
-- linkedHabits: For each north star, link 2-4 daily habits from this list by id: ["wake_up","deep_learning","reading","gym","youtube","walk","sleep"]. Array of { habitId: string, northStarId: string }
+- oneMonth: Array of 2-4 goals { id: string, name: string, progress: 0, target: number, unit: string, deadline: string (YYYY-MM-DD, ~1 month from now), northStarId: string (match a northStar id), completed: false }
+- linkedHabits: For each north star, link 2-4 daily habits from this list by id: ${JSON.stringify(appState.settings.scheduleBlocks.map(b => b.id))}. Array of { habitId: string, northStarId: string }
 - Use realistic targets (e.g. 6 videos, 80%, 12 books, 90 days).
 - Deadlines should be future dates relative to ${getLocalDateString()}.`;
 

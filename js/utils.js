@@ -61,18 +61,30 @@ function getLoggedCompletionRate(dateStr) {
   const dayLog = appState.logs[dateStr];
   if (!dayLog) return 0;
   let totalItems = 0, completedItems = 0;
-  appState.settings.scheduleBlocks.forEach(block => {
+  const blocks = getLinkedBlocks();
+  const checkBlocks = blocks.length > 0 ? blocks : appState.settings.scheduleBlocks;
+  checkBlocks.forEach(block => {
     totalItems++;
-    const blockVal = dayLog[block.id];
-    if (blockVal) {
-      if (block.id === "deep_learning" || block.id === "youtube") {
-        const mins = blockVal.minutes || 0;
-        if (block.id === "deep_learning" && mins >= 60) completedItems++;
-        else if (block.id === "youtube" && mins <= 90 && mins > 0) completedItems++;
-      } else { if (blockVal.completed) completedItems++; }
-    }
+    if (isBlockCompleted(block, dayLog[block.id])) completedItems++;
   });
   return totalItems > 0 ? completedItems / totalItems : 0;
+}
+
+function isBlockCompleted(block, val) {
+  if (!val) return false;
+  return block.fields.some(f => {
+    if (f.type === "checkbox") return val.completed === true;
+    if (f.type === "number") return (val[f.id] || 0) > 0;
+    return false;
+  });
+}
+
+function hadAnyCompletion(dateStr) {
+  const dayLog = appState.logs[dateStr];
+  if (!dayLog) return false;
+  const blocks = getLinkedBlocks();
+  const checkBlocks = blocks.length > 0 ? blocks : appState.settings.scheduleBlocks;
+  return checkBlocks.some(block => isBlockCompleted(block, dayLog[block.id]));
 }
 
 function calculateStreaks() {
@@ -81,9 +93,8 @@ function calculateStreaks() {
   const today = getLocalDateString();
   const yesterday = getYesterdayDateString(today);
   let overallStreak = 0;
-  let checkDate = today;
-  if (!appState.logs[today] || getLoggedCompletionRate(today) < 0.6) checkDate = yesterday;
-  while (appState.logs[checkDate] && getLoggedCompletionRate(checkDate) >= 0.6) {
+  let checkDate = hadAnyCompletion(today) ? today : yesterday;
+  while (hadAnyCompletion(checkDate)) {
     overallStreak++;
     checkDate = getYesterdayDateString(checkDate);
   }
@@ -91,15 +102,13 @@ function calculateStreaks() {
 }
 
 function getBlockStreak(blockId) {
+  const block = appState.settings.scheduleBlocks.find(b => b.id === blockId);
+  if (!block) return 0;
   const today = getLocalDateString();
   const yesterday = getYesterdayDateString(today);
   let checkDate = today;
   function isBlockLogDone(dateStr) {
-    const log = appState.logs[dateStr];
-    if (!log) return false;
-    if (blockId === "deep_learning") return (log[blockId]?.minutes || 0) > 0;
-    if (blockId === "youtube") return (log[blockId]?.minutes || 0) <= 90;
-    return !!log[blockId]?.completed;
+    return isBlockCompleted(block, appState.logs[dateStr]?.[blockId]);
   }
   if (!isBlockLogDone(today)) checkDate = yesterday;
   let streak = 0;
@@ -120,53 +129,34 @@ function updateStreakUI(overall) {
 }
 
 function calculateWeeklyScore(weekID) {
-  let daysLogCount = 0, gymSessions = 0, dlDays = 0, readingDays = 0, sleepOnTimeDays = 0, youtubeAdherentDays = 0;
-  Object.keys(appState.logs).forEach(dateStr => {
-    if (getWeekID(dateStr) === weekID) {
-      daysLogCount++;
-      const log = appState.logs[dateStr];
-      if (log.gym?.completed) gymSessions++;
-      if ((log.deep_learning?.minutes || 0) > 0) dlDays++;
-      if (log.reading?.completed) readingDays++;
-      if (log.sleep?.completed) sleepOnTimeDays++;
-      if ((log.youtube?.minutes || 0) <= 90) youtubeAdherentDays++;
-    }
+  const blocks = getLinkedBlocks();
+  if (blocks.length === 0) return 0;
+  const weightPerBlock = 100 / blocks.length;
+  const weekDates = Object.keys(appState.logs).filter(d => getWeekID(d) === weekID);
+  if (weekDates.length === 0) return 0;
+  let totalScore = 0;
+  blocks.forEach(block => {
+    let doneDays = 0;
+    weekDates.forEach(d => { if (isBlockCompleted(block, appState.logs[d]?.[block.id])) doneDays++; });
+    totalScore += Math.min((doneDays / 7) * weightPerBlock, weightPerBlock);
   });
-  if (daysLogCount === 0) return 0;
-  const gymScore = Math.min((gymSessions / 4) * 25, 25);
-  const dlScore = Math.min((dlDays / 5) * 25, 25);
-  const ytScore = Math.min((youtubeAdherentDays / 5) * 15, 15);
-  const readingScore = Math.min((readingDays / 7) * 15, 15);
-  const sleepScore = Math.min((sleepOnTimeDays / 7) * 20, 20);
-  return Math.round(gymScore + dlScore + ytScore + readingScore + sleepScore);
+  return Math.round(totalScore);
 }
 
 function getBlockWeeklyTarget(blockId) {
-  const targets = { gym: 4, deep_learning: 600, reading: 7, sleep: 7, youtube: 5 };
-  return targets[blockId] || 7;
+  return 7;
 }
 
 function getBlockActual(blockId, dates) {
-  let total = 0;
-  dates.forEach(dStr => {
-    const log = appState.logs[dStr];
-    if (!log) return;
-    if (blockId === "deep_learning") total += log.deep_learning?.minutes || 0;
-    else if (blockId === "youtube") { if ((log.youtube?.minutes || 0) <= 90 && (log.youtube?.minutes || 0) > 0) total++; }
-    else if (log[blockId]?.completed) total++;
-  });
-  return total;
+  const block = appState.settings.scheduleBlocks.find(b => b.id === blockId);
+  if (!block) return 0;
+  let count = 0;
+  dates.forEach(dStr => { if (isBlockCompleted(block, appState.logs[dStr]?.[blockId])) count++; });
+  return count;
 }
 
-function formatBlockActual(blockId, val) {
-  if (blockId === "deep_learning") return `${(val / 60).toFixed(1)}h`;
-  return val;
-}
-
-function formatBlockTarget(blockId, target) {
-  if (blockId === "deep_learning") return `${(target / 60).toFixed(1)}h`;
-  return target;
-}
+function formatBlockActual(blockId, val) { return val; }
+function formatBlockTarget(blockId, target) { return target; }
 
 function calculateDaysRemaining(deadlineStr) {
   if (!deadlineStr) return "";
@@ -178,10 +168,31 @@ function calculateDaysRemaining(deadlineStr) {
   return `${diff}d left`;
 }
 
+function getLinkedBlocks() {
+  const linkedIds = new Set(appState.goals.linkedHabits.map(l => l.habitId));
+  return appState.settings.scheduleBlocks.filter(b => linkedIds.has(b.id));
+}
+
+function playTapSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 800;
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.06);
+  } catch (e) { /* audio not supported */ }
+}
+
 function getDeadlinesForDate(dateStr) {
   const result = [];
   appState.goals.yearly.forEach(g => { if (g.deadline === dateStr) result.push(g); });
   (appState.goals.sixMonth || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });
   (appState.goals.threeMonth || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });
+  (appState.goals.oneMonth || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });
   return result;
 }
