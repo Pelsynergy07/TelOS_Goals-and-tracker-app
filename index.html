@@ -302,7 +302,8 @@
             <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Anon Key / Publishable Key <button onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
           </div>
           <div class="flex items-center gap-3">
-            <button onclick="testAndSaveSupabaseConnection()" class="btn btn-primary">Verify &amp; Connect</button>
+            <button onclick="testAndSaveSupabaseConnection()" id="settings-connect-btn" class="btn btn-primary">Verify &amp; Connect</button>
+            <button onclick="syncNow()" id="settings-sync-btn" class="btn btn-primary hidden"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sync Now</button>
             <button onclick="disconnectSupabase()" id="settings-supabase-disconnect" class="btn btn-danger hidden">Disconnect</button>
             <span id="supabase-msg" class="text-xs font-semibold"></span>
           </div>

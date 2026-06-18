@@ -9,6 +9,7 @@ function renderSettings() {
   const keyEl = document.getElementById("settings-supabase-key");
   if (urlEl) urlEl.value = appState.settings.supabaseUrl || "";
   if (keyEl) keyEl.value = appState.settings.supabaseKey || "";
+  updateSyncStatusBadge(!!dbClient);
 }
 
 // ─── Supabase Connection ──────────────────────────────────

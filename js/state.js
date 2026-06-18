@@ -91,16 +91,35 @@ if (typeof window !== 'undefined') {
 function updateSyncStatusBadge(connected, msg) {
   const badge = document.getElementById("sync-status-badge");
   const discBtn = document.getElementById("settings-supabase-disconnect");
+  const connectBtn = document.getElementById("settings-connect-btn");
+  const syncBtn = document.getElementById("settings-sync-btn");
   if (!badge) return;
   if (connected) {
     badge.className = "text-[9px] bg-green/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-green border border-green/20";
     badge.textContent = "Cloud Connected";
     if (discBtn) discBtn.classList.remove("hidden");
+    if (connectBtn) connectBtn.classList.add("hidden");
+    if (syncBtn) { syncBtn.classList.remove("hidden"); lucide.createIcons(); }
   } else {
     badge.className = "text-[9px] bg-border px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-text-dim";
     badge.textContent = msg ? `Local (${msg})` : "Local Mode";
     if (discBtn) discBtn.classList.add("hidden");
+    if (connectBtn) connectBtn.classList.remove("hidden");
+    if (syncBtn) syncBtn.classList.add("hidden");
   }
+}
+
+async function syncNow() {
+  const syncBtn = document.getElementById("settings-sync-btn");
+  const msgEl = document.getElementById("supabase-msg");
+  if (syncBtn) { syncBtn.disabled = true; syncBtn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Syncing...'; }
+  if (msgEl) { msgEl.className = "text-xs font-semibold text-blue"; msgEl.textContent = "Pushing local data..."; }
+  await pushToCloud();
+  if (msgEl) { msgEl.className = "text-xs font-semibold text-blue"; msgEl.textContent = "Pulling cloud data..."; }
+  await pullFromCloud();
+  if (msgEl) { msgEl.className = "text-xs font-semibold text-green"; msgEl.textContent = "Synced!"; }
+  if (syncBtn) { syncBtn.disabled = false; syncBtn.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sync Now'; lucide.createIcons(); }
+  setTimeout(() => { if (msgEl) msgEl.textContent = ""; }, 3000);
 }
 
 async function pushToCloud() {
