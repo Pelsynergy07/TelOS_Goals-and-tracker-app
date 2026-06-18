@@ -206,14 +206,17 @@ function loadSampleData() {
   lucide.createIcons();
 }
 
-function clearAllData() {
+async function clearAllData() {
   if (!confirm("This will permanently delete ALL your data. Are you sure?")) return;
   if (!confirm("Really? There is no undo. Clear everything?")) return;
   localStorage.removeItem(APP_CONFIG.storageKey);
   appState = JSON.parse(JSON.stringify(initialMockData));
   dbClient = null;
+  appState.settings.supabaseUrl = "";
+  appState.settings.supabaseKey = "";
+  appState.settings.syncEnabled = false;
   persistState();
-  initSupabase();
+  await initSupabase();
   renderAll();
   lucide.createIcons();
 }

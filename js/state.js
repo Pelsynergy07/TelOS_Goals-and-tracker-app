@@ -65,29 +65,27 @@ function persistState() {
   }
 }
 
-function initSupabase() {
+async function initSupabase() {
   const url = APP_CONFIG.supabaseUrl || appState.settings.supabaseUrl;
   const key = APP_CONFIG.supabaseKey || appState.settings.supabaseKey;
   if (url && key) {
     try {
       dbClient = supabase.createClient(url, key);
+      appState.settings.supabaseUrl = appState.settings.supabaseUrl || APP_CONFIG.supabaseUrl;
+      appState.settings.supabaseKey = appState.settings.supabaseKey || APP_CONFIG.supabaseKey;
       appState.settings.syncEnabled = true;
       updateSyncStatusBadge(true);
-      pullFromCloud();
+      await pullFromCloud();
     } catch (e) {
       updateSyncStatusBadge(false, "Connection error");
     }
   } else {
     dbClient = null;
+    appState.settings.supabaseUrl = "";
+    appState.settings.supabaseKey = "";
     appState.settings.syncEnabled = false;
     updateSyncStatusBadge(false);
   }
-}
-
-if (typeof window !== 'undefined') {
-  setInterval(() => {
-    pullFromCloud();
-  }, 10000);
 }
 
 function updateSyncStatusBadge(connected, msg) {
@@ -96,7 +94,13 @@ function updateSyncStatusBadge(connected, msg) {
   const connectBtn = document.getElementById("settings-connect-btn");
   const syncBtn = document.getElementById("settings-sync-btn");
   if (!badge) return;
-  if (connected) {
+  if (msg === "Offline") {
+    badge.className = "text-[9px] bg-amber/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-amber border border-amber/20";
+    badge.textContent = "Cloud (Offline)";
+    if (discBtn) discBtn.classList.remove("hidden");
+    if (connectBtn) connectBtn.classList.add("hidden");
+    if (syncBtn) syncBtn.classList.add("hidden");
+  } else if (connected) {
     badge.className = "text-[9px] bg-green/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-green border border-green/20";
     badge.textContent = "Cloud Connected";
     if (discBtn) discBtn.classList.remove("hidden");
@@ -109,6 +113,37 @@ function updateSyncStatusBadge(connected, msg) {
     if (connectBtn) connectBtn.classList.remove("hidden");
     if (syncBtn) syncBtn.classList.add("hidden");
   }
+}
+
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    pullFromCloud();
+  }, 10000);
+
+  window.addEventListener('online', async () => {
+    const url = APP_CONFIG.supabaseUrl || appState.settings.supabaseUrl;
+    const key = APP_CONFIG.supabaseKey || appState.settings.supabaseKey;
+    if (!url || !key) return;
+    if (!dbClient) {
+      try {
+        dbClient = supabase.createClient(url, key);
+        appState.settings.syncEnabled = true;
+      } catch (e) { return; }
+    }
+    await pushToCloud();
+    await pullFromCloud();
+    updateSyncStatusBadge(true);
+    renderAll();
+  });
+
+  window.addEventListener('offline', () => {
+    if (!dbClient) return;
+    const url = APP_CONFIG.supabaseUrl || appState.settings.supabaseUrl;
+    const key = APP_CONFIG.supabaseKey || appState.settings.supabaseKey;
+    if (url && key) {
+      updateSyncStatusBadge(false, "Offline");
+    }
+  });
 }
 
 async function syncNow() {

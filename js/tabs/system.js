@@ -9,7 +9,12 @@ function renderSettings() {
   const keyEl = document.getElementById("settings-supabase-key");
   if (urlEl) urlEl.value = appState.settings.supabaseUrl || "";
   if (keyEl) keyEl.value = appState.settings.supabaseKey || "";
-  updateSyncStatusBadge(!!dbClient && !!appState.settings.supabaseUrl && !!appState.settings.supabaseKey);
+  const hasCreds = !!appState.settings.supabaseUrl && !!appState.settings.supabaseKey;
+  if (dbClient && hasCreds && navigator.onLine === false) {
+    updateSyncStatusBadge(false, "Offline");
+  } else {
+    updateSyncStatusBadge(!!dbClient && hasCreds);
+  }
 }
 
 // ─── Supabase Connection ──────────────────────────────────
@@ -96,14 +101,18 @@ function validateWipeInput() {
   }
 }
 
-function submitWipe() {
+async function submitWipe() {
   const input = document.getElementById("wipe-confirm-input");
   if (input?.value.trim().toLowerCase() !== "delete all data") return;
   closeWipeModal();
   localStorage.removeItem(APP_CONFIG.storageKey);
   appState = JSON.parse(JSON.stringify(initialMockData));
+  dbClient = null;
+  appState.settings.supabaseUrl = "";
+  appState.settings.supabaseKey = "";
+  appState.settings.syncEnabled = false;
   persistState();
-  initSupabase();
+  await initSupabase();
   renderAll();
   lucide.createIcons();
 }
@@ -125,6 +134,10 @@ function executeReset(type) {
   } else if (type === "all") {
     localStorage.removeItem(APP_CONFIG.storageKey);
     appState = JSON.parse(JSON.stringify(initialMockData));
+    dbClient = null;
+    appState.settings.supabaseUrl = "";
+    appState.settings.supabaseKey = "";
+    appState.settings.syncEnabled = false;
     persistState();
     initSupabase();
     renderAll();
@@ -175,7 +188,7 @@ function importDataJSON(event) {
   const statusMsg = document.getElementById("import-msg");
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     try {
       const imported = JSON.parse(e.target.result);
       if (imported.logs && imported.goals && imported.settings) {
@@ -184,7 +197,7 @@ function importDataJSON(event) {
         if (!Array.isArray(appState.dangerAreas)) appState.dangerAreas = [];
         if (!Array.isArray(appState.rules)) appState.rules = [];
         persistState();
-        initSupabase();
+        await initSupabase();
         renderAll();
         if (statusMsg) { statusMsg.className = "block text-center text-[10px] mt-2 font-medium text-green"; statusMsg.textContent = "Backup imported successfully."; }
       } else throw new Error();
