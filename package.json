@@ -1,0 +1,30 @@
+{
+  "name": "progress-tracker_pranav",
+  "version": "1.0.0",
+  "description": "TelOS is a lightweight, local-first personal goals and habit tracker built as a static web app.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:www": "mkdir www\\js\\tabs 2>nul && copy index.html www\\ && copy app.js www\\ && copy style.css www\\ && copy mockData.js www\\ && xcopy js www\\js\\ /E /I /Y",
+    "cap:sync": "npm run build:www && npx cap copy",
+    "cap:open": "npx cap open android",
+    "cap:build": "cd android && gradlew assembleDebug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pelsynergy07/TelOS_Goals-and-tracker-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Pelsynergy07/TelOS_Goals-and-tracker-app/issues"
+  },
+  "homepage": "https://github.com/Pelsynergy07/TelOS_Goals-and-tracker-app#readme",
+  "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0"
+  }
+}

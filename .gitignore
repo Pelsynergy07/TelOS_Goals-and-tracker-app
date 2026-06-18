@@ -4,3 +4,7 @@ Desktop.ini
 .vscode/
 .idea/
 *.log
+node_modules/
+android/
+www/
+capacitor.config.json
