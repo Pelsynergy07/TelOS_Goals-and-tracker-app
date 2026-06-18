@@ -70,8 +70,6 @@ function initSupabase() {
   const key = APP_CONFIG.supabaseKey || appState.settings.supabaseKey;
   if (url && key) {
     try {
-      if (!appState.settings.supabaseUrl) appState.settings.supabaseUrl = APP_CONFIG.supabaseUrl;
-      if (!appState.settings.supabaseKey) appState.settings.supabaseKey = APP_CONFIG.supabaseKey;
       dbClient = supabase.createClient(url, key);
       appState.settings.syncEnabled = true;
       updateSyncStatusBadge(true);
@@ -80,6 +78,8 @@ function initSupabase() {
       updateSyncStatusBadge(false, "Connection error");
     }
   } else {
+    dbClient = null;
+    appState.settings.syncEnabled = false;
     updateSyncStatusBadge(false);
   }
 }
@@ -127,8 +127,13 @@ async function syncNow() {
 async function pushToCloud() {
   if (!dbClient || !appState.settings.syncEnabled) return;
   try {
+    const clean = JSON.parse(JSON.stringify(appState));
+    clean.settings = { ...clean.settings };
+    delete clean.settings.supabaseUrl;
+    delete clean.settings.supabaseKey;
+    delete clean.settings.syncEnabled;
     await dbClient.from('life_os_sync').upsert({
-      id: 'life_os_data', data: appState,
+      id: 'life_os_data', data: clean,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
   } catch (e) { console.error("Cloud push failed", e); }
@@ -139,7 +144,9 @@ async function pullFromCloud() {
   try {
     const { data } = await dbClient.from('life_os_sync').select('data').eq('id', 'life_os_data').maybeSingle();
     if (data && data.data && data.data.logs && data.data.goals) {
+      const localSettings = appState.settings;
       appState = data.data;
+      appState.settings = { ...appState.settings, ...localSettings };
       persistState();
       renderAll();
     }

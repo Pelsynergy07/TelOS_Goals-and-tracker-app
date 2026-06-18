@@ -209,8 +209,11 @@ function loadSampleData() {
 function clearAllData() {
   if (!confirm("This will permanently delete ALL your data. Are you sure?")) return;
   if (!confirm("Really? There is no undo. Clear everything?")) return;
+  localStorage.removeItem(APP_CONFIG.storageKey);
   appState = JSON.parse(JSON.stringify(initialMockData));
+  dbClient = null;
   persistState();
+  initSupabase();
   renderAll();
   lucide.createIcons();
 }

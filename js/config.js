@@ -24,6 +24,6 @@ const APP_CONFIG = {
   // Create a free Supabase account at https://supabase.com
   // then create a table called 'life_os_sync' with columns:
   //   id (text, primary key), data (jsonb), updated_at (timestamptz)
-  supabaseUrl: 'https://zbukjszqsqswmizcnyuf.supabase.co',
-  supabaseKey: 'sb_publishable_mDixBzUI1dIFNmNBXdACNA_dhDe5hRG',
+  supabaseUrl: '',
+  supabaseKey: '',
 };

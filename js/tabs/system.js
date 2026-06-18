@@ -9,7 +9,7 @@ function renderSettings() {
   const keyEl = document.getElementById("settings-supabase-key");
   if (urlEl) urlEl.value = appState.settings.supabaseUrl || "";
   if (keyEl) keyEl.value = appState.settings.supabaseKey || "";
-  updateSyncStatusBadge(!!dbClient);
+  updateSyncStatusBadge(!!dbClient && !!appState.settings.supabaseUrl && !!appState.settings.supabaseKey);
 }
 
 // ─── Supabase Connection ──────────────────────────────────
@@ -33,6 +33,9 @@ async function testAndSaveSupabaseConnection() {
     await pullFromCloud();
     if (msgEl) { msgEl.className = "text-xs font-semibold text-green"; msgEl.textContent = "Synced!"; }
     persistState();
+    if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.TelOSStorage) {
+      Capacitor.Plugins.TelOSStorage.saveCredentials({ url, key });
+    }
     renderAll();
     lucide.createIcons();
   } catch (err) {
@@ -61,6 +64,9 @@ function disconnectSupabase() {
     const keyEl = document.getElementById("settings-supabase-key");
     if (urlEl) urlEl.value = "";
     if (keyEl) keyEl.value = "";
+    if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.TelOSStorage) {
+      Capacitor.Plugins.TelOSStorage.clearCredentials();
+    }
   }
 }
 
