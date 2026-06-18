@@ -139,7 +139,7 @@ function renderEmptyStateBanner() {
     chatBtn.className = "btn btn-outline shrink-0 text-blue border-blue/30 hover:bg-blue/[0.06]";
   }
 
-  if (empty && !onCareer) {
+  if (empty && activeTab !== "today" && activeTab !== "career") {
     banner.classList.remove("hidden");
   } else {
     banner.classList.add("hidden");
