@@ -25,5 +25,5 @@ const APP_CONFIG = {
   // then create a table called 'life_os_sync' with columns:
   //   id (text, primary key), data (jsonb), updated_at (timestamptz)
   supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseKey: '',
 };

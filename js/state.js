@@ -67,7 +67,7 @@ function persistState() {
 
 function initSupabase() {
   const url = APP_CONFIG.supabaseUrl || appState.settings.supabaseUrl;
-  const key = APP_CONFIG.supabaseAnonKey || appState.settings.supabaseKey;
+  const key = APP_CONFIG.supabaseKey || appState.settings.supabaseKey;
   if (url && key) {
     try {
       dbClient = supabase.createClient(url, key);

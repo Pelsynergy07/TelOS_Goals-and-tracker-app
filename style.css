@@ -767,6 +767,9 @@ section { animation: fadeUp 0.25s ease; }
   .rule-item {
     padding: 8px 0;
   }
+  .identity-hero {
+    padding: 14px;
+  }
 }
 
 @media (min-width: 768px) and (max-width: 1180px) {

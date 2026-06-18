@@ -37,6 +37,14 @@ async function testAndSaveSupabaseConnection() {
   }
 }
 
+function openSupabaseHelp(field) {
+  document.getElementById("supabase-help-modal").style.display = "flex";
+}
+
+function closeSupabaseHelp() {
+  document.getElementById("supabase-help-modal").style.display = "none";
+}
+
 function disconnectSupabase() {
   if (confirm("Disconnect database sync?")) {
     appState.settings.supabaseUrl = "";
@@ -50,6 +58,44 @@ function disconnectSupabase() {
     if (urlEl) urlEl.value = "";
     if (keyEl) keyEl.value = "";
   }
+}
+
+// ─── Wipe Data Modal ─────────────────────────────────────
+
+function openWipeModal() {
+  const input = document.getElementById("wipe-confirm-input");
+  const btn = document.getElementById("wipe-confirm-btn");
+  if (input) input.value = "";
+  if (btn) btn.disabled = true;
+  document.getElementById("wipe-modal").style.display = "flex";
+}
+
+function closeWipeModal() {
+  document.getElementById("wipe-modal").style.display = "none";
+}
+
+function validateWipeInput() {
+  const input = document.getElementById("wipe-confirm-input");
+  const btn = document.getElementById("wipe-confirm-btn");
+  const msg = document.getElementById("wipe-msg");
+  const match = input?.value.trim().toLowerCase() === "delete all data";
+  if (btn) btn.disabled = !match;
+  if (msg) {
+    msg.className = "block text-xs font-semibold";
+    msg.textContent = match ? "" : "Type exactly: delete all data";
+  }
+}
+
+function submitWipe() {
+  const input = document.getElementById("wipe-confirm-input");
+  if (input?.value.trim().toLowerCase() !== "delete all data") return;
+  closeWipeModal();
+  localStorage.removeItem(APP_CONFIG.storageKey);
+  appState = JSON.parse(JSON.stringify(initialMockData));
+  persistState();
+  initSupabase();
+  renderAll();
+  lucide.createIcons();
 }
 
 // ─── Reset, Export, Import ───────────────────────────────

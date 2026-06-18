@@ -82,21 +82,21 @@
 </header>
 
 <!-- Mobile Bottom Nav -->
-<nav class="md:hidden bg-surface/95 border-t border-border fixed bottom-0 left-0 right-0 z-50 flex justify-around py-1.5 px-2 backdrop-blur-xl">
-  <button onclick="switchTab('today')" id="mob-nav-today" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
-    <i data-lucide="play-circle" class="w-4 h-4"></i><span>Execution</span>
+<nav class="md:hidden bg-surface/95 border-t border-border fixed bottom-0 left-0 right-0 z-50 flex justify-around py-1.5 px-2 backdrop-blur-xl gap-0">
+  <button onclick="switchTab('today')" id="mob-nav-today" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+    <i data-lucide="play-circle" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">Execution</span>
   </button>
-  <button onclick="switchTab('review')" id="mob-nav-review" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
-    <i data-lucide="trending-up" class="w-4 h-4"></i><span>Progress</span>
+  <button onclick="switchTab('review')" id="mob-nav-review" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+    <i data-lucide="trending-up" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">Progress</span>
   </button>
-  <button onclick="switchTab('constitution')" id="mob-nav-constitution" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
-    <i data-lucide="scroll-text" class="w-4 h-4"></i><span>Constitution</span>
+  <button onclick="switchTab('constitution')" id="mob-nav-constitution" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+    <i data-lucide="scroll-text" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">Constitution</span>
   </button>
-  <button onclick="switchTab('career')" id="mob-nav-career" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
-    <i data-lucide="map" class="w-4 h-4"></i><span>Blueprint</span>
+  <button onclick="switchTab('career')" id="mob-nav-career" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+    <i data-lucide="map" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">Blueprint</span>
   </button>
-  <button onclick="switchTab('settings')" id="mob-nav-settings" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
-    <i data-lucide="settings" class="w-4 h-4"></i><span>System</span>
+  <button onclick="switchTab('settings')" id="mob-nav-settings" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+    <i data-lucide="settings" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">System</span>
   </button>
 </nav>
 
@@ -262,7 +262,6 @@
         <button id="career-edit-btn" onclick="toggleCareerEdit()" class="btn btn-outline shrink-0"><i data-lucide="pencil" class="w-3.5 h-3.5" id="career-edit-icon"></i> <span id="career-edit-label">Edit</span></button>
         <button onclick="openAIGoalImport()" class="btn btn-outline shrink-0 text-blue border-blue/30 hover:bg-blue/[0.06]"><i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> <span>Plan with ChatGPT</span></button>
         <button onclick="loadSampleData()" class="btn btn-outline shrink-0 text-purple border-purple/30 hover:bg-purple/[0.06]"><i data-lucide="database" class="w-3.5 h-3.5"></i> <span>Load Sample</span></button>
-        <button onclick="clearAllData()" class="btn btn-outline shrink-0 text-red border-red/30 hover:bg-red/[0.06]"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> <span>Clear Data</span></button>
       </div>
     </div>
 
@@ -288,8 +287,8 @@
           </div>
           <p class="text-xs text-text-dim leading-relaxed mb-4">Connect Supabase to sync your data across devices.</p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">API URL</label><input type="password" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
-            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Anon Key</label><input type="password" id="settings-supabase-key" placeholder="eyJhbGciOi..." class="w-full text-xs"></div>
+            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">API URL <button onclick="openSupabaseHelp('url')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
+            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Anon Key / Publishable Key <button onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
           </div>
           <div class="flex items-center gap-3">
             <button onclick="testAndSaveSupabaseConnection()" class="btn btn-primary">Verify &amp; Connect</button>
@@ -331,7 +330,7 @@
           <div class="space-y-2">
             <button onclick="confirmReset('week')" class="btn btn-danger w-full justify-center">Reset This Week</button>
             <button onclick="confirmReset('month')" class="btn btn-danger w-full justify-center">Reset This Month</button>
-            <button onclick="confirmReset('all')" class="w-full bg-red/15 hover:bg-red/20 border border-red/30 text-red text-xs font-bold py-2.5 px-3 rounded flex items-center justify-center gap-2 transition-colors">Wipe All Local Data</button>
+            <button onclick="openWipeModal()" class="btn btn-danger w-full justify-center"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Wipe All Data</button>
           </div>
         </div>
       </div>
@@ -424,6 +423,71 @@
   </div>
 </div>
 
+<!-- Wipe All Data Confirmation Modal -->
+<div id="wipe-modal" class="fixed inset-0 bg-bg/85 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" style="display:none" onclick="if(event.target===this)closeWipeModal()">
+  <div class="bg-surface border border-border w-full max-w-md rounded-lg p-5 space-y-4 shadow-xl" onclick="event.stopPropagation()">
+    <div class="space-y-2">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-red flex items-center gap-1.5"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i>Wipe All Data</h3>
+      <p class="text-sm text-text">This will permanently delete ALL your data.</p>
+      <p class="text-sm text-text">Type <span class="font-bold text-red">delete all data</span> below to confirm.</p>
+    </div>
+    <div class="space-y-2">
+      <input type="text" id="wipe-confirm-input" placeholder="type confirmation here" class="w-full text-xs" oninput="validateWipeInput()" onkeydown="if(event.key==='Enter')submitWipe()">
+      <span id="wipe-msg" class="block text-xs font-semibold"></span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button id="wipe-confirm-btn" onclick="submitWipe()" class="btn btn-danger flex-1 justify-center" disabled>Delete Everything</button>
+      <button onclick="closeWipeModal()" class="btn btn-outline flex-1 justify-center">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Supabase Help Modal -->
+<div id="supabase-help-modal" class="fixed inset-0 bg-bg/85 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" style="display:none" onclick="if(event.target===this)closeSupabaseHelp()">
+  <div class="bg-surface border border-border w-full max-w-lg rounded-lg p-5 space-y-4 shadow-xl" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between border-b border-border pb-3">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim"><i data-lucide="database" class="w-3.5 h-3.5 inline mr-1.5 text-green"></i>Where to Find Your Supabase Credentials</h3>
+      <button onclick="closeSupabaseHelp()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="space-y-4 text-xs text-text-dim leading-relaxed">
+      <div>
+        <p class="font-bold text-text mb-1">API URL</p>
+        <ol class="list-decimal list-inside space-y-1 pl-1">
+          <li>Log in to your <a href="https://supabase.com" target="_blank" class="text-blue hover:underline">Supabase dashboard</a></li>
+          <li>Select your project</li>
+          <li>Go to <span class="text-text font-semibold">Project Settings → Data API</span></li>
+          <li>Copy the <span class="text-text font-semibold">Project URL</span> (looks like <code class="text-[10px] bg-white/10 px-1 rounded">https://xxxx.supabase.co</code>)</li>
+        </ol>
+      </div>
+      <div>
+        <p class="font-bold text-text mb-1">Anon Key / Publishable Key</p>
+        <ol class="list-decimal list-inside space-y-1 pl-1">
+          <li>Go to <span class="text-text font-semibold">Project Settings → API Keys</span></li>
+          <li>Find the <span class="text-text font-semibold">anon public</span> key (starts with <code class="text-[10px] bg-white/10 px-1 rounded">eyJ...</code>)</li>
+          <li>Or if using Supabase Publishing, use your <span class="text-text font-semibold">publishable key</span> (starts with <code class="text-[10px] bg-white/10 px-1 rounded">sb_publishable_...</code>)</li>
+          <li>Paste it into the key field above</li>
+        </ol>
+      </div>
+      <div class="bg-white/5 border border-border rounded p-3">
+        <p class="font-bold text-text mb-1 flex items-center gap-1.5"><i data-lucide="info" class="w-3 h-3 text-blue"></i>Need a Supabase project?</p>
+        <p class="text-xs">Go to <a href="https://supabase.com" target="_blank" class="text-blue hover:underline">supabase.com</a>, sign up, create a project, then run this SQL in the SQL Editor:</p>
+        <pre class="text-[10px] bg-bg p-2 rounded mt-1 overflow-x-auto">create table public.life_os_sync (
+  id text primary key,
+  data jsonb not null default '{}',
+  updated_at timestamptz default now()
+);
+
+alter table public.life_os_sync enable row level security;
+create policy "Enable all" on public.life_os_sync
+  for all using (true) with check (true);</pre>
+      </div>
+    </div>
+    <div class="flex justify-end pt-1">
+      <button onclick="closeSupabaseHelp()" class="btn btn-primary">Got it</button>
+    </div>
+  </div>
+</div>
+
 <script src="mockData.js?v=7"></script>
 <script src="js/config.js?v=4"></script>
 <script src="js/state.js?v=6"></script>
@@ -431,10 +495,10 @@
 <script src="js/tabs/today.js?v=9"></script>
 <script src="js/tabs/review.js?v=9"></script>
 <script src="js/tabs/career.js?v=4"></script>
-<script src="js/tabs/settings.js?v=10"></script>
+<script src="js/tabs/settings.js?v=12"></script>
 <script src="js/tabs/constitution.js?v=2"></script>
 <script src="js/ai-goal-prompt.js?v=9"></script>
 <script src="js/ai-goals.js?v=10"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

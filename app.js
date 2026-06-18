@@ -85,7 +85,7 @@ function switchTab(tabName) {
     const mobNavBtn = document.getElementById(`mob-nav-${t}`);
     if (sec) sec.classList.add("hidden");
     if (navBtn) navBtn.classList.remove("nav-active");
-    if (mobNavBtn) mobNavBtn.className = "flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1";
+    if (mobNavBtn) mobNavBtn.className = "flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0";
   });
 
   const activeSec = document.getElementById(`tab-${tabName}`);
@@ -93,7 +93,7 @@ function switchTab(tabName) {
   const activeMobNav = document.getElementById(`mob-nav-${tabName}`);
   if (activeSec) activeSec.classList.remove("hidden");
   if (activeNav) activeNav.classList.add("nav-active");
-  if (activeMobNav) activeMobNav.className = "flex flex-col items-center gap-0.5 text-green text-[9px] font-bold flex-1 py-1";
+  if (activeMobNav) activeMobNav.className = "flex flex-col items-center gap-0.5 text-green text-[9px] font-bold flex-1 py-1 min-w-0";
 
   if (tabName === "today") renderToday();
   else if (tabName === "review") renderReview();

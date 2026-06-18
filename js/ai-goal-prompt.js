@@ -96,6 +96,8 @@ The goal is to understand how you operate, what you want, what is holding you ba
 
 The quality of your Life OS will be directly proportional to the depth and honesty of your answers.
 
+If it feels easier to speak your thoughts than type them, use the voice dictation feature in ChatGPT — it often helps surface more honest answers.
+
 If you're ready, commit to answering thoughtfully and we will begin."
 
 Wait for confirmation before starting the discovery conversation.
