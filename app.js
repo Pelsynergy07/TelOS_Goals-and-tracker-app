@@ -37,7 +37,7 @@ function hashFromTab(tab) {
 
 // ─── Init ─────────────────────────────────────────────────
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
   applyConfig();
   applyPageCopy();
   trackerDate = getLocalDateString();
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   reviewYear = today.getFullYear();
   reviewWeekId = getWeekID(trackerDate);
   loadLocalData();
-  await initSupabase();
+  initSupabase();
   renderAll();
   lucide.createIcons();
   if (location.hash) switchTab(routeFromHash());

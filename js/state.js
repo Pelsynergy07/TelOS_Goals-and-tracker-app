@@ -65,7 +65,7 @@ function persistState() {
   }
 }
 
-async function initSupabase() {
+function initSupabase() {
   const url = APP_CONFIG.supabaseUrl || appState.settings.supabaseUrl;
   const key = APP_CONFIG.supabaseKey || appState.settings.supabaseKey;
   if (url && key) {
@@ -73,7 +73,7 @@ async function initSupabase() {
       dbClient = supabase.createClient(url, key);
       appState.settings.syncEnabled = true;
       updateSyncStatusBadge(true);
-      await pullFromCloud();
+      pullFromCloud();
     } catch (e) {
       updateSyncStatusBadge(false, "Connection error");
     }
@@ -83,10 +83,9 @@ async function initSupabase() {
 }
 
 if (typeof window !== 'undefined') {
-  pullFromCloud();
   setInterval(() => {
-    if (dbClient && appState.settings.syncEnabled) pullFromCloud();
-  }, 30000);
+    pullFromCloud();
+  }, 10000);
 }
 
 function updateSyncStatusBadge(connected, msg) {
