@@ -28,10 +28,13 @@ async function testAndSaveSupabaseConnection() {
     appState.settings.supabaseKey = key;
     appState.settings.syncEnabled = true;
     dbClient = testClient;
-    persistState();
     updateSyncStatusBadge(true);
-    await pushToCloud();
-    if (msgEl) { msgEl.className = "text-xs font-semibold text-green"; msgEl.textContent = "Connected."; }
+    if (msgEl) { msgEl.className = "text-xs font-semibold text-blue"; msgEl.textContent = "Pulling cloud data..."; }
+    await pullFromCloud();
+    if (msgEl) { msgEl.className = "text-xs font-semibold text-green"; msgEl.textContent = "Synced!"; }
+    persistState();
+    renderAll();
+    lucide.createIcons();
   } catch (err) {
     if (msgEl) { msgEl.className = "text-xs font-semibold text-red"; msgEl.textContent = err.message || "Connection failed."; }
     updateSyncStatusBadge(false, "Failed");
