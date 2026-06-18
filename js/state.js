@@ -82,6 +82,12 @@ function initSupabase() {
   }
 }
 
+if (typeof window !== 'undefined') {
+  setInterval(() => {
+    if (dbClient && appState.settings.syncEnabled) pullFromCloud();
+  }, 30000);
+}
+
 function updateSyncStatusBadge(connected, msg) {
   const badge = document.getElementById("sync-status-badge");
   const discBtn = document.getElementById("settings-supabase-disconnect");
