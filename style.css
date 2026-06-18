@@ -676,6 +676,94 @@ section { animation: fadeUp 0.25s ease; }
   .calendar-day-cell { min-height: 60px; padding: 6px; }
 }
 
+/* ─── Personal Constitution ───────────────────────────── */
+
+.identity-hero {
+  border-left: 3px solid rgba(34, 211, 160, 0.4);
+}
+
+.identity-hero textarea {
+  font-family: "Newsreader", serif;
+}
+
+/* Danger Area Cards */
+.danger-card {
+  background: rgba(248, 113, 113, 0.03);
+  border: 1px solid rgba(248, 113, 113, 0.12);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  transition: border-color 0.15s ease;
+}
+.danger-card:hover {
+  border-color: rgba(248, 113, 113, 0.25);
+}
+.danger-card.editing {
+  background: rgba(248, 113, 113, 0.05);
+  border-color: rgba(248, 113, 113, 0.2);
+}
+.danger-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.danger-card-body {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(248, 113, 113, 0.08);
+}
+.danger-card.collapsed .danger-card-body {
+  display: none;
+}
+.danger-card.collapsed .danger-chevron {
+  transform: rotate(-90deg);
+}
+.danger-chevron {
+  transition: transform 0.2s ease;
+}
+
+/* Rules List */
+.rules-list {
+  counter-reset: rule-counter;
+}
+.rule-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.rule-item:last-child {
+  border-bottom: none;
+}
+.rule-item.editing {
+  gap: 8px;
+}
+.rule-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(34, 211, 160, 0.1);
+  border: 1px solid rgba(34, 211, 160, 0.15);
+  color: var(--green);
+  font-size: 0.65rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+@media (max-width: 767px) {
+  .danger-card {
+    padding: 10px 12px;
+  }
+  .rule-item {
+    padding: 8px 0;
+  }
+}
+
 @media (min-width: 768px) and (max-width: 1180px) {
   .career-habit-row.editing {
     flex-direction: column;

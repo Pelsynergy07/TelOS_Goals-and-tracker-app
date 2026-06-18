@@ -6,6 +6,13 @@ const initialMockData = {
   weeklyReviews: {},
   monthlyReviews: {},
 
+  identityStatement: {
+    title: "Who I Am Becoming",
+    description: ""
+  },
+  dangerAreas: [],
+  rules: [],
+
   goals: {
     northStar: [],
     yearly: [],
@@ -101,7 +108,7 @@ const initialMockData = {
 };
 
 function buildSampleData() {
-  const nsId1 = "ns_sample_career", nsId2 = "ns_sample_health", nsId3 = "ns_sample_learning";
+  const nsId1 = "ns_sample_creator", nsId2 = "ns_sample_wellness", nsId3 = "ns_sample_craft";
   const today = new Date();
   const y = today.getFullYear(), m = String(today.getMonth() + 1).padStart(2, '0');
   const logs = {};
@@ -110,14 +117,14 @@ function buildSampleData() {
     if (dStr > getLocalDateString()) break;
     logs[dStr] = {
       feelingScore: Math.floor(Math.random() * 3) + 3,
-      biggestWin: ["Finished deep work early", "Hit gym PR", "Great client call", "Read 50 pages", "Meditated"][Math.floor(Math.random() * 5)],
-      biggestLearning: ["Focus on one thing", "Rest is productive", "Say no more often", "Plan ahead", "Batch tasks"][Math.floor(Math.random() * 5)],
+      biggestWin: ["Finished a big deliverable", "Solid workout session", "Great conversation", "Hit inbox zero", "Cooked a good meal"][Math.floor(Math.random() * 5)],
+      biggestLearning: ["Progress beats perfection", "Rest is part of the work", "Boundaries matter", "Small steps compound", "Ask for help sooner"][Math.floor(Math.random() * 5)],
       wake_up: { completed: Math.random() > 0.2 },
-      deep_learning: { minutes: Math.random() > 0.3 ? 60 + Math.floor(Math.random() * 60) : 0, notes: Math.random() > 0.5 ? "Deep focus session" : "" },
+      deep_learning: { minutes: Math.random() > 0.3 ? 45 + Math.floor(Math.random() * 75) : 0, notes: Math.random() > 0.5 ? "Focused session" : "" },
       reading: { completed: Math.random() > 0.4 },
       gym: { completed: Math.random() > 0.5 },
       office_rule: { completed: Math.random() > 0.25 },
-      youtube: { minutes: Math.random() > 0.4 ? 20 + Math.floor(Math.random() * 40) : 0 },
+      youtube: { minutes: Math.random() > 0.4 ? 15 + Math.floor(Math.random() * 45) : 0 },
       walk: { completed: Math.random() > 0.35 },
       sleep: { completed: Math.random() > 0.3 }
     };
@@ -127,32 +134,63 @@ function buildSampleData() {
     logs,
     weeklyReviews: {},
     monthlyReviews: {},
+    identityStatement: {
+      title: "Who I Am Becoming",
+      description: "I am someone who shows up consistently, finishes what I start, and builds skills that compound over time."
+    },
+    dangerAreas: [
+      {
+        id: "overplanning_trap",
+        title: "Planning Instead of Doing",
+        reality: "I spend more time organizing and planning than actually executing.",
+        reminder: "The best plan is the one you execute. Start before you feel ready."
+      },
+      {
+        id: "distraction_loops",
+        title: "Endless Distraction Cycles",
+        reality: "I reach for my phone or open a tab the moment a task feels hard or boring.",
+        reminder: "Discomfort is a signal to go deeper, not to escape."
+      },
+      {
+        id: "perfection_delay",
+        title: "Perfectionist Paralysis",
+        reality: "I hold back until I'm sure it's good enough, which means I rarely ship.",
+        reminder: "Done is better than perfect. You can refine after you release."
+      }
+    ],
+    rules: [
+      { id: "five_second_rule", text: "When an important task feels hard, start within 5 seconds before your brain talks you out of it." },
+      { id: "one_thing_first", text: "Complete the most important task before checking any notifications." },
+      { id: "no_zero_days", text: "Do at least one thing every day that moves a priority forward." },
+      { id: "phone_down", text: "Keep the phone in another room during deep work blocks." },
+      { id: "weekly_reset", text: "Every Sunday evening, review the week and set intentions for the next." }
+    ],
     goals: {
       northStar: [
-        { id: nsId1, title: "Career Growth", description: "Become a recognized expert in my field and lead impactful projects.", completed: false },
-        { id: nsId2, title: "Health & Vitality", description: "Build sustainable fitness, sleep, and nutrition habits.", completed: false },
-        { id: nsId3, title: "Continuous Learning", description: "Deepen knowledge through daily reading and deliberate practice.", completed: false }
+        { id: nsId1, title: "Build a Creative Practice", description: "Develop a consistent output habit and share work publicly.", completed: false },
+        { id: nsId2, title: "Sustain Peak Wellness", description: "Optimize sleep, movement, and nutrition for long-term energy.", completed: false },
+        { id: nsId3, title: "Master My Craft", description: "Deepen expertise through deliberate practice and real projects.", completed: false }
       ],
       yearly: [],
       sixMonth: [
-        { id: "g_s1", name: "Ship 2 major features at work", progress: 1, target: 2, unit: "features", deadline: "", northStarId: nsId1, completed: false },
-        { id: "g_s2", name: "Run a half marathon", progress: 0, target: 1, unit: "race", deadline: "", northStarId: nsId2, completed: false },
-        { id: "g_s3", name: "Complete AWS Solutions Architect cert", progress: 0, target: 1, unit: "cert", deadline: "", northStarId: nsId3, completed: false }
+        { id: "g_s1", name: "Publish 24 pieces of work", progress: 4, target: 24, unit: "pieces", deadline: "", northStarId: nsId1, completed: false },
+        { id: "g_s2", name: "Run 10k consistently", progress: 0, target: 1, unit: "race", deadline: "", northStarId: nsId2, completed: false },
+        { id: "g_s3", name: "Complete 3 portfolio projects", progress: 0, target: 3, unit: "projects", deadline: "", northStarId: nsId3, completed: false }
       ],
       threeMonth: [
-        { id: "g_t1", name: "Lead code review for team project", progress: 60, target: 100, unit: "%", deadline: "", northStarId: nsId1, completed: false },
-        { id: "g_t2", name: "Reach 5 pull-ups consistently", progress: 3, target: 5, unit: "reps", deadline: "", northStarId: nsId2, completed: false },
-        { id: "g_t3", name: "Read 4 technical books", progress: 2, target: 4, unit: "books", deadline: "", northStarId: nsId3, completed: false }
+        { id: "g_t1", name: "Ship a MVP for side project", progress: 30, target: 100, unit: "%", deadline: "", northStarId: nsId1, completed: false },
+        { id: "g_t2", name: "Average 7h sleep per night", progress: 6.2, target: 7, unit: "hours", deadline: "", northStarId: nsId2, completed: false },
+        { id: "g_t3", name: "Complete an online course in my field", progress: 40, target: 100, unit: "%", deadline: "", northStarId: nsId3, completed: false }
       ],
       oneMonth: [
-        { id: "g_o1", name: "Complete Q2 performance review doc", progress: 0, target: 1, unit: "doc", deadline: "", northStarId: nsId1, completed: false },
-        { id: "g_o2", name: "Average 7h sleep per night", progress: 0, target: 7, unit: "hours", deadline: "", northStarId: nsId2, completed: false },
-        { id: "g_o3", name: "Finish 'Deep Work' book", progress: 0, target: 1, unit: "book", deadline: "", northStarId: nsId3, completed: false }
+        { id: "g_o1", name: "Write and publish 4 newsletter issues", progress: 1, target: 4, unit: "issues", deadline: "", northStarId: nsId1, completed: false },
+        { id: "g_o2", name: "Hit 6 gym sessions this month", progress: 2, target: 6, unit: "sessions", deadline: "", northStarId: nsId2, completed: false },
+        { id: "g_o3", name: "Complete 2 course modules", progress: 1, target: 2, unit: "modules", deadline: "", northStarId: nsId3, completed: false }
       ],
       linkedHabits: [
         { habitId: "wake_up", northStarId: nsId2 },
-        { habitId: "deep_learning", northStarId: nsId1 },
-        { habitId: "reading", northStarId: nsId3 },
+        { habitId: "deep_learning", northStarId: nsId3 },
+        { habitId: "reading", northStarId: nsId1 },
         { habitId: "gym", northStarId: nsId2 },
         { habitId: "office_rule", northStarId: nsId1 },
         { habitId: "youtube", northStarId: nsId3 },

@@ -14,6 +14,27 @@ let reviewWeekId = "";
 let reviewMonth = 0;
 let reviewYear = 2026;
 
+const tabRoutes = {
+  execution: "today",
+  progress: "review",
+  constitution: "constitution",
+  blueprint: "career",
+  system: "settings"
+};
+
+const tabSlugs = Object.fromEntries(
+  Object.entries(tabRoutes).map(([slug, tab]) => [tab, slug])
+);
+
+function routeFromHash() {
+  const hash = location.hash.replace(/^#\/?/, "");
+  return tabRoutes[hash] || "today";
+}
+
+function hashFromTab(tab) {
+  return "#/" + (tabSlugs[tab] || "execution");
+}
+
 // ─── Init ─────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -28,6 +49,11 @@ document.addEventListener("DOMContentLoaded", () => {
   initSupabase();
   renderAll();
   lucide.createIcons();
+  if (location.hash) switchTab(routeFromHash());
+});
+
+window.addEventListener("hashchange", () => {
+  if (activeTab !== routeFromHash()) switchTab(routeFromHash());
 });
 
 function applyConfig() {
@@ -52,7 +78,7 @@ function applyPageCopy() {
 
 function switchTab(tabName) {
   activeTab = tabName;
-  const tabs = ["today", "review", "career", "settings"];
+  const tabs = ["today", "review", "constitution", "career", "settings"];
   tabs.forEach(t => {
     const sec = document.getElementById(`tab-${t}`);
     const navBtn = document.getElementById(`nav-${t}`);
@@ -71,8 +97,12 @@ function switchTab(tabName) {
 
   if (tabName === "today") renderToday();
   else if (tabName === "review") renderReview();
+  else if (tabName === "constitution") renderConstitution();
   else if (tabName === "career") renderGoalsHub();
   else if (tabName === "settings") renderSettings();
+
+  const newHash = hashFromTab(tabName);
+  if (location.hash !== newHash) history.pushState(null, "", newHash);
 
   window.scrollTo(0, 0);
   lucide.createIcons();
@@ -83,6 +113,7 @@ function renderAll() {
   calculateStreaks();
   renderToday();
   renderReview();
+  renderConstitution();
   renderGoalsHub();
   renderSettings();
 }

@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -56,6 +56,7 @@
     </nav>
     <div class="mt-auto space-y-4">
       <nav class="space-y-1">
+        <button onclick="switchTab('constitution')" id="nav-constitution" class="nav-btn"><i data-lucide="scroll-text"></i><span>Constitution</span></button>
         <button onclick="switchTab('career')" id="nav-career" class="nav-btn"><i data-lucide="map"></i><span>Blueprint</span></button>
         <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn"><i data-lucide="settings"></i><span>System</span></button>
       </nav>
@@ -87,6 +88,9 @@
   </button>
   <button onclick="switchTab('review')" id="mob-nav-review" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
     <i data-lucide="trending-up" class="w-4 h-4"></i><span>Progress</span>
+  </button>
+  <button onclick="switchTab('constitution')" id="mob-nav-constitution" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
+    <i data-lucide="scroll-text" class="w-4 h-4"></i><span>Constitution</span>
   </button>
   <button onclick="switchTab('career')" id="mob-nav-career" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1">
     <i data-lucide="map" class="w-4 h-4"></i><span>Blueprint</span>
@@ -232,6 +236,20 @@
     </div>
   </section>
 
+  <!-- ==================== TAB: CONSTITUTION ==================== -->
+  <section id="tab-constitution" class="hidden space-y-6">
+    <div class="flex items-start justify-between gap-3 border-b border-border pb-5 flex-wrap">
+      <div class="min-w-0">
+        <h2 class="font-bold text-2xl text-text">Constitution</h2>
+        <p class="text-xs text-text-dim">Your personal operating system: identity, guardrails, and rules.</p>
+      </div>
+      <div class="flex items-center gap-2 flex-wrap shrink-0">
+        <button id="constitution-edit-btn" onclick="toggleConstitutionEdit()" class="btn btn-outline shrink-0"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> <span>Edit</span></button>
+      </div>
+    </div>
+    <div id="constitution-container" class="space-y-6"></div>
+  </section>
+
   <!-- ==================== TAB: CAREER ==================== -->
   <section id="tab-career" class="hidden space-y-6">
 
@@ -243,7 +261,6 @@
       <div class="flex items-center gap-2 flex-wrap shrink-0">
         <button id="career-edit-btn" onclick="toggleCareerEdit()" class="btn btn-outline shrink-0"><i data-lucide="pencil" class="w-3.5 h-3.5" id="career-edit-icon"></i> <span id="career-edit-label">Edit</span></button>
         <button onclick="openAIGoalImport()" class="btn btn-outline shrink-0 text-blue border-blue/30 hover:bg-blue/[0.06]"><i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> <span>Plan with ChatGPT</span></button>
-        <button onclick="openAIGoalGenerator()" class="btn btn-outline shrink-0 text-amber border-amber/30 hover:bg-amber/[0.06]"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> <span>Generate with AI</span></button>
         <button onclick="loadSampleData()" class="btn btn-outline shrink-0 text-purple border-purple/30 hover:bg-purple/[0.06]"><i data-lucide="database" class="w-3.5 h-3.5"></i> <span>Load Sample</span></button>
         <button onclick="clearAllData()" class="btn btn-outline shrink-0 text-red border-red/30 hover:bg-red/[0.06]"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> <span>Clear Data</span></button>
       </div>
@@ -425,16 +442,17 @@
   </div>
 </div>
 
-<script src="mockData.js?v=4"></script>
+<script src="mockData.js?v=6"></script>
 <script src="js/config.js?v=4"></script>
-<script src="js/state.js?v=4"></script>
+<script src="js/state.js?v=5"></script>
 <script src="js/utils.js?v=8"></script>
 <script src="js/tabs/today.js?v=9"></script>
 <script src="js/tabs/review.js?v=9"></script>
 <script src="js/tabs/career.js?v=4"></script>
-<script src="js/tabs/settings.js?v=8"></script>
-<script src="js/ai-goal-prompt.js?v=8"></script>
-<script src="js/ai-goals.js?v=8"></script>
-<script src="app.js?v=4"></script>
+<script src="js/tabs/settings.js?v=9"></script>
+<script src="js/tabs/constitution.js?v=2"></script>
+<script src="js/ai-goal-prompt.js?v=9"></script>
+<script src="js/ai-goals.js?v=10"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

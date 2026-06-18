@@ -9,6 +9,9 @@ let appState = {
   logs: {},
   weeklyReviews: {},
   monthlyReviews: {},
+  identityStatement: { title: "Who I Am Becoming", description: "" },
+  dangerAreas: [],
+  rules: [],
   goals: { northStar: [], yearly: [], sixMonth: [], threeMonth: [], oneMonth: [], linkedHabits: [] },
   settings: {
     scheduleBlocks: [],
@@ -33,6 +36,9 @@ function loadLocalData() {
       appState = JSON.parse(localData);
       if (!appState.settings) appState.settings = initialMockData.settings;
       if (!appState.goals) appState.goals = initialMockData.goals;
+      if (!appState.identityStatement) appState.identityStatement = { title: "Who I Am Becoming", description: "" };
+      if (!Array.isArray(appState.dangerAreas)) appState.dangerAreas = [];
+      if (!Array.isArray(appState.rules)) appState.rules = [];
       if (!appState.goals.northStar) appState.goals.northStar = initialMockData.goals.northStar;
       if (!appState.goals.sixMonth) appState.goals.sixMonth = [];
       if (!appState.goals.threeMonth) {

@@ -150,6 +150,9 @@ function importDataJSON(event) {
       const imported = JSON.parse(e.target.result);
       if (imported.logs && imported.goals && imported.settings) {
         appState = imported;
+        if (!appState.identityStatement) appState.identityStatement = { title: "Who I Am Becoming", description: "" };
+        if (!Array.isArray(appState.dangerAreas)) appState.dangerAreas = [];
+        if (!Array.isArray(appState.rules)) appState.rules = [];
         persistState();
         initSupabase();
         renderAll();
