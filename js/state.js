@@ -70,6 +70,8 @@ function initSupabase() {
   const key = APP_CONFIG.supabaseKey || appState.settings.supabaseKey;
   if (url && key) {
     try {
+      if (!appState.settings.supabaseUrl) appState.settings.supabaseUrl = APP_CONFIG.supabaseUrl;
+      if (!appState.settings.supabaseKey) appState.settings.supabaseKey = APP_CONFIG.supabaseKey;
       dbClient = supabase.createClient(url, key);
       appState.settings.syncEnabled = true;
       updateSyncStatusBadge(true);
