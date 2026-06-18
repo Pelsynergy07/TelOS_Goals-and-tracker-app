@@ -9,32 +9,6 @@ function renderSettings() {
   const keyEl = document.getElementById("settings-supabase-key");
   if (urlEl) urlEl.value = appState.settings.supabaseUrl || "";
   if (keyEl) keyEl.value = appState.settings.supabaseKey || "";
-  const aiKeyEl = document.getElementById("settings-ai-key");
-  const aiEndpointEl = document.getElementById("settings-ai-endpoint");
-  const aiModelEl = document.getElementById("settings-ai-model");
-  const aiSpeechModelEl = document.getElementById("settings-ai-speech-model");
-  if (aiKeyEl) aiKeyEl.value = appState.settings.aiApiKey || "";
-  if (aiEndpointEl) aiEndpointEl.value = appState.settings.aiEndpoint || "";
-  if (aiModelEl) aiModelEl.value = appState.settings.aiModel || "";
-  if (aiSpeechModelEl) aiSpeechModelEl.value = appState.settings.aiSpeechModel || "";
-}
-
-function saveAISettings() {
-  const key = document.getElementById("settings-ai-key").value.trim();
-  const endpoint = document.getElementById("settings-ai-endpoint").value.trim();
-  const model = document.getElementById("settings-ai-model").value.trim();
-  const speechModel = document.getElementById("settings-ai-speech-model").value.trim();
-  const msgEl = document.getElementById("ai-msg");
-  if (!key || !endpoint || !model) {
-    if (msgEl) { msgEl.className = "text-xs font-semibold text-red"; msgEl.textContent = "All fields required."; }
-    return;
-  }
-  appState.settings.aiApiKey = key;
-  appState.settings.aiEndpoint = endpoint;
-  appState.settings.aiModel = model;
-  appState.settings.aiSpeechModel = speechModel;
-  persistState();
-  if (msgEl) { msgEl.className = "text-xs font-semibold text-green"; msgEl.textContent = "Saved."; setTimeout(() => msgEl.textContent = "", 2000); }
 }
 
 // ─── Supabase Connection ──────────────────────────────────

@@ -383,8 +383,13 @@ input[type="range"]::-webkit-slider-thumb {
   border: 1px solid rgba(96,165,250,0.15);
 }
 .northstar-label {
-  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--text); display: block;
+}
+.northstar-card > span:first-child,
+.northstar-card > .flex > input:first-child {
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 .northstar-desc {
   font-size: 0.65rem; color: var(--text-dim); margin-top: 4px; line-height: 1.4;

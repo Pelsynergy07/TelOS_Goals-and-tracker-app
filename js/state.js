@@ -19,11 +19,7 @@ let appState = {
     supabaseKey: "",
     syncEnabled: false,
     upcomingHidden: false,
-    goalsCountdownCollapsed: false,
-    aiApiKey: "",
-    aiEndpoint: "",
-    aiModel: "",
-    aiSpeechModel: ""
+    goalsCountdownCollapsed: false
   }
 };
 
