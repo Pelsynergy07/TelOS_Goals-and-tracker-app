@@ -772,6 +772,109 @@ section { animation: fadeUp 0.25s ease; }
   }
 }
 
+/* Onboarding modal */
+@keyframes modal-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+#onboarding-modal > div {
+  animation: modal-fade-up 0.3s ease-out;
+}
+
+/* Onboarding modal steps */
+.onboarding-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.onboarding-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+  transition: border-color 0.15s ease;
+}
+.onboarding-step:hover {
+  border-color: var(--border-hover);
+}
+.onboarding-step-num {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(34,211,160,0.12);
+  border: 1px solid rgba(34,211,160,0.2);
+  color: var(--green);
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.onboarding-step-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.onboarding-step-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.onboarding-step-desc {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+
+/* Empty state banner */
+.empty-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(34,211,160,0.04));
+  border: 1px solid rgba(96,165,250,0.2);
+  flex-wrap: wrap;
+}
+.empty-banner-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.empty-banner-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.empty-banner-text {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-top: 1px;
+}
+@media (max-width: 767px) {
+  .empty-banner {
+    padding: 14px 16px;
+  }
+  .empty-banner-title {
+    font-size: 0.8rem;
+  }
+}
+
 @media (min-width: 768px) and (max-width: 1180px) {
   .career-habit-row.editing {
     flex-direction: column;

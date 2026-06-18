@@ -74,6 +74,7 @@ function renderGoalsHub() {
     }
   }
 
+  if (typeof renderEmptyStateBanner === "function") renderEmptyStateBanner();
   lucide.createIcons();
 }
 

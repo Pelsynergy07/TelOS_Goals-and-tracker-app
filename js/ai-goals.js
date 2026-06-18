@@ -21,19 +21,30 @@ function renderAIImportMode() {
         <p class="text-xs text-text-dim mt-1">Copy the prompt below into ChatGPT, answer the curated questions there, then paste the final JSON back here.</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <button onclick="copyAIGoalPrompt()" class="btn btn-primary text-[10px]">Copy ChatGPT Prompt</button>
+        <button onclick="copyAIGoalPrompt()" class="btn btn-outline border-green/30 text-green hover:bg-green/[0.06] text-[10px]">Copy ChatGPT Prompt</button>
         <button onclick="openChatGPTPlanner()" class="btn btn-outline text-[10px]">Open ChatGPT</button>
         <span id="ai-import-msg" class="text-xs font-semibold text-text-dim"></span>
       </div>
       <div class="space-y-2">
         <label class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Paste generated JSON</label>
-        <textarea id="ai-import-json" rows="12" class="w-full text-xs" placeholder='{"identityStatement":{...},"dangerAreas":[...],"rules":[...],"northStar":[...],"sixMonth":[...],"threeMonth":[...],"linkedHabits":[...]}'></textarea>
+        <textarea id="ai-import-json" rows="12" class="w-full text-xs" placeholder='{"identityStatement":{...},"dangerAreas":[...],"rules":[...],"northStar":[...],"sixMonth":[...],"threeMonth":[...],"linkedHabits":[...]}' oninput="validateAIImportInput()"></textarea>
       </div>
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <button onclick="closeAIModal()" class="text-[10px] font-bold text-text-dim hover:text-text">Cancel</button>
-        <button onclick="importAIGoalsFromTextarea()" class="btn btn-primary text-[10px]">Import JSON</button>
+        <button id="ai-import-btn" onclick="importAIGoalsFromTextarea()" class="btn btn-green text-[10px] opacity-50" disabled>Import JSON</button>
       </div>
     </div>`;
+  validateAIImportInput();
+}
+
+function validateAIImportInput() {
+  const input = document.getElementById("ai-import-json");
+  const btn = document.getElementById("ai-import-btn");
+  if (!input || !btn) return;
+  const valid = input.value.trim().length > 0;
+  btn.disabled = !valid;
+  btn.classList.toggle("opacity-50", !valid);
+  btn.classList.toggle("cursor-not-allowed", !valid);
 }
 
 function getAIGoalImportPrompt() {

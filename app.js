@@ -50,6 +50,11 @@ document.addEventListener("DOMContentLoaded", () => {
   renderAll();
   lucide.createIcons();
   if (location.hash) switchTab(routeFromHash());
+
+  // Show onboarding modal after 2s on home page when empty
+  setTimeout(() => {
+    if (!hasGoals() && activeTab === "today") openOnboardingModal();
+  }, 2000);
 });
 
 window.addEventListener("hashchange", () => {
@@ -104,13 +109,62 @@ function switchTab(tabName) {
   const newHash = hashFromTab(tabName);
   if (location.hash !== newHash) history.pushState(null, "", newHash);
 
+  renderEmptyStateBanner();
   window.scrollTo(0, 0);
   lucide.createIcons();
+}
+
+function hasGoals() {
+  return appState.goals.northStar.length > 0
+    || appState.goals.sixMonth.length > 0
+    || appState.goals.threeMonth.length > 0
+    || appState.goals.oneMonth.length > 0
+    || appState.goals.linkedHabits.length > 0;
+}
+
+function renderEmptyStateBanner() {
+  const banner = document.getElementById("empty-state-banner");
+  if (!banner) return;
+
+  const chatBtn = document.getElementById("btn-plan-chatgpt");
+  const empty = !hasGoals();
+  const onCareer = activeTab === "career";
+
+  const guideBtn = document.getElementById("btn-setup-guide");
+  if (guideBtn) guideBtn.style.display = empty ? "" : "none";
+
+  if (empty && onCareer && chatBtn) {
+    chatBtn.className = "btn btn-green shrink-0 text-xs";
+  } else if (chatBtn) {
+    chatBtn.className = "btn btn-outline shrink-0 text-blue border-blue/30 hover:bg-blue/[0.06]";
+  }
+
+  if (empty && !onCareer) {
+    banner.classList.remove("hidden");
+  } else {
+    banner.classList.add("hidden");
+  }
+}
+
+function openOnboardingModal() {
+  const modal = document.getElementById("onboarding-modal");
+  if (!modal) return;
+  modal.classList.remove("hidden");
+  modal.style.display = "flex";
+  lucide.createIcons();
+}
+
+function closeOnboardingModal() {
+  const modal = document.getElementById("onboarding-modal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  modal.style.display = "none";
 }
 
 function renderAll() {
   updateTodayDateHeader();
   calculateStreaks();
+  renderEmptyStateBanner();
   renderToday();
   renderReview();
   renderConstitution();

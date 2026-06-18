@@ -104,6 +104,17 @@
   <main class="overflow-y-auto mb-16 md:mb-0 h-screen">
 <div class="app-content mx-auto max-w-[1180px] px-4 py-5 md:px-8 md:py-8 space-y-6">
 
+  <!-- Empty state banner (shown when no goals exist) -->
+  <div id="empty-state-banner" class="empty-banner hidden">
+    <div class="empty-banner-body">
+      <i data-lucide="map" class="w-6 h-6 text-blue shrink-0"></i>
+      <div>
+        <p class="empty-banner-title">Add your goals to begin</p>
+        <p class="empty-banner-text">Set up your North Star and checkpoints on the Blueprint page.</p>
+      </div>
+    </div>
+    <button onclick="switchTab('career')" class="btn btn-primary text-xs shrink-0">Go to Blueprint</button>
+  </div>
 
   <!-- ==================== TAB: TODAY ==================== -->
   <section id="tab-today" class="space-y-6">
@@ -260,8 +271,8 @@
       </div>
       <div class="flex items-center gap-2 flex-wrap shrink-0">
         <button id="career-edit-btn" onclick="toggleCareerEdit()" class="btn btn-outline shrink-0"><i data-lucide="pencil" class="w-3.5 h-3.5" id="career-edit-icon"></i> <span id="career-edit-label">Edit</span></button>
-        <button onclick="openAIGoalImport()" class="btn btn-outline shrink-0 text-blue border-blue/30 hover:bg-blue/[0.06]"><i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> <span>Plan with ChatGPT</span></button>
-        <button onclick="loadSampleData()" class="btn btn-outline shrink-0 text-purple border-purple/30 hover:bg-purple/[0.06]"><i data-lucide="database" class="w-3.5 h-3.5"></i> <span>Load Sample</span></button>
+        <button id="btn-plan-chatgpt" onclick="openAIGoalImport()" class="btn btn-outline shrink-0 text-blue border-blue/30 hover:bg-blue/[0.06]"><i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> <span>Plan with ChatGPT</span></button>
+        <button id="btn-setup-guide" onclick="openOnboardingModal()" class="btn btn-outline shrink-0 text-green border-green/30 hover:bg-green/[0.06]"><i data-lucide="help-circle" class="w-3.5 h-3.5"></i> <span>Setup Guide</span></button>
       </div>
     </div>
 
@@ -313,6 +324,14 @@
               <i data-lucide="chevron-right" class="w-4 h-4 text-text-dim"></i>
             </button>
           </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Sample Data</div>
+          <p class="text-xs text-text-dim leading-relaxed mb-3">Load sample goals, habits, and data to explore the app.</p>
+          <button onclick="loadSampleData()" class="w-full bg-[rgba(255,255,255,0.02)] hover:bg-white/5 border border-border text-xs font-bold py-2.5 px-3 rounded flex items-center justify-center gap-2 transition-colors text-purple border-purple/30">
+            <i data-lucide="database" class="w-4 h-4"></i> Load Sample Data
+          </button>
         </div>
 
         <div class="card">
@@ -438,6 +457,50 @@
     <div class="flex items-center gap-3">
       <button id="wipe-confirm-btn" onclick="submitWipe()" class="btn btn-danger flex-1 justify-center" disabled>Delete Everything</button>
       <button onclick="closeWipeModal()" class="btn btn-outline flex-1 justify-center">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Onboarding modal (shown after 2s on home page when empty) -->
+<div id="onboarding-modal" class="fixed inset-0 bg-bg/85 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" style="display:none" onclick="if(event.target===this)closeOnboardingModal()">
+  <div class="bg-surface border border-border w-full max-w-lg rounded-lg p-5 space-y-4 shadow-xl" onclick="event.stopPropagation()">
+    <div class="flex items-center justify-between border-b border-border pb-3">
+      <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber inline mr-1.5"></i>Welcome to Life OS
+      </h3>
+      <button onclick="closeOnboardingModal()" class="text-text-dim/50 hover:text-text p-1">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div class="space-y-4">
+      <p class="text-sm text-text leading-relaxed">Set up in 3 steps:</p>
+      <div class="onboarding-steps">
+        <div class="onboarding-step">
+          <div class="onboarding-step-num">1</div>
+          <div class="onboarding-step-content">
+            <span class="onboarding-step-title">Launch the AI Planner</span>
+            <span class="onboarding-step-desc">Click "Plan with ChatGPT" and copy the prompt that appears.</span>
+          </div>
+        </div>
+        <div class="onboarding-step">
+          <div class="onboarding-step-num">2</div>
+          <div class="onboarding-step-content">
+            <span class="onboarding-step-title">Answer in Detail</span>
+            <span class="onboarding-step-desc">Paste the prompt into ChatGPT and answer each question thoroughly — the more detail, the better your plan.</span>
+          </div>
+        </div>
+        <div class="onboarding-step">
+          <div class="onboarding-step-num">3</div>
+          <div class="onboarding-step-content">
+            <span class="onboarding-step-title">Import &amp; Commit</span>
+            <span class="onboarding-step-desc">Copy the JSON output, paste it back here, and start executing. Stick to the plan daily.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3 pt-1">
+      <button onclick="closeOnboardingModal();openAIGoalImport()" class="btn btn-green flex-1 justify-center">Launch AI Planner</button>
+      <button onclick="closeOnboardingModal()" class="btn btn-outline flex-1 justify-center">Dismiss</button>
     </div>
   </div>
 </div>
