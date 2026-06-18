@@ -215,6 +215,7 @@ async function clearAllData() {
   appState.settings.supabaseUrl = "";
   appState.settings.supabaseKey = "";
   appState.settings.syncEnabled = false;
+  clearCredentialsFromNative();
   persistState();
   await initSupabase();
   renderAll();

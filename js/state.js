@@ -76,6 +76,9 @@ async function initSupabase() {
       appState.settings.syncEnabled = true;
       updateSyncStatusBadge(true);
       await pullFromCloud();
+      if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.TelOSStorage) {
+        Capacitor.Plugins.TelOSStorage.saveCredentials({ url, key });
+      }
     } catch (e) {
       updateSyncStatusBadge(false, "Connection error");
     }
@@ -85,6 +88,18 @@ async function initSupabase() {
     appState.settings.supabaseKey = "";
     appState.settings.syncEnabled = false;
     updateSyncStatusBadge(false);
+  }
+}
+
+function saveCredentialsToNative(url, key) {
+  if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.TelOSStorage) {
+    Capacitor.Plugins.TelOSStorage.saveCredentials({ url, key });
+  }
+}
+
+function clearCredentialsFromNative() {
+  if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.TelOSStorage) {
+    Capacitor.Plugins.TelOSStorage.clearCredentials();
   }
 }
 
@@ -128,6 +143,7 @@ if (typeof window !== 'undefined') {
       try {
         dbClient = supabase.createClient(url, key);
         appState.settings.syncEnabled = true;
+        saveCredentialsToNative(url, key);
       } catch (e) { return; }
     }
     await pushToCloud();
