@@ -5,7 +5,9 @@
   "main": "app.js",
   "scripts": {
     "test": "jest",
-    "build:www": "mkdir www\\js\\tabs 2>nul && copy index.html www\\ && copy app.js www\\ && copy style.css www\\ && copy mockData.js www\\ && copy .env.example www\\ && xcopy js www\\js\\ /E /I /Y && xcopy assets www\\assets\\ /E /I /Y",
+    "lint": "eslint js/ app.js mockData.js",
+    "lint:fix": "eslint js/ app.js mockData.js --fix",
+    "build:www": "mkdir www\\js\\tabs 2>nul && copy index.html www\\ && copy app.js www\\ && copy style.css www\\ && copy mockData.js www\\ && copy .env.example www\\ && xcopy js www\\js\\ /E /I /Y && xcopy assets www\\assets\\ /E /I /Y && copy eslint.config.js www\\ 2>nul",
     "cap:sync": "npm run build:www && npx cap copy",
     "cap:open": "npx cap open android",
     "cap:build": "cd android && gradlew assembleDebug"
@@ -28,6 +30,7 @@
     "@capacitor/core": "^8.4.0"
   },
   "devDependencies": {
+    "eslint": "^10.7.0",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
     "jsdom": "^29.1.1"

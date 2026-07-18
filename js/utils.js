@@ -155,10 +155,6 @@ function getBlockActual(blockId, dates) {
   return count;
 }
 
-function formatBlockActual(blockId, val) { return val; }
-function formatBlockTarget(blockId, target) { return target; }
-// TODO: Remove formatBlockActual/formatBlockTarget once renderReviewMetrics is updated
-
 function calculateDaysRemaining(deadlineStr) {
   if (!deadlineStr) return "";
   const today = new Date(getLocalDateString());

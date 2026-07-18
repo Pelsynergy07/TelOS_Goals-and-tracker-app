@@ -22,7 +22,6 @@ global.appState = {
   rules: [],
   goals: {
     northStar: [],
-    yearly: [],
     sixMonth: [],
     threeMonth: [],
     oneMonth: [],

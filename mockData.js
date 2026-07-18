@@ -15,7 +15,6 @@ const initialMockData = {
 
   goals: {
     northStar: [],
-    yearly: [],
     sixMonth: [],
     threeMonth: [],
     oneMonth: [],
@@ -167,7 +166,7 @@ function buildSampleData() {
         { id: nsId2, title: "Sustain Peak Wellness", description: "Optimize sleep, movement, and nutrition for long-term energy.", completed: false },
         { id: nsId3, title: "Master My Craft", description: "Deepen expertise through deliberate practice and real projects.", completed: false }
       ],
-      yearly: [],
+      // yearly goals migrated to sixMonth during load
       sixMonth: [
         { id: "g_s1", name: "Publish 24 pieces of work", progress: 4, target: 24, unit: "pieces", deadline: "", northStarId: nsId1, completed: false },
         { id: "g_s2", name: "Run 10k consistently", progress: 0, target: 1, unit: "race", deadline: "", northStarId: nsId2, completed: false },

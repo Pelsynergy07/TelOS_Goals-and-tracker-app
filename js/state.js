@@ -12,7 +12,7 @@ let appState = {
   identityStatement: { title: "Who I Am Becoming", description: "" },
   dangerAreas: [],
   rules: [],
-  goals: { northStar: [], yearly: [], sixMonth: [], threeMonth: [], oneMonth: [], linkedHabits: [] },
+  goals: { northStar: [], sixMonth: [], threeMonth: [], oneMonth: [], linkedHabits: [] },
   settings: {
     scheduleBlocks: [],
     supabaseUrl: "",
@@ -43,8 +43,14 @@ function loadLocalData() {
       delete appState.goals.ninetyDay;
       if (!appState.goals.oneMonth) appState.goals.oneMonth = [];
       if (!appState.goals.linkedHabits) appState.goals.linkedHabits = [];
+
+      if (Array.isArray(appState.goals.yearly) && appState.goals.yearly.length > 0) {
+        appState.goals.sixMonth.push(...appState.goals.yearly.map(g => ({ ...g })));
+      }
+      delete appState.goals.yearly;
+
       if (!appState.monthlyReviews) appState.monthlyReviews = {};
-      ["yearly", "sixMonth", "threeMonth", "oneMonth"].forEach(level => {
+      ["sixMonth", "threeMonth", "oneMonth"].forEach(level => {
         (appState.goals[level] || []).forEach(goal => {
           if (goal.completed === undefined) goal.completed = false;
         });
