@@ -18,12 +18,10 @@ let pendingCheckpointCompletion = null;
 
 function updateTodayDateHeader() {
   const d = new Date(trackerDate);
-  const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
-  const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const h1 = document.getElementById("today-day-header");
   const h2 = document.getElementById("today-date-header");
-  if (h1) h1.textContent = days[d.getDay()];
-  if (h2) h2.textContent = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  if (h1) h1.textContent = DAY_NAMES[d.getDay()];
+  if (h2) h2.textContent = `${MONTH_NAMES[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
 function renderHabitMonthGrids() {
@@ -326,12 +324,7 @@ function makeCheckpointDeadlineRow(g, done, badge) {
 
 function getGoalsDueOnDate(dateStr) {
   const result = [];
-  const levels = [
-    { key: "sixMonth", label: "6-Month" },
-    { key: "threeMonth", label: "3-Month" },
-    { key: "oneMonth", label: "1-Month" }
-  ];
-  levels.forEach(level => {
+  GOAL_LEVELS.forEach(level => {
     (appState.goals[level.key] || []).forEach(g => {
       if (g.deadline === dateStr) {
         result.push({ ...g, type: level.key, typeLabel: level.label });
@@ -343,15 +336,10 @@ function getGoalsDueOnDate(dateStr) {
 
 function getUpcomingDeadlines(fromDate, daysAhead) {
   const result = [];
-  const levels = [
-    { key: "sixMonth", label: "6-Month" },
-    { key: "threeMonth", label: "3-Month" },
-    { key: "oneMonth", label: "1-Month" }
-  ];
   const from = new Date(fromDate);
   const until = new Date(from);
   until.setDate(until.getDate() + daysAhead);
-  levels.forEach(level => {
+  GOAL_LEVELS.forEach(level => {
     (appState.goals[level.key] || []).forEach(g => {
       if (!g.deadline) return;
       const d = new Date(g.deadline);
@@ -420,11 +408,11 @@ function submitCheckpointComplete() {
   const input = document.getElementById("checkpoint-complete-input");
   const msg = document.getElementById("checkpoint-complete-msg");
   if (!input || !pendingCheckpointCompletion) return;
-  const normalized = input.value.trim().toLowerCase().replace(/\s+/g, " ");
-  if (normalized !== "yea boi") {
+      const normalized = input.value.trim().toLowerCase().replace(/\s+/g, " ");
+  if (normalized !== CHECKPOINT_CONFIRM_TEXT) {
     if (msg) {
       msg.className = "text-xs font-semibold text-red";
-      msg.textContent = 'Type "yea boi" exactly to continue.';
+      msg.textContent = `Type "${CHECKPOINT_CONFIRM_TEXT}" exactly to continue.`;
     }
     return;
   }
@@ -441,10 +429,9 @@ function renderAllGoalsCountdown() {
 
   const dateStr = trackerDate || getLocalDateString();
   const today = new Date(dateStr);
-  const levels = [{ key: "sixMonth", label: "6-Month" }, { key: "threeMonth", label: "3-Month" }, { key: "oneMonth", label: "1-Month" }];
 
   const all = [];
-  levels.forEach(l => {
+  GOAL_LEVELS.forEach(l => {
     (appState.goals[l.key] || []).forEach(g => {
       if (g.deadline) all.push({ ...g, type: l.key });
     });

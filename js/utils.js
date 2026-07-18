@@ -54,7 +54,7 @@ function getWeekDates(dateStr) {
 
 function formatDateLabelShort(dateStr) {
   const d = new Date(dateStr);
-  return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()] + " " + d.getDate();
+  return MONTH_ABBREVS[d.getMonth()] + " " + d.getDate();
 }
 
 function getLoggedCompletionRate(dateStr) {
@@ -157,6 +157,7 @@ function getBlockActual(blockId, dates) {
 
 function formatBlockActual(blockId, val) { return val; }
 function formatBlockTarget(blockId, target) { return target; }
+// TODO: Remove formatBlockActual/formatBlockTarget once renderReviewMetrics is updated
 
 function calculateDaysRemaining(deadlineStr) {
   if (!deadlineStr) return "";
@@ -190,7 +191,6 @@ function playTapSound() {
 
 function getDeadlinesForDate(dateStr) {
   const result = [];
-  appState.goals.yearly.forEach(g => { if (g.deadline === dateStr) result.push(g); });
   (appState.goals.sixMonth || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });
   (appState.goals.threeMonth || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });
   (appState.goals.oneMonth || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });

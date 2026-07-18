@@ -47,11 +47,7 @@ function validateAIImportInput() {
   btn.classList.toggle("cursor-not-allowed", !valid);
 }
 
-function getAIGoalImportPrompt() {
-  return AI_GOAL_IMPORT_PROMPT_TEMPLATE
-    .replace("{{TODAY}}", getLocalDateString())
-    .replace("{{HABIT_IDS}}", JSON.stringify(appState.settings.scheduleBlocks.map(b => b.id)));
-}
+// getAIGoalImportPrompt moved to ai-goal-prompt.js
 
 async function copyAIGoalPrompt() {
   const msgEl = document.getElementById("ai-import-msg");
@@ -72,7 +68,7 @@ async function copyAIGoalPrompt() {
 function normalizeGoalItems(items, prefix) {
   return (items || []).map(item => ({
     ...item,
-    id: item.id || `${prefix}_${Date.now()}${Math.random().toString(36).slice(2, 6)}`,
+    id: item.id || generateId(prefix),
     completed: !!item.completed
   }));
 }
@@ -95,7 +91,7 @@ function applyGeneratedGoalCascade(content) {
   }
   if (Array.isArray(content.dangerAreas)) {
     appState.dangerAreas = content.dangerAreas.map(d => ({
-      id: d.id || "da_" + Date.now() + Math.random().toString(36).slice(2, 6),
+      id: d.id || generateId("da"),
       title: d.title || "Untitled Danger Area",
       reality: d.reality || "",
       reminder: d.reminder || ""
@@ -103,7 +99,7 @@ function applyGeneratedGoalCascade(content) {
   }
   if (Array.isArray(content.rules)) {
     appState.rules = content.rules.map(r => ({
-      id: r.id || "rule_" + Date.now() + Math.random().toString(36).slice(2, 6),
+      id: r.id || generateId("rule"),
       text: r.text || "Untitled Rule"
     }));
   }

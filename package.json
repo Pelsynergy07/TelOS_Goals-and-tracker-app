@@ -4,8 +4,8 @@
   "description": "TelOS is a lightweight, local-first personal goals and habit tracker built as a static web app.",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build:www": "mkdir www\\js\\tabs 2>nul && copy index.html www\\ && copy app.js www\\ && copy style.css www\\ && copy mockData.js www\\ && xcopy js www\\js\\ /E /I /Y",
+    "test": "jest",
+    "build:www": "mkdir www\\js\\tabs 2>nul && copy index.html www\\ && copy app.js www\\ && copy style.css www\\ && copy mockData.js www\\ && copy .env.example www\\ && xcopy js www\\js\\ /E /I /Y && xcopy assets www\\assets\\ /E /I /Y",
     "cap:sync": "npm run build:www && npx cap copy",
     "cap:open": "npx cap open android",
     "cap:build": "cd android && gradlew assembleDebug"
@@ -26,5 +26,10 @@
     "@capacitor/android": "^8.4.0",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^8.4.0"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "jsdom": "^29.1.1"
   }
 }

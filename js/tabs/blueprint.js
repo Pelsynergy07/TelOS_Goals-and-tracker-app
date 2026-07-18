@@ -7,15 +7,6 @@
 
 let careerEditMode = false;
 
-const cascadeLevels = [
-  { key: "northStar",  label: "North Star",            icon: "star",     color: "blue",   isCardGrid: true },
-  { key: "sixMonth",   label: "6-Month Checkpoints",   icon: "calendar",  color: "amber",  isCardGrid: false },
-  { key: "threeMonth", label: "3-Month Checkpoints",   icon: "target",    color: "green",  isCardGrid: false },
-  { key: "oneMonth",   label: "1-Month Checkpoints",   icon: "flag",   color: "purple", isCardGrid: false },
-];
-
-const levelColors = { northStar: "blue", sixMonth: "amber", threeMonth: "green", oneMonth: "purple" };
-
 function toggleCareerEdit() {
   careerEditMode = !careerEditMode;
   renderGoalsHub();
@@ -28,15 +19,15 @@ function renderGoalsHub() {
   let html = "";
 
   // North Star (full width)
-  html += renderLevelCard(cascadeLevels[0], 0);
+  html += renderLevelCard(CASCADE_LEVELS[0], 0);
 
   // Divider
   html += `<div class="border-t border-border"></div>`;
 
   // Give the checkpoint columns more room and move habits below them.
   html += `<div class="career-blueprint-grid">`;
-  for (let i = 1; i < cascadeLevels.length; i++) {
-    html += renderLevelCard(cascadeLevels[i], i);
+  for (let i = 1; i < CASCADE_LEVELS.length; i++) {
+    html += renderLevelCard(CASCADE_LEVELS[i], i);
   }
   html += `<div class="career-blueprint-habits">`;
   html += renderLinkedHabits();
@@ -79,7 +70,7 @@ function renderGoalsHub() {
 }
 
 function renderLevelCard(level, idx) {
-  const color = levelColors[level.key] || "text-dim";
+  const color = LEVEL_COLORS[level.key] || "text-dim";
   const addBtn = careerEditMode && level.key !== "northStar" ? `<button class="cascade-add-btn" onclick="openAddGoal('${level.key}')"><i data-lucide="plus" class="w-3 h-3"></i></button>` : "";
 
   if (level.isCardGrid) {
@@ -105,10 +96,7 @@ function renderLevelCard(level, idx) {
 
 // ─── North Star ───────────────────────────────────────────
 
-const northStarIcons = {
-  dream_role: "target", visual_cap: "palette",
-  brand_channel: "youtube", identity: "user"
-};
+// northStarIcons available from js/constants.js
 
 function renderNorthStar() {
   const list = document.getElementById("northstar-list");
@@ -377,9 +365,8 @@ function addNewGoal() {
   const northStarId = document.getElementById("goal-form-northstar").value || "";
   if (!name || !deadline) return;
 
-  const goal = { id: "g_" + Date.now(), name, progress: 0, target, unit, deadline, northStarId, completed: false };
-  if (type === "yearly") appState.goals.yearly.push(goal);
-  else if (type === "sixMonth") appState.goals.sixMonth.push(goal);
+  const goal = { id: generateId("g"), name, progress: 0, target, unit, deadline, northStarId, completed: false };
+  if (type === "sixMonth") appState.goals.sixMonth.push(goal);
   else if (type === "threeMonth") appState.goals.threeMonth.push(goal);
   else if (type === "oneMonth") appState.goals.oneMonth.push(goal);
 
@@ -389,10 +376,10 @@ function addNewGoal() {
 }
 
 function getGoalsByType(type) {
-  if (type === "yearly") return appState.goals.yearly;
   if (type === "sixMonth") return appState.goals.sixMonth;
   if (type === "threeMonth") return appState.goals.threeMonth;
-  return appState.goals.oneMonth;
+  if (type === "oneMonth") return appState.goals.oneMonth;
+  return [];
 }
 
 function updateGoalProgress(idx, type, val) {
