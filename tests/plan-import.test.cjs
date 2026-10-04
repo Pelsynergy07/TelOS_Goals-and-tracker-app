@@ -225,6 +225,15 @@ test('cloud reset replaces stale dirty local state before it can be uploaded', a
   const {ctx,run,state}=setup(); ctx.plan=plan(); run('applyGeneratedGoalCascade(plan)');
   const empty=state(); empty.logs={}; empty.settings.scheduleBlocks=[]; empty.goals={northStar:[],yearly:[],sixMonth:[],threeMonth:[],oneMonth:[],linkedHabits:[]}; empty.cloudResetAt='2026-10-05T00:00:00Z';
   const cloud=fakeCloud({id:'life_os_data',updated_at:empty.cloudResetAt,data:empty}); connect(ctx,run,cloud);
+  run('syncConflict=true');
   await run('pushToCloud()');
   assert.equal(cloud.writes,0); assert.equal(state().settings.scheduleBlocks.length,0); assert.equal(state().cloudResetAt,empty.cloudResetAt); assert.equal(run('syncMeta.dirty'),false);
+});
+
+test('inline details preserve completion, reject invalid amounts, and leave blank amounts absent', () => {
+  const {ctx,run,state}=setup();ctx.plan=plan();run('applyGeneratedGoalCascade(plan); appState.logs["2026-10-01"]={practice:{completed:true}}; renderReview=()=>{};');
+  let value='8';const message={textContent:''};ctx.form={querySelector(selector){return selector==='.habit-details-error'?message:{value};}};
+  run('saveInlineHabitDetails("2026-10-01","practice",form)');assert.equal(state().logs['2026-10-01'].practice.minutes,8);assert.equal(state().logs['2026-10-01'].practice.completed,true);
+  value='-1';run('saveInlineHabitDetails("2026-10-01","practice",form)');assert.equal(state().logs['2026-10-01'].practice.minutes,8);assert.match(message.textContent,/non-negative/);
+  value='';run('saveInlineHabitDetails("2026-10-01","practice",form)');assert.equal(state().logs['2026-10-01'].practice.minutes,undefined);assert.equal(state().logs['2026-10-01'].practice.completed,true);
 });

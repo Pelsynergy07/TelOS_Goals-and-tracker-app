@@ -120,7 +120,7 @@ body {
 
 .telos-subtitle {
   margin-top: 4px;
-  font-size: 0.58rem;
+  font-size: var(--type-caption);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -129,7 +129,7 @@ body {
 
 .nav-btn {
   display: flex; align-items: center; gap: 10px; width: 100%;
-  padding: 12px 14px; font-size: 0.84rem; font-weight: 600;
+  padding: 12px 14px; font-size: var(--type-small); font-weight: 600;
   color: var(--text-dim); border-radius: var(--radius-sm);
   background: transparent; border: 1px solid transparent;
   cursor: pointer; text-align: left;
@@ -168,7 +168,7 @@ body {
   padding: 8px 14px; border-radius: 99px;
   background: rgba(255,255,255,0.04);
   border: 1px solid var(--border);
-  color: var(--text-dim); font-size: 0.75rem; font-weight: 600;
+  color: var(--text-dim); font-size: var(--type-small); font-weight: 600;
 }
 
 .app-status-dot {
@@ -185,7 +185,7 @@ body {
 }
 .card:hover { border-color: var(--border-hover); }
 .card-header {
-  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  font-size: var(--type-caption); font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.08em; color: var(--text-dim);
   border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 16px;
 }
@@ -201,7 +201,7 @@ body {
   padding: 8px 12px; border-radius: 99px;
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--border);
-  color: var(--text-dim); font-size: 0.75rem; font-weight: 600;
+  color: var(--text-dim); font-size: var(--type-small); font-weight: 600;
 }
 
 /* Custom checkbox */
@@ -232,7 +232,7 @@ input[type="number"], input[type="time"], select, textarea {
   border: 1px solid var(--border) !important;
   border-radius: var(--radius-sm) !important;
   padding: 10px 14px !important;
-  font-size: 0.8rem !important;
+  font-size: var(--type-small);
   font-family: inherit;
   transition: border-color 0.15s ease;
 }
@@ -261,7 +261,7 @@ input[type="range"]::-webkit-slider-thumb {
 .btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 9px 18px; border-radius: var(--radius-sm);
-  font-size: 0.75rem; font-weight: 700;
+  font-size: var(--type-small); font-weight: 700;
   cursor: pointer; border: none;
   transition: all 0.15s ease;
 }
@@ -275,7 +275,7 @@ input[type="range"]::-webkit-slider-thumb {
 .btn-green { background: var(--green); color: #000; }
 .btn-green:hover { opacity: 0.9; }
 .text-purple { color: #a78bfa; }
-.btn-sm { padding: 6px 12px; font-size: 0.7rem; }
+.btn-sm { padding: 6px 12px; font-size: var(--type-caption); }
 
 /* Habit month grid */
 .habit-month-grid {
@@ -324,7 +324,7 @@ input[type="range"]::-webkit-slider-thumb {
 .calendar-day-cell.inactive { opacity: 0.3; pointer-events: none; }
 .calendar-day-cell.today { border-color: var(--blue); }
 .calendar-day-cell.selected { border-color: var(--green); box-shadow: 0 0 0 2px rgba(34,211,160,0.25), 0 0 12px rgba(34,211,160,0.1); background: rgba(34,211,160,0.06); }
-.calendar-day-cell .day-number { font-size: 0.75rem; font-weight: 700; }
+.calendar-day-cell .day-number { font-size: var(--type-small); font-weight: 700; }
 
 /* Progress bars */
 .progress-bar {
@@ -384,16 +384,16 @@ input[type="range"]::-webkit-slider-thumb {
   border: 1px solid rgba(96,165,250,0.15);
 }
 .northstar-label {
-  font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+  font-size: var(--type-caption); font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--text); display: block;
 }
 .northstar-card > span:first-child,
 .northstar-card > .flex > input:first-child {
-  font-size: 0.8rem;
+  font-size: var(--type-small);
   font-weight: 600;
 }
 .northstar-desc {
-  font-size: 0.65rem; color: var(--text-dim); margin-top: 4px; line-height: 1.4;
+  font-size: var(--type-caption); color: var(--text-dim); margin-top: 4px; line-height: 1.4;
 }
 
 /* Goal checklist item */
@@ -422,7 +422,7 @@ input[type="range"]::-webkit-slider-thumb {
 /* Notifications / save status */
 .save-status {
   opacity: 0; transition: opacity 0.3s ease;
-  font-size: 0.7rem; font-weight: 700; color: var(--green);
+  font-size: var(--type-caption); font-weight: 700; color: var(--green);
 }
 .save-status.show { opacity: 1; }
 
@@ -440,12 +440,12 @@ section { animation: fadeUp 0.25s ease; }
   border-radius: var(--radius-sm);
   padding: 12px;
 }
-.metric-card .label { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
+.metric-card .label { font-size: var(--type-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); }
 .metric-card .value { font-size: 1.1rem; font-weight: 700; color: var(--text); }
 
 /* Block field inputs inside cards */
 .field-group { margin-bottom: 10px; }
-.field-group label { display: block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 4px; }
+.field-group label { display: block; font-size: var(--type-caption); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 4px; }
 
 /* ─── Goal Cascade ────────────────────────────────────── */
 
@@ -466,7 +466,7 @@ section { animation: fadeUp 0.25s ease; }
 
 .cascade-card-title {
   display: flex; align-items: center; gap: 8px;
-  font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+  font-size: var(--type-caption); font-weight: 700; text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
@@ -754,7 +754,7 @@ section { animation: fadeUp 0.25s ease; }
   background: rgba(34, 211, 160, 0.1);
   border: 1px solid rgba(34, 211, 160, 0.15);
   color: var(--green);
-  font-size: 0.65rem;
+  font-size: var(--type-caption);
   font-weight: 700;
   flex-shrink: 0;
 }
@@ -812,7 +812,7 @@ section { animation: fadeUp 0.25s ease; }
   background: rgba(34,211,160,0.12);
   border: 1px solid rgba(34,211,160,0.2);
   color: var(--green);
-  font-size: 0.7rem;
+  font-size: var(--type-caption);
   font-weight: 700;
   display: flex;
   align-items: center;
@@ -827,12 +827,12 @@ section { animation: fadeUp 0.25s ease; }
   min-width: 0;
 }
 .onboarding-step-title {
-  font-size: 0.8rem;
+  font-size: var(--type-small);
   font-weight: 700;
   color: var(--text);
 }
 .onboarding-step-desc {
-  font-size: 0.75rem;
+  font-size: var(--type-small);
   color: var(--text-dim);
   line-height: 1.4;
 }
@@ -856,12 +856,12 @@ section { animation: fadeUp 0.25s ease; }
   min-width: 0;
 }
 .empty-banner-title {
-  font-size: 0.85rem;
+  font-size: var(--type-small);
   font-weight: 700;
   color: var(--text);
 }
 .empty-banner-text {
-  font-size: 0.7rem;
+  font-size: var(--type-caption);
   color: var(--text-dim);
   margin-top: 1px;
 }
@@ -870,7 +870,7 @@ section { animation: fadeUp 0.25s ease; }
     padding: 14px 16px;
   }
   .empty-banner-title {
-    font-size: 0.8rem;
+    font-size: var(--type-small);
   }
 }
 
@@ -985,3 +985,12 @@ button { touch-action:manipulation; }
 
 #today-habit-cards-container .card > .flex p { font-size:1rem; line-height:1.4; }
 #mood-selector button { min-height:48px; min-width:48px; }
+
+@media (max-width:767px) {
+ .checkpoint-deadline-row { flex-direction:column; align-items:stretch; }
+ .checkpoint-deadline-row > div:last-child { justify-content:space-between; }
+ .checkpoint-deadline-row button { min-height:48px; }
+ #today-goals-countdown > .card-header { flex-wrap:wrap; gap:12px; }
+ #today-goals-countdown > .card-header > span { flex-basis:100%; }
+ #today-goals-countdown > .card-header button { min-height:48px; }
+}

@@ -324,7 +324,7 @@ function renderTodayDeadlines() {
 
 function makeCheckpointDeadlineRow(g, done, badge) {
   return `
-    <div class="flex items-center justify-between gap-3 py-3 px-3 rounded-xl bg-[rgba(255,255,255,0.02)] border ${done ? 'border-green/30 bg-green/[0.04]' : 'border-border'}">
+    <div class="checkpoint-deadline-row flex items-center justify-between gap-3 py-3 px-3 rounded-xl bg-[rgba(255,255,255,0.02)] border ${done ? 'border-green/30 bg-green/[0.04]' : 'border-border'}">
       <div class="flex items-center gap-3 min-w-0">
         <div class="w-9 h-9 rounded-full ${done ? 'bg-green/[0.16]' : 'bg-white/[0.04]'} border ${done ? 'border-green/30' : 'border-border'} flex items-center justify-center shrink-0">
           <i data-lucide="${done ? 'check-check' : 'flag'}" class="w-4 h-4 ${done ? 'text-green' : 'text-blue'}"></i>

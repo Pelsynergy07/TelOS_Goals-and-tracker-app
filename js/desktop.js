@@ -59,6 +59,7 @@ function saveInlineHabitDetails(date, id, form) {
   const values = { ...appState.logs[date]?.[id] };
   for (const field of habit.fields.filter(f => f.type !== "checkbox")) {
     const input = form.querySelector(`[data-detail-field="${field.id}"]`);
+    if (field.type === "number" && input.value.trim() === "") { delete values[field.id]; continue; }
     const value = field.type === "number" ? Number(input.value) : input.value;
     if (field.type === "number" && (!Number.isFinite(value) || value < 0)) { form.querySelector(".habit-details-error").textContent = "Enter a valid non-negative amount."; return; }
     values[field.id] = value;
