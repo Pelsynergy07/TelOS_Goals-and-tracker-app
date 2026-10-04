@@ -8,11 +8,14 @@
 function renderToday() {
   const picker = document.getElementById("execution-date");
   if (picker) { picker.value = trackerDate; picker.max = getLocalDateString(); }
+  const todayButton = document.getElementById("execution-today-button");
+  if (todayButton) todayButton.hidden = trackerDate === getLocalDateString();
   updateTodayDateHeader();
   calculateStreaks();
   renderHabitMonthGrids();
   renderTodayDeadlines();
   renderAllGoalsCountdown();
+  renderCheckpointDisclosure();
   loadDailyReflection();
 }
 
@@ -506,4 +509,26 @@ function toggleAllGoals() {
   appState.settings.goalsCountdownCollapsed = !appState.settings.goalsCountdownCollapsed;
   persistState();
   renderAllGoalsCountdown();
+}
+
+function renderCheckpointDisclosure() {
+  const disclosure = document.getElementById("execution-checkpoints");
+  if (!disclosure) return;
+  const goals = ["yearly","sixMonth","threeMonth","oneMonth"].flatMap(level => appState.goals[level] || []);
+  disclosure.hidden = goals.length === 0;
+  disclosure.open = appState.settings.checkpointsExpanded === true;
+  const due = goals.filter(g => !g.completed && g.deadline === trackerDate).length;
+  const summary = document.getElementById("execution-checkpoint-summary");
+  if (summary) summary.textContent = `${goals.length} ${goals.length === 1 ? 'goal' : 'goals'}${due ? ` · ${due} due on this day` : ''}`;
+}
+function saveCheckpointDisclosure(open) {
+  if (!!appState.settings.checkpointsExpanded === open) return;
+  appState.settings.checkpointsExpanded = open;
+  persistState({ sync: false });
+}
+function openExecutionDatePicker() {
+  const picker = document.getElementById("execution-date");
+  if (!picker) return;
+  try { if (typeof picker.showPicker === "function") { picker.showPicker(); return; } } catch {}
+  picker.focus();
 }

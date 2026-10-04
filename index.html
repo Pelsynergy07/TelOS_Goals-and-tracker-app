@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body>
 
@@ -120,12 +120,14 @@
   <section id="tab-today" class="space-y-6">
 
     <div>
-      <span class="text-caption text-text-dim font-bold uppercase tracking-[0.15em]">Execution Hub</span>
       <h2 class="font-display text-3xl md:text-5xl text-text leading-none mt-1" style="font-family:'Newsreader',serif" id="today-day-header">Saturday</h2>
       <p class="text-text-dim text-sm mt-2" id="today-date-header">May 23, 2026</p>
-      <div class="execution-date-controls"><label for="execution-date">Viewing day</label><input type="date" id="execution-date" onchange="editExecutionDate(this.value)"><button class="btn btn-outline" onclick="editExecutionDate(getLocalDateString())">Today</button></div>
+      <div class="execution-date-controls"><label for="execution-date">Log habits for</label><div class="execution-date-picker"><input type="date" id="execution-date" onchange="editExecutionDate(this.value)"><button type="button" class="date-picker-button" aria-label="Open calendar to choose a tracking date" onclick="openExecutionDatePicker()"><i data-lucide="calendar-days" aria-hidden="true"></i></button></div><button id="execution-today-button" class="btn btn-outline" onclick="editExecutionDate(getLocalDateString())">Back to today</button></div>
     </div>
 
+    <details id="execution-checkpoints" class="checkpoint-disclosure" ontoggle="saveCheckpointDisclosure(this.open)">
+      <summary><span>Checkpoints</span><span id="execution-checkpoint-summary" class="text-small text-text-dim"></span><i data-lucide="chevron-down" aria-hidden="true"></i></summary>
+      <div class="checkpoint-disclosure-body">
     <!-- Today's Deadlines -->
     <div id="today-deadlines-container" class="hidden"></div>
 
@@ -137,6 +139,9 @@
       </div>
       <div id="goals-countdown-body" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-3"></div>
     </div>
+
+      </div>
+    </details>
 
     <!-- Habit month grids -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="today-habit-cards-container">    </div>
@@ -554,18 +559,18 @@ create policy "Enable all" on public.life_os_sync
   </div>
 </div>
 
-<script src="mockData.js?v=20"></script>
-<script src="js/config.js?v=20"></script>
-<script src="js/state.js?v=20"></script>
-<script src="js/utils.js?v=20"></script>
-<script src="js/tabs/execution.js?v=20"></script>
-<script src="js/tabs/progress.js?v=20"></script>
-<script src="js/tabs/blueprint.js?v=20"></script>
-<script src="js/tabs/system.js?v=20"></script>
-<script src="js/tabs/constitution.js?v=20"></script>
-<script src="js/ai-goal-prompt.js?v=20"></script>
-<script src="js/ai-goals.js?v=20"></script>
-<script src="js/desktop.js?v=20"></script>
-<script src="app.js?v=20"></script>
+<script src="mockData.js?v=21"></script>
+<script src="js/config.js?v=21"></script>
+<script src="js/state.js?v=21"></script>
+<script src="js/utils.js?v=21"></script>
+<script src="js/tabs/execution.js?v=21"></script>
+<script src="js/tabs/progress.js?v=21"></script>
+<script src="js/tabs/blueprint.js?v=21"></script>
+<script src="js/tabs/system.js?v=21"></script>
+<script src="js/tabs/constitution.js?v=21"></script>
+<script src="js/ai-goal-prompt.js?v=21"></script>
+<script src="js/ai-goals.js?v=21"></script>
+<script src="js/desktop.js?v=21"></script>
+<script src="app.js?v=21"></script>
 </body>
 </html>

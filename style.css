@@ -996,3 +996,22 @@ button { touch-action:manipulation; }
 }
 
 @media (max-width:360px) { .habit-month-grid { grid-template-columns:repeat(4,minmax(48px,1fr)); } }
+
+/* Execution keeps the daily task in front; checkpoint detail is opt-in. */
+.execution-date-controls { margin-top:16px; gap:10px; }
+.execution-date-controls > label { font-size:var(--type-small); color:var(--text-dim); }
+.execution-date-picker { display:flex; align-items:center; border:1px solid var(--border-hover); border-radius:var(--radius-sm); background:var(--surface); overflow:hidden; }
+.execution-date-picker input[type=date] { border:0 !important; background:transparent !important; padding:10px 12px; width:160px; min-width:0; color-scheme:dark; }
+.execution-date-picker input::-webkit-calendar-picker-indicator { display:none; }
+.date-picker-button { display:grid; place-items:center; min-width:48px; min-height:48px; color:var(--text); background:transparent; border:0; cursor:pointer; }
+.date-picker-button svg { width:20px; height:20px; }
+.date-picker-button:hover { background:var(--surface-hover); }
+#execution-today-button[hidden],.checkpoint-disclosure[hidden] { display:none; }
+.checkpoint-disclosure { border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+.checkpoint-disclosure > summary { list-style:none; display:flex; align-items:center; gap:12px; min-height:56px; cursor:pointer; font-size:1rem; font-weight:600; padding:12px 0; }
+.checkpoint-disclosure > summary::-webkit-details-marker { display:none; }
+.checkpoint-disclosure > summary svg { margin-left:auto; width:20px; height:20px; flex-shrink:0; color:var(--text-dim); }
+.checkpoint-disclosure[open] > summary svg { transform:rotate(180deg); }
+.checkpoint-disclosure-body { display:flex; flex-direction:column; gap:16px; padding-bottom:16px; }
+.checkpoint-disclosure summary:focus-visible { outline:2px solid var(--blue); outline-offset:3px; }
+@media (max-width:767px) { .execution-date-controls > label { flex-basis:100%; } .checkpoint-disclosure > summary { flex-wrap:wrap; } }
