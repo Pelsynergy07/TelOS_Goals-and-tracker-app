@@ -73,7 +73,7 @@ function renderHabitMonthGrids() {
 
       const cell = document.createElement("button");
       cell.type = "button";
-      cell.textContent = i;
+      cell.textContent = i % 5 === 0 ? i : "";
       cell.disabled = isFuture;
       cell.setAttribute("aria-label", `${block.name}, ${dStr}`);
       cell.setAttribute("aria-pressed", String(checked));
