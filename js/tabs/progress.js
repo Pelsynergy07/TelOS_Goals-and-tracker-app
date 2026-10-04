@@ -473,10 +473,10 @@ function renderReviewDayDetails(dateStr) {
   getLinkedBlocks().forEach(b => {
     const logData = log[b.id] || {};
     let ok = isBlockCompleted(b, logData);
-    const amounts = b.fields.filter(f => f.type === "number").map(f => `${logData[f.id] || 0} ${f.label || f.id}`).join(", ");
+    const amounts = b.fields.filter(f => f.type === "number" && logData[f.id] !== undefined && logData[f.id] !== "").map(f => `${logData[f.id]} ${f.label || f.id}`).join(", ");
     blocksHtml += `<div class="flex items-center justify-between text-xs py-1.5 px-2 rounded ${ok ? 'bg-green/[0.06]' : 'bg-[rgba(255,255,255,0.015)]'}">
       <span class="${ok ? 'text-text font-bold' : 'text-text-dim/40'}">${escapeHtml(b.name)}</span>
-      <span class="${ok ? 'text-green' : 'text-text-dim/30'}">${escapeHtml(amounts || (ok ? '✓' : '—'))}</span>
+      <span class="${ok ? 'text-green' : 'text-text-dim/30'}">${escapeHtml([ok ? 'Done' : (typeof logData.completed === 'boolean' ? 'Not done' : ''), amounts].filter(Boolean).join(' · ') || '—')}</span>
     </div>`;
   });
   }
