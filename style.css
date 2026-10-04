@@ -891,3 +891,25 @@ section { animation: fadeUp 0.25s ease; }
     width: 100%;
   }
 }
+
+/* Desktop task controls and accessible states. */
+.execution-date-controls { display:flex; align-items:center; gap:12px; margin-top:18px; flex-wrap:wrap; }
+.desktop-editor { position:fixed; inset:0; z-index:100; background:rgba(10,10,15,.88); align-items:center; justify-content:center; padding:24px; }
+.desktop-editor > .card { width:min(100%,560px); max-height:85vh; overflow:auto; }
+.desktop-editor h3 { font-size:20px; margin-bottom:20px; }
+.editor-field { display:flex; flex-direction:column; gap:8px; margin:16px 0; font-size:14px; color:var(--text); }
+.editor-field input,.editor-field textarea,.editor-field select { width:100%; font-size:14px; }
+.editor-field input[type=checkbox] { width:20px; height:20px; }
+.editor-actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:20px; }
+button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline:2px solid var(--blue) !important; outline-offset:3px; }
+.habit-month-cell { color:var(--text-dim); font-size:11px; padding:0; }
+.habit-month-cell.checked { color:var(--bg); font-weight:700; }
+.habit-month-cell:disabled { cursor:default; }
+#habit-log-error,#habit-editor-error { color:var(--red); font-size:14px; }
+@media (min-width:768px) {
+  #today-habit-cards-container { grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); }
+  #tab-review [class*="text-text-dim/"] { color:var(--text-dim); }
+  .app-content [class*="text-[7px]"], .app-content [class*="text-[8px]"], .app-content [class*="text-[9px]"], .app-content [class*="text-[10px]"] { font-size:12px; }
+  .habit-month-cell { min-height:32px; }
+}
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }

@@ -9,6 +9,7 @@
 
 let activeTab = "today";
 let trackerDate = "";
+let selectedReviewDate = "";
 let reviewTab = "weekly", reviewMode = "weekly";
 let reviewWeekId = "";
 let reviewMonth = 0;
@@ -41,10 +42,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   applyConfig();
   applyPageCopy();
   trackerDate = getLocalDateString();
-  const today = new Date(trackerDate);
+  const today = parseLocalDate(trackerDate);
   reviewMonth = today.getMonth();
   reviewYear = today.getFullYear();
   reviewWeekId = getWeekID(trackerDate);
+  selectedReviewDate = trackerDate;
   loadLocalData();
   await initSupabase();
   renderAll();
@@ -181,6 +183,7 @@ function celebrate() {
   canvas.height = window.innerHeight;
   const cx = canvas.width / 2;
 
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { canvas.remove(); return; }
   const palette = ["#ffd700","#22d3a0","#60a5fa","#f472b6","#f87171","#f59e0b","#a78bfa","#34d399","#fbbf24"];
   const particles = [];
 

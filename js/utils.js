@@ -11,49 +11,41 @@ function getLocalDateString() {
   return new Date(d.getTime() - offset * 60000).toISOString().split('T')[0];
 }
 
-function getYesterdayDateString(dateStr) {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() - 1);
-  return d.toISOString().split('T')[0];
+function parseLocalDate(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
+function addDateDays(dateStr, amount) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + amount);
+  return d.toISOString().slice(0, 10);
+}
+
+function getYesterdayDateString(dateStr) { return addDateDays(dateStr, -1); }
+
 function getWeekID(dateString) {
-  const date = new Date(dateString);
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const d = new Date(dateString + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-  return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`;
+  const week = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
 function getWeekStartDate(weekId) {
-  const [year, weekNum] = weekId.split('-W');
-  const jan1 = new Date(+year, 0, 1);
-  const days = (+weekNum - 1) * 7;
-  const d = new Date(jan1.getTime() + days * 86400000);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  d.setDate(diff);
-  return d.toISOString().split('T')[0];
+  const [year, week] = weekId.split('-W').map(Number);
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  jan4.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() || 7) - 1) + (week - 1) * 7);
+  return jan4.toISOString().slice(0, 10);
 }
 
 function getWeekDates(dateStr) {
-  const d = new Date(dateStr);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-  const monday = new Date(d.setDate(diff));
-  const dates = [];
-  for (let i = 0; i < 7; i++) {
-    const dayVal = new Date(monday);
-    dayVal.setDate(monday.getDate() + i);
-    dates.push(dayVal.toISOString().split('T')[0]);
-  }
-  return dates;
+  const monday = getWeekStartDate(getWeekID(dateStr));
+  return Array.from({ length: 7 }, (_, i) => addDateDays(monday, i));
 }
 
 function formatDateLabelShort(dateStr) {
-  const d = new Date(dateStr);
+  const d = parseLocalDate(dateStr);
   return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()] + " " + d.getDate();
 }
 
@@ -62,7 +54,7 @@ function getLoggedCompletionRate(dateStr) {
   if (!dayLog) return 0;
   let totalItems = 0, completedItems = 0;
   const blocks = getLinkedBlocks();
-  const checkBlocks = blocks.length > 0 ? blocks : appState.settings.scheduleBlocks;
+  const checkBlocks = blocks;
   checkBlocks.forEach(block => {
     totalItems++;
     if (isBlockCompleted(block, dayLog[block.id])) completedItems++;
@@ -83,7 +75,7 @@ function hadAnyCompletion(dateStr) {
   const dayLog = appState.logs[dateStr];
   if (!dayLog) return false;
   const blocks = getLinkedBlocks();
-  const checkBlocks = blocks.length > 0 ? blocks : appState.settings.scheduleBlocks;
+  const checkBlocks = blocks;
   return checkBlocks.some(block => isBlockCompleted(block, dayLog[block.id]));
 }
 
@@ -169,7 +161,8 @@ function calculateDaysRemaining(deadlineStr) {
 }
 
 function getLinkedBlocks() {
-  const linkedIds = new Set(appState.goals.linkedHabits.map(l => l.habitId));
+  const pillars = new Set(appState.goals.northStar.map(n => n.id));
+  const linkedIds = new Set(appState.goals.linkedHabits.filter(l => pillars.has(l.northStarId)).map(l => l.habitId));
   return appState.settings.scheduleBlocks.filter(b => linkedIds.has(b.id));
 }
 
@@ -190,7 +183,7 @@ function playTapSound() {
 
 function getDeadlinesForDate(dateStr) {
   const result = [];
-  appState.goals.yearly.forEach(g => { if (g.deadline === dateStr) result.push(g); });
+  (appState.goals.yearly || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });
   (appState.goals.sixMonth || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });
   (appState.goals.threeMonth || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });
   (appState.goals.oneMonth || []).forEach(g => { if (g.deadline === dateStr) result.push(g); });

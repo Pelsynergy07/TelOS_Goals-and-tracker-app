@@ -24,6 +24,24 @@ let appState = {
 };
 
 let dbClient = null;
+let syncMeta = { dirty: false, base: null };
+try { syncMeta = { ...syncMeta, ...JSON.parse(localStorage.getItem(APP_CONFIG.storageKey + '_sync') || '{}') }; } catch {}
+let stateRevision = 0;
+let pushJob = null;
+let pullJob = null;
+let syncError = "";
+let syncConflict = false;
+
+function saveSyncMeta() { localStorage.setItem(APP_CONFIG.storageKey + '_sync', JSON.stringify(syncMeta)); }
+function markSyncError(error) {
+  syncError = error.message || String(error);
+  updateSyncStatusBadge(false, syncConflict ? "Conflict" : "Sync failed");
+  const msg = document.getElementById("supabase-msg");
+  if (msg) { msg.className = "text-sm text-red"; msg.textContent = syncError; }
+  const conflict = document.getElementById("sync-conflict-controls");
+  if (conflict) conflict.classList.toggle("hidden", !syncConflict);
+}
+
 
 function loadLocalData() {
   const localData = localStorage.getItem(APP_CONFIG.storageKey);
@@ -54,15 +72,17 @@ function loadLocalData() {
     }
   } else {
     appState = JSON.parse(JSON.stringify(initialMockData));
-    persistState();
+    persistState({ sync: false });
   }
 }
 
-function persistState() {
+function persistState({ sync = true } = {}) {
   localStorage.setItem(APP_CONFIG.storageKey, JSON.stringify(appState));
-  if (dbClient && appState.settings.supabaseUrl && appState.settings.supabaseKey) {
-    pushToCloud();
-  }
+  if (!sync) return;
+  stateRevision++;
+  syncMeta.dirty = true;
+  saveSyncMeta();
+  if (dbClient && appState.settings.syncEnabled) pushToCloud().catch(markSyncError);
 }
 
 async function initSupabase() {
@@ -75,12 +95,13 @@ async function initSupabase() {
       appState.settings.supabaseKey = appState.settings.supabaseKey || APP_CONFIG.supabaseKey;
       appState.settings.syncEnabled = true;
       updateSyncStatusBadge(true);
-      await pullFromCloud();
+      if (syncMeta.dirty) await pushToCloud();
+      else await pullFromCloud();
       if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.TelOSStorage) {
         Capacitor.Plugins.TelOSStorage.saveCredentials({ url, key });
       }
     } catch (e) {
-      updateSyncStatusBadge(false, "Connection error");
+      markSyncError(e);
     }
   } else {
     dbClient = null;
@@ -124,15 +145,16 @@ function updateSyncStatusBadge(connected, msg) {
   } else {
     badge.className = "text-[9px] bg-border px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-text-dim";
     badge.textContent = msg ? `Local (${msg})` : "Local Mode";
-    if (discBtn) discBtn.classList.add("hidden");
-    if (connectBtn) connectBtn.classList.remove("hidden");
-    if (syncBtn) syncBtn.classList.add("hidden");
+    if (discBtn) discBtn.classList.toggle("hidden", !dbClient);
+    if (connectBtn) connectBtn.classList.toggle("hidden", !!dbClient);
+    if (syncBtn) syncBtn.classList.toggle("hidden", !dbClient);
   }
 }
 
 if (typeof window !== 'undefined') {
   setInterval(() => {
-    pullFromCloud();
+    if (syncMeta.dirty) pushToCloud().catch(markSyncError);
+    else pullFromCloud().catch(markSyncError);
   }, 10000);
 
   window.addEventListener('online', async () => {
@@ -146,10 +168,11 @@ if (typeof window !== 'undefined') {
         saveCredentialsToNative(url, key);
       } catch (e) { return; }
     }
-    await pushToCloud();
-    await pullFromCloud();
-    updateSyncStatusBadge(true);
-    renderAll();
+    try {
+      if (syncMeta.dirty) await pushToCloud();
+      await pullFromCloud();
+      updateSyncStatusBadge(true);
+    } catch (error) { markSyncError(error); }
   });
 
   window.addEventListener('offline', () => {
@@ -163,46 +186,113 @@ if (typeof window !== 'undefined') {
 }
 
 async function syncNow() {
-  const syncBtn = document.getElementById("settings-sync-btn");
-  const msgEl = document.getElementById("supabase-msg");
-  if (syncBtn) { syncBtn.disabled = true; syncBtn.innerHTML = '<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i> Syncing...'; }
-  if (msgEl) { msgEl.className = "text-xs font-semibold text-blue"; msgEl.textContent = "Pushing local data..."; }
-  await pushToCloud();
-  if (msgEl) { msgEl.className = "text-xs font-semibold text-blue"; msgEl.textContent = "Pulling cloud data..."; }
-  await pullFromCloud();
-  if (msgEl) { msgEl.className = "text-xs font-semibold text-green"; msgEl.textContent = "Synced!"; }
-  if (syncBtn) { syncBtn.disabled = false; syncBtn.innerHTML = '<i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sync Now'; lucide.createIcons(); }
-  setTimeout(() => { if (msgEl) msgEl.textContent = ""; }, 3000);
+  const button = document.getElementById("settings-sync-btn");
+  const msg = document.getElementById("supabase-msg");
+  if (button) button.disabled = true;
+  if (msg) { msg.className = "text-sm text-blue"; msg.textContent = "Syncing…"; }
+  try {
+    if (!dbClient) throw new Error("Connect Supabase before syncing.");
+    if (syncMeta.dirty) await pushToCloud();
+    await pullFromCloud();
+    syncError = "";
+    updateSyncStatusBadge(true);
+    if (msg) { msg.className = "text-sm text-green"; msg.textContent = "Synced successfully."; }
+  } catch (error) { markSyncError(error); }
+  finally { if (button) button.disabled = false; }
 }
 
-async function pushToCloud() {
-  if (!dbClient || !appState.settings.syncEnabled) return;
-  try {
-    const clean = JSON.parse(JSON.stringify(appState));
-    clean.settings = { ...clean.settings };
-    delete clean.settings.supabaseUrl;
-    delete clean.settings.supabaseKey;
-    delete clean.settings.syncEnabled;
-    await dbClient.from('life_os_sync').upsert({
-      id: 'life_os_data', data: clean,
-      updated_at: new Date().toISOString()
-    }, { onConflict: 'id' });
-  } catch (e) { console.error("Cloud push failed", e); }
+function cleanCloudState() {
+  const clean = JSON.parse(JSON.stringify(appState));
+  delete clean.settings.supabaseUrl;
+  delete clean.settings.supabaseKey;
+  delete clean.settings.syncEnabled;
+  return clean;
 }
 
-async function pullFromCloud() {
+function conflictError() {
+  syncConflict = true;
+  return new Error("Both this device and the cloud have changes. Choose which version to keep in System; local changes are still saved.");
+}
+
+async function pushToCloud({ force = false } = {}) {
+  if (pushJob) return pushJob;
   if (!dbClient || !appState.settings.syncEnabled) return;
-  try {
-    const { data } = await dbClient.from('life_os_sync').select('data').eq('id', 'life_os_data').maybeSingle();
-    if (data && data.data && data.data.logs && data.data.goals) {
-      const localSettings = appState.settings;
-      appState = data.data;
-      // Credentials and device preferences stay local; the habit plan comes from the cloud.
-      const { scheduleBlocks, ...deviceSettings } = localSettings;
-      appState.settings = { ...appState.settings, ...deviceSettings };
-      if (!Array.isArray(appState.settings.scheduleBlocks)) appState.settings.scheduleBlocks = scheduleBlocks;
-      persistState();
+  if (syncConflict && !force) throw conflictError();
+  const client = dbClient;
+  pushJob = (async () => {
+    // Serialize whole-state writes and detect a changed cloud revision before replacing it.
+    do {
+      const revision = stateRevision;
+      const { data: remote, error: readError } = await client.from('life_os_sync').select('updated_at').eq('id', 'life_os_data').maybeSingle();
+      if (readError) throw new Error(readError.message || "Cloud read failed.");
+      if (client !== dbClient) return;
+      if (remote && !force && (!syncMeta.base || Date.parse(remote.updated_at) !== Date.parse(syncMeta.base))) throw conflictError();
+      const updated_at = new Date(Math.max(Date.now(), (Date.parse(remote?.updated_at) || 0) + 1)).toISOString();
+      const payload = { id: 'life_os_data', data: cleanCloudState(), updated_at };
+      let result;
+      if (remote) {
+        result = await client.from('life_os_sync').update(payload).eq('id', 'life_os_data').eq('updated_at', remote.updated_at).select('updated_at');
+        if (!result.error && !result.data?.length) throw conflictError();
+      } else {
+        result = await client.from('life_os_sync').insert(payload);
+      }
+      if (result.error) throw new Error(result.error.message || "Cloud write failed.");
+      if (client !== dbClient) return;
+      syncMeta.base = result.data?.[0]?.updated_at || updated_at;
+      syncMeta.dirty = stateRevision !== revision;
+      syncConflict = false;
+      syncError = "";
+      saveSyncMeta();
+      force = false;
+    } while (syncMeta.dirty);
+    updateSyncStatusBadge(true);
+    document.getElementById("sync-conflict-controls")?.classList.add("hidden");
+  })();
+  try { return await pushJob; }
+  finally { pushJob = null; }
+}
+
+async function pullFromCloud({ force = false } = {}) {
+  if (pullJob) return pullJob;
+  if (!dbClient || !appState.settings.syncEnabled || pushJob || (syncMeta.dirty && !force)) return;
+  if (!force && typeof document !== 'undefined') {
+    const active = document.activeElement;
+    if (active && /^(INPUT|TEXTAREA|SELECT)$/.test(active.tagName)) return;
+    if (typeof document.querySelector === 'function' && document.querySelector('[role="dialog"][data-open="true"]')) return;
+  }
+  const client = dbClient;
+  const revision = stateRevision;
+  pullJob = (async () => {
+    const { data, error } = await client.from('life_os_sync').select('data,updated_at').eq('id', 'life_os_data').maybeSingle();
+    if (error) throw new Error(error.message || "Cloud read failed.");
+    if (client !== dbClient || revision !== stateRevision || (!force && syncMeta.dirty)) return;
+    if (force && !data?.data) throw new Error("No cloud snapshot exists. Local data was kept.");
+    if (data?.data) {
+      if (!force && data.updated_at && syncMeta.base && Date.parse(data.updated_at) === Date.parse(syncMeta.base)) return;
+      const next = normalizeBackup(data.data);
+      const { scheduleBlocks, ...deviceSettings } = appState.settings;
+      next.settings = { ...next.settings, ...deviceSettings };
+      appState = next;
+      syncMeta = { dirty: false, base: data.updated_at || null };
+      syncConflict = false;
+      syncError = "";
+      saveSyncMeta();
+      persistState({ sync: false });
       renderAll();
     }
-  } catch (e) { console.error("Cloud pull failed", e); }
+  })();
+  try { return await pullJob; }
+  finally { pullJob = null; }
+}
+
+async function resolveSyncConflict(source) {
+  if (!confirm(`Keep the ${source} version? This replaces the other version. Export a backup first if you need both.`)) return;
+  try {
+    if (source === "local") await pushToCloud({ force: true });
+    else await pullFromCloud({ force: true });
+    document.getElementById("sync-conflict-controls")?.classList.add("hidden");
+    const message = document.getElementById("supabase-msg");
+    if (message) { message.textContent = "Conflict resolved. Synced!"; message.className = "text-xs font-semibold text-green"; }
+    updateSyncStatusBadge(true);
+  } catch (error) { markSyncError(error); }
 }

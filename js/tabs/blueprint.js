@@ -60,7 +60,7 @@ function renderGoalsHub() {
     || appState.goals.oneMonth.length > 0
     || appState.goals.linkedHabits.length > 0;
   if (btn) {
-    btn.style.display = hasContent || careerEditMode ? "" : "none";
+    btn.style.display = "";
     if (careerEditMode) {
       btn.className = "btn btn-primary";
       document.getElementById("career-edit-label").textContent = "Done Editing";
@@ -80,7 +80,7 @@ function renderGoalsHub() {
 
 function renderLevelCard(level, idx) {
   const color = levelColors[level.key] || "text-dim";
-  const addBtn = careerEditMode && level.key !== "northStar" ? `<button class="cascade-add-btn" onclick="openAddGoal('${level.key}')"><i data-lucide="plus" class="w-3 h-3"></i></button>` : "";
+  const addBtn = careerEditMode && level.key !== "northStar" ? `<button aria-label="Add checkpoint" class="cascade-add-btn" onclick="openAddGoal('${level.key}')"><i data-lucide="plus" class="w-3 h-3"></i></button>` : "";
 
   if (level.isCardGrid) {
     return `
@@ -121,17 +121,17 @@ function renderNorthStar() {
       card.className = "northstar-card editing";
       card.innerHTML = `
         <div class="flex items-center justify-between gap-2">
-          <input type="text" value="${item.title}" onchange="updateNorthStar(${idx},'title',this.value)" class="text-xs font-bold bg-transparent text-text border-b border-transparent focus:border-blue py-0.5 flex-1 min-w-0">
-          <button onclick="deleteNorthStar(${idx})" class="text-red hover:bg-red/10 p-1 rounded shrink-0"><i data-lucide="x" class="w-3 h-3"></i></button>
+          <input aria-label="North Star title" type="text" value="${escapeHtml(item.title)}" onchange="updateNorthStar(${idx},'title',this.value)" class="text-xs font-bold bg-transparent text-text border-b border-transparent focus:border-blue py-0.5 flex-1 min-w-0">
+          <button aria-label="Close or remove" onclick="deleteNorthStar(${idx})" class="text-red hover:bg-red/10 p-1 rounded shrink-0"><i data-lucide="x" class="w-3 h-3"></i></button>
         </div>
-        <textarea rows="2" onchange="updateNorthStar(${idx},'description',this.value)" class="text-[10px] bg-transparent text-text-dim w-full min-w-0 resize-none border border-transparent focus:border-blue rounded px-1 py-0.5 mt-1">${item.description}</textarea>
+        <textarea aria-label="North Star description" rows="2" onchange="updateNorthStar(${idx},'description',this.value)" class="text-[10px] bg-transparent text-text-dim w-full min-w-0 resize-none border border-transparent focus:border-blue rounded px-1 py-0.5 mt-1">${escapeHtml(item.description)}</textarea>
       `;
     } else {
       const done = item.completed;
       card.className = "northstar-card" + (done ? " completed" : "");
       card.innerHTML = `
-        <span class="text-xs font-bold ${done ? 'text-green' : 'text-text'}">${item.title}</span>
-        <p class="text-[11px] text-text-dim mt-0.5">${item.description}</p>
+        <span class="text-xs font-bold ${done ? 'text-green' : 'text-text'}">${escapeHtml(item.title)}</span>
+        <p class="text-[11px] text-text-dim mt-0.5">${escapeHtml(item.description)}</p>
       `;
     }
     list.appendChild(card);
@@ -159,7 +159,12 @@ function updateNorthStar(idx, field, val) {
 }
 
 function deleteNorthStar(idx) {
-  if (!confirm(`Delete "${appState.goals.northStar[idx].title}"?`)) return;
+  if (!confirm(`Delete "${appState.goals.northStar[idx].title}"? Its habits and checkpoints will be unlinked, and their data will be kept.`)) return;
+  const id = appState.goals.northStar[idx].id;
+  appState.goals.linkedHabits = appState.goals.linkedHabits.filter(l => l.northStarId !== id);
+  for (const level of ["yearly","sixMonth","threeMonth","oneMonth"]) {
+    (appState.goals[level] || []).forEach(g => { if (g.northStarId === id) g.northStarId = ""; });
+  }
   appState.goals.northStar.splice(idx, 1);
   persistState();
   renderGoalsHub();
@@ -189,27 +194,27 @@ function renderGoalList(containerId, goals, type) {
     if (careerEditMode) {
       item.innerHTML = `
         <div class="career-edit-row career-edit-row-top">
-          <input type="text" value="${goal.name}" onchange="updateGoalName(${idx},'${type}',this.value)" class="career-edit-name text-xs font-bold bg-transparent text-text border-b border-transparent focus:border-blue py-0.5">
-          <button onclick="deleteGoal(${idx},'${type}')" class="text-red hover:bg-red/10 p-1 rounded shrink-0"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          <input aria-label="Checkpoint name" type="text" value="${escapeHtml(goal.name)}" onchange="updateGoalName(${idx},'${type}',this.value)" class="career-edit-name text-xs font-bold bg-transparent text-text border-b border-transparent focus:border-blue py-0.5">
+          <button aria-label="Delete" onclick="deleteGoal(${idx},'${type}')" class="text-red hover:bg-red/10 p-1 rounded shrink-0"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
         <div class="career-edit-grid mb-2 text-[10px]">
-          <select onchange="updateGoalNorthStar(${idx},'${type}',this.value)" class="career-edit-select bg-transparent text-text-dim border border-border rounded py-1 px-1">
+          <select aria-label="Checkpoint North Star" onchange="updateGoalNorthStar(${idx},'${type}',this.value)" class="career-edit-select bg-transparent text-text-dim border border-border rounded py-1 px-1">
             <option value="">— North Star —</option>
-            ${appState.goals.northStar.map(n => `<option value="${n.id}" ${n.id === goal.northStarId ? 'selected' : ''}>${n.title}</option>`).join("")}
+            ${appState.goals.northStar.map(n => `<option value="${n.id}" ${n.id === goal.northStarId ? 'selected' : ''}>${escapeHtml(n.title)}</option>`).join("")}
           </select>
-          <input type="date" value="${goal.deadline || ''}" onchange="updateGoalDeadline(${idx},'${type}',this.value)" class="career-edit-date bg-transparent text-text-dim border border-border rounded py-1 px-1" style="color-scheme:dark">
+          <input aria-label="Checkpoint deadline" type="date" value="${escapeHtml(goal.deadline || '')}" onchange="updateGoalDeadline(${idx},'${type}',this.value)" class="career-edit-date bg-transparent text-text-dim border border-border rounded py-1 px-1" style="color-scheme:dark">
         </div>
         <div class="career-edit-progress text-xs">
           <span class="text-text-dim font-bold">Progress:</span>
-          <input type="number" min="0" max="${goal.target}" value="${goal.progress}" onchange="updateGoalProgress(${idx},'${type}',this.value)" class="career-edit-number text-center font-bold bg-transparent text-text border border-border rounded py-1 px-1">
-          <span class="text-text-dim">/ ${goal.target} ${goal.unit || ''}</span>
+          <input aria-label="Checkpoint progress" type="number" min="0" max="${goal.target}" value="${goal.progress}" onchange="updateGoalProgress(${idx},'${type}',this.value)" class="career-edit-number text-center font-bold bg-transparent text-text border border-border rounded py-1 px-1">
+          <span class="text-text-dim">/ ${goal.target} ${escapeHtml(goal.unit || '')}</span>
         </div>`;
     } else {
       item.innerHTML = `
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
-            <span class="text-xs font-bold text-text block break-words leading-relaxed">${goal.name}</span>
-            ${ns ? `<span class="text-[10px] text-blue/70 whitespace-nowrap">★ ${ns.title}</span>` : ''}
+            <span class="text-xs font-bold text-text block break-words leading-relaxed">${escapeHtml(goal.name)}</span>
+            ${ns ? `<span class="text-[10px] text-blue/70 whitespace-nowrap">★ ${escapeHtml(ns.title)}</span>` : ''}
           </div>
           <span class="text-[10px] font-bold shrink-0 ${overdue ? 'text-red' : 'text-text-dim'}">${daysLeft}</span>
         </div>`;
@@ -226,7 +231,7 @@ function renderLinkedHabits() {
       <div class="cascade-card-header">
         <div class="cascade-card-title"><i data-lucide="activity" class="w-4 h-4 text-green"></i><span class="text-green">Daily Habits</span></div>
       </div>
-      <div id="linked-habits-list" class="space-y-1.5"></div>
+      <button class="btn btn-outline mb-3" onclick="openHabitEditor()">Add daily habit</button><div id="linked-habits-list" class="space-y-1.5"></div>
     </div>`;
 }
 
@@ -254,7 +259,7 @@ function renderLinkedHabitsList() {
     section.className = "mb-3";
     const header = document.createElement("div");
     header.className = "flex items-center gap-1.5 mb-1.5";
-    header.innerHTML = `<i data-lucide="star" class="w-3 h-3 text-blue"></i><span class="text-[10px] font-bold text-blue">${ns.title}</span>`;
+    header.innerHTML = `<i data-lucide="star" class="w-3 h-3 text-blue"></i><span class="text-[10px] font-bold text-blue">${escapeHtml(ns.title)}</span>`;
     section.appendChild(header);
 
     if (nsLinked.length === 0) {
@@ -270,17 +275,17 @@ function renderLinkedHabitsList() {
         row.className = `career-habit-row py-1 px-2 rounded hover:bg-white/[0.02]${careerEditMode ? ' editing' : ''}`;
         if (careerEditMode) {
           const nsOptions = appState.goals.northStar.map(n =>
-            `<option value="${n.id}" ${n.id === l.northStarId ? 'selected' : ''}>${n.title}</option>`
+            `<option value="${n.id}" ${n.id === l.northStarId ? 'selected' : ''}>${escapeHtml(n.title)}</option>`
           ).join("");
-          row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${l.block.name}</span></div>
+          row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${escapeHtml(l.block.name)}</span><button class="btn btn-outline" onclick="openHabitEditor('${l.block.id}')">Edit habit</button></div>
             <div class="career-habit-controls">
-              <select onchange="linkHabit('${l.block.id}', this.value);renderLinkedHabitsList()" class="career-habit-select text-[10px] bg-transparent border border-border rounded py-0.5 px-1">
+              <select aria-label="Habit North Star" onchange="linkHabit('${l.block.id}', this.value);renderLinkedHabitsList()" class="career-habit-select text-[10px] bg-transparent border border-border rounded py-0.5 px-1">
                 <option value="">— Not linked —</option>
                 ${nsOptions}
               </select>
             </div>`;
         } else {
-          row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${l.block.name}</span>${l.block.time ? `<span class="text-[10px] text-text-dim/60">${l.block.time}</span>` : ''}</div>`;
+          row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${escapeHtml(l.block.name)}</span>${l.block.time ? `<span class="text-[10px] text-text-dim/60">${escapeHtml(l.block.time)}</span>` : ''}</div>`;
         }
         list.appendChild(row);
       });
@@ -304,11 +309,11 @@ function renderLinkedHabitsList() {
         const row = document.createElement("div");
         row.className = "career-habit-row py-1.5 px-2 rounded hover:bg-white/[0.02] editing";
         const nsOptions = appState.goals.northStar.map(n =>
-          `<option value="${n.id}">${n.title}</option>`
+          `<option value="${n.id}">${escapeHtml(n.title)}</option>`
         ).join("");
-        row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${block.name}</span></div>
+        row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${escapeHtml(block.name)}</span><button class="btn btn-outline" onclick="openHabitEditor('${block.id}')">Edit habit</button></div>
           <div class="career-habit-controls">
-            <select onchange="linkHabit('${block.id}', this.value);renderLinkedHabitsList()" class="career-habit-select text-[10px] bg-transparent border border-border rounded py-0.5 px-1">
+            <select aria-label="Habit North Star" onchange="linkHabit('${block.id}', this.value);renderLinkedHabitsList()" class="career-habit-select text-[10px] bg-transparent border border-border rounded py-0.5 px-1">
               <option value="">— Link to North Star —</option>
               ${nsOptions}
             </select>
@@ -342,7 +347,7 @@ function linkHabit(habitId, northStarId) {
 
 function openAddGoal(level) {
   const nsSelect = document.getElementById("goal-form-northstar");
-  nsSelect.innerHTML = '<option value="">— Not linked —</option>' + appState.goals.northStar.map(n => `<option value="${n.id}">${n.title}</option>`).join("");
+  nsSelect.innerHTML = '<option value="">— Not linked —</option>' + appState.goals.northStar.map(n => `<option value="${n.id}">${escapeHtml(n.title)}</option>`).join("");
   document.getElementById("goal-form-type").value = level;
   document.getElementById("goal-form-name").value = "";
   document.getElementById("goal-form-target").value = "";
@@ -358,7 +363,7 @@ function validateGoalForm() {
   const target = document.getElementById("goal-form-target").value;
   const deadline = document.getElementById("goal-form-deadline").value;
   const btn = document.getElementById("goal-add-btn");
-  const valid = name && target && deadline;
+  const valid = name && Number.isFinite(Number(target)) && Number(target) > 0 && deadline && ["sixMonth","threeMonth","oneMonth"].includes(document.getElementById("goal-form-type").value);
   btn.disabled = !valid;
   btn.classList.toggle("opacity-50", !valid);
 }
@@ -375,7 +380,7 @@ function addNewGoal() {
   const unit = document.getElementById("goal-form-unit").value.trim();
   const deadline = document.getElementById("goal-form-deadline").value;
   const northStarId = document.getElementById("goal-form-northstar").value || "";
-  if (!name || !deadline) return;
+  if (!name || !deadline || !Number.isFinite(target) || target <= 0 || !["sixMonth","threeMonth","oneMonth"].includes(type)) return;
 
   const goal = { id: "g_" + Date.now(), name, progress: 0, target, unit, deadline, northStarId, completed: false };
   if (type === "yearly") appState.goals.yearly.push(goal);
@@ -398,7 +403,10 @@ function getGoalsByType(type) {
 function updateGoalProgress(idx, type, val) {
   const goals = getGoalsByType(type);
   const prev = goals[idx].progress;
-  goals[idx].progress = Number(val);
+  const progress = Number(val);
+  if (!Number.isFinite(progress) || progress < 0) return;
+  goals[idx].progress = Math.min(progress, goals[idx].target);
+  goals[idx].completed = goals[idx].target > 0 && goals[idx].progress >= goals[idx].target;
   if (prev < goals[idx].target && goals[idx].progress >= goals[idx].target) celebrate();
   persistState();
 }

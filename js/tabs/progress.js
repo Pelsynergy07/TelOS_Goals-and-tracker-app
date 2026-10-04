@@ -16,9 +16,9 @@ function setReviewTab(tab) {
 }
 
 function shiftReviewWeek(dir) {
-  const d = new Date(getWeekStartDate(reviewWeekId));
-  d.setDate(d.getDate() + dir * 7);
-  reviewWeekId = getWeekID(d.toISOString().split('T')[0]);
+  const next = addDateDays(getWeekStartDate(reviewWeekId), dir * 7);
+  const d = parseLocalDate(next);
+  reviewWeekId = getWeekID(next);
   reviewMonth = d.getMonth();
   reviewYear = d.getFullYear();
   renderReview();
@@ -41,7 +41,7 @@ function renderReview() {
   const isPeriodView = reviewTab === "weekly" || reviewTab === "monthly";
 
   // Period selector visibility
-  periodSelector.style.display = isPeriodView ? "" : "none";
+  periodSelector.style.display = "";
 
   // Show/hide sections
   const metricsSection = document.getElementById("review-metrics-section");
@@ -52,36 +52,36 @@ function renderReview() {
   if (calendarSection) calendarSection.classList.toggle("hidden", !isPeriodView);
   if (cascadeCard) cascadeCard.classList.toggle("hidden", isPeriodView);
 
-  if (isPeriodView) {
-    if (!container) return;
-
-    if (reviewTab === "weekly") {
-      const monday = new Date(getWeekStartDate(reviewWeekId));
-      const weekLabel = `${formatDateLabelShort(monday.toISOString().split('T')[0])} - ${formatDateLabelShort(getWeekDates(monday.toISOString().split('T')[0])[6])}`;
+  if (reviewMode === "weekly") {
+      const monday = parseLocalDate(getWeekStartDate(reviewWeekId));
+      const weekLabel = `${formatDateLabelShort(getWeekStartDate(reviewWeekId))} - ${formatDateLabelShort(getWeekDates(getWeekStartDate(reviewWeekId))[6])}`;
       periodSelector.innerHTML = `
-        <button onclick="shiftReviewWeek(-1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+        <button aria-label="Previous period" onclick="shiftReviewWeek(-1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
         <span class="text-[11px] font-bold px-2 text-center w-32 select-none">${weekLabel}</span>
-        <button onclick="shiftReviewWeek(1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+        <button aria-label="Next period" onclick="shiftReviewWeek(1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
       `;
     } else {
       const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
       periodSelector.innerHTML = `
-        <button onclick="shiftReviewMonth(-1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+        <button aria-label="Previous period" onclick="shiftReviewMonth(-1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
         <span class="text-[11px] font-bold px-2 text-center w-28 select-none">${months[reviewMonth]} ${reviewYear}</span>
-        <button onclick="shiftReviewMonth(1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+        <button aria-label="Next period" onclick="shiftReviewMonth(1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
       `;
     }
     lucide.createIcons();
 
+  if (isPeriodView) {
+    if (!container) return;
     const todayStr = getLocalDateString();
     container.innerHTML = "";
 
     if (reviewTab === "weekly") {
       const weekDates = getWeekDates(getWeekStartDate(reviewWeekId));
       weekDates.forEach(dStr => {
-        const dayNum = new Date(dStr).getDate();
+        const dayNum = parseLocalDate(dStr).getDate();
         const completionRate = getLoggedCompletionRate(dStr);
-        const cell = document.createElement("div");
+        const cell = document.createElement("button");
+        cell.type = "button";
         cell.className = "calendar-day-cell";
         if (dStr === todayStr) cell.classList.add("today");
 
@@ -92,6 +92,7 @@ function renderReview() {
         }
         cell.innerHTML = `<span class="day-number ${dStr === todayStr ? 'text-blue' : ''}">${dayNum}</span>`;
         if (bgStyle) cell.setAttribute("style", bgStyle);
+        cell.setAttribute("aria-label", `View ${dStr}`);
         cell.onclick = () => {
           renderReviewDayDetails(dStr);
           document.querySelectorAll("#review-calendar-days-container .calendar-day-cell").forEach(c => c.classList.remove("selected"));
@@ -106,8 +107,10 @@ function renderReview() {
       const prevMonthTotalDays = new Date(year, month, 0).getDate();
 
       for (let i = firstDay - 1; i >= 0; i--) {
-        const cell = document.createElement("div");
+        const cell = document.createElement("button");
+        cell.type = "button";
         cell.className = "calendar-day-cell inactive";
+        cell.disabled = true;
         cell.innerHTML = `<span class="text-[9px] text-text-dim/40">${prevMonthTotalDays - i}</span>`;
         container.appendChild(cell);
       }
@@ -115,7 +118,8 @@ function renderReview() {
       for (let i = 1; i <= totalDays; i++) {
         const cellDateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
         const completionRate = getLoggedCompletionRate(cellDateStr);
-        const cell = document.createElement("div");
+        const cell = document.createElement("button");
+        cell.type = "button";
         cell.className = "calendar-day-cell";
         if (cellDateStr === todayStr) cell.classList.add("today");
 
@@ -129,6 +133,7 @@ function renderReview() {
         cell.innerHTML = `<div class="flex justify-between items-start w-full"><span class="day-number ${cellDateStr === todayStr ? 'text-blue' : ''}">${i}</span>${deadlinesCount > 0 ? '<span class="w-1.5 h-1.5 rounded-full bg-red mt-1" title="Checkpoint due"></span>' : ''}</div>`;
         if (bgStyle) cell.setAttribute("style", bgStyle);
 
+        cell.setAttribute("aria-label", `View ${cellDateStr}`);
         cell.onclick = () => {
           renderReviewDayDetails(cellDateStr);
           document.querySelectorAll("#review-calendar-days-container .calendar-day-cell").forEach(c => c.classList.remove("selected"));
@@ -138,10 +143,15 @@ function renderReview() {
       }
     }
 
-    renderReviewDayDetails(trackerDate);
+    const period = getPeriodDates();
+    if (!period.includes(selectedReviewDate)) selectedReviewDate = period.includes(getLocalDateString()) ? getLocalDateString() : period[0];
+    renderReviewDayDetails(selectedReviewDate);
     renderReviewMetrics();
   }
 
+  const weekdays = document.getElementById("review-weekday-labels");
+  if (weekdays) weekdays.innerHTML = (reviewMode === "weekly" ? ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] : ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]).map(d => `<span>${d}</span>`).join("");
+  renderPeriodReflection();
   renderCascadeImpact();
 }
 
@@ -160,7 +170,7 @@ function renderReviewMetrics() {
     }
   }
 
-  const multiplier = reviewMode === "monthly" ? Math.ceil(dates.length / 7) : 1;
+
 
   if (getLinkedBlocks().length === 0) {
     container.innerHTML = `
@@ -174,7 +184,7 @@ function renderReviewMetrics() {
   }
 
   getLinkedBlocks().forEach(b => {
-    const target = getBlockWeeklyTarget(b.id) * multiplier;
+    const target = dates.length;
     const actual = getBlockActual(b.id, dates);
     const pct = target > 0 ? Math.min(Math.round((actual / target) * 100), 100) : 0;
     const card = document.createElement("div");
@@ -182,7 +192,7 @@ function renderReviewMetrics() {
     card.innerHTML = `
       <div class="flex items-center gap-2 mb-1">
         <i data-lucide="activity" class="w-3.5 h-3.5 text-text-dim shrink-0"></i>
-        <span class="label">${b.name}</span>
+        <span class="label">${escapeHtml(b.name)}</span>
       </div>
       <div class="value ${pct >= 100 ? 'text-green' : pct >= 50 ? 'text-amber' : 'text-red'}">${formatBlockActual(b.id, actual)} / ${formatBlockTarget(b.id, target)}</div>
       <div class="progress-bar mt-1.5">
@@ -294,14 +304,6 @@ function submitNorthStarReviewComplete() {
   const input = document.getElementById("northstar-review-complete-input");
   const msg = document.getElementById("northstar-review-complete-msg");
   if (!input || !pendingNorthStarReviewCompletion) return;
-  const normalized = input.value.trim().toLowerCase().replace(/\s+/g, " ");
-  if (normalized !== "yea boi") {
-    if (msg) {
-      msg.className = "text-xs font-semibold text-red";
-      msg.textContent = 'Type "yea boi" exactly to continue.';
-    }
-    return;
-  }
   toggleNorthStarReviewComplete(pendingNorthStarReviewCompletion, true);
   closeNorthStarReviewModal();
   celebrate();
@@ -345,7 +347,7 @@ function renderCascadeImpact() {
     html += `<div class="flex items-center justify-between border-b border-border pb-3">
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 rounded-full ${pillar.completed ? 'bg-green/[0.15]' : 'bg-blue/[0.12]'} flex items-center justify-center">${pillar.completed ? '<i data-lucide="check" class="w-3.5 h-3.5 text-green"></i>' : '<i data-lucide="star" class="w-3.5 h-3.5 text-blue"></i>'}</div>
-        <span class="text-[11px] font-bold ${pillar.completed ? 'text-green' : 'text-text'}">${pillar.title}</span>
+        <span class="text-[11px] font-bold ${pillar.completed ? 'text-green' : 'text-text'}">${escapeHtml(pillar.title)}</span>
       </div>
       <span class="text-[8px] font-bold ${pillar.completed ? 'text-green' : avgCls}">${pillar.completed ? '✓ Done' : avgPct + '%'}</span>
     </div>`;
@@ -367,8 +369,8 @@ function renderCascadeImpact() {
             <div class="w-[34px] h-[34px] rounded-full bg-surface flex items-center justify-center"><span class="text-[9px] font-bold ${txtCls}">${pct}%</span></div>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-[9px] font-bold ${done ? 'text-green' : 'text-text'} truncate">${g.name}</div>
-            <div class="text-[8px] text-text-dim/60">${g.levelLabel} · ${done ? 'Checkpoint completed' : `${g.progress}/${g.target}${g.unit ? ' ' + g.unit : ''}`}${g.deadline ? ' · ' + days : ''}</div>
+            <div class="text-[9px] font-bold ${done ? 'text-green' : 'text-text'} truncate">${escapeHtml(g.name)}</div>
+            <div class="text-[8px] text-text-dim/60">${g.levelLabel} · ${done ? 'Checkpoint completed' : `${g.progress}/${g.target}${g.unit ? ' ' + escapeHtml(g.unit) : ''}`}${g.deadline ? ' · ' + days : ''}</div>
           </div>
         </div>`;
       });
@@ -385,7 +387,7 @@ function renderCascadeImpact() {
         dates.forEach(dStr => { dots += `<div class="w-[7px] h-[7px] rounded-full ${dotColor(lh.habitId, dStr)}"></div>`; });
         const completed = getHabitCompletionInPeriod(lh.habitId, dates);
         html += `<div class="flex items-center justify-between gap-2">
-          <span class="text-[9px] text-text-dim shrink-0 min-w-[48px]">${block.name}</span>
+          <span class="text-[9px] text-text-dim shrink-0 min-w-[48px]">${escapeHtml(block.name)}</span>
           <div class="flex items-center gap-[3px] flex-wrap justify-end">${dots}</div>
           <span class="text-[8px] font-bold text-text-dim shrink-0 w-[32px] text-right">${completed}/${daysInPeriod}</span>
         </div>`;
@@ -395,7 +397,7 @@ function renderCascadeImpact() {
 
     html += `<div class="mt-auto pt-3">
       <button onclick="${pillar.completed ? `toggleNorthStarReviewComplete('${pillar.id}',false)` : `openNorthStarReviewModal('${pillar.id}')`}" class="w-full text-[10px] font-bold px-3 py-2 rounded-full border transition-colors ${pillar.completed ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
-        ${pillar.completed ? 'Completed' : 'Checkpoint Achieved'}
+        ${pillar.completed ? 'Completed' : 'Complete North Star'}
       </button>
     </div>`;
 
@@ -426,13 +428,13 @@ function renderCascadeImpact() {
         <div class="flex items-start justify-between gap-3">
           <div>
             <div class="text-[9px] uppercase tracking-[0.16em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${goal.levelLabel}</div>
-            <div class="text-xs font-bold ${done ? 'text-green' : 'text-text'} mt-1">${goal.name}</div>
+            <div class="text-xs font-bold ${done ? 'text-green' : 'text-text'} mt-1">${escapeHtml(goal.name)}</div>
           </div>
           <span class="text-[9px] font-bold px-2 py-1 rounded-full border ${done ? 'bg-green/15 text-green border-green/30' : 'bg-white/[0.03] text-text-dim border-border'}">${done ? 'Completed' : 'Active'}</span>
         </div>
-        <div class="text-[10px] text-text-dim">${goal.northStarTitle}</div>
+        <div class="text-[10px] text-text-dim">${escapeHtml(goal.northStarTitle)}</div>
         <div class="flex items-center justify-between text-[10px] text-text-dim">
-          <span>${goal.progress}/${goal.target}${goal.unit ? ' ' + goal.unit : ''}</span>
+          <span>${goal.progress}/${goal.target}${goal.unit ? ' ' + escapeHtml(goal.unit) : ''}</span>
           <span>${days}</span>
         </div>
         <div class="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
@@ -454,13 +456,14 @@ function renderCascadeImpact() {
 function renderReviewDayDetails(dateStr) {
   const container = document.getElementById("review-selected-day-details");
   if (!container) return;
+  selectedReviewDate = dateStr;
   const log = appState.logs[dateStr] || {};
   const deadlines = getDeadlinesForDate(dateStr);
   const formattedDate = formatDateLabelShort(dateStr);
 
   let deadlinesHtml = "";
   if (deadlines.length > 0) {
-    deadlinesHtml = `<div class="border-t border-border pt-2 mt-2"><p class="text-[10px] text-red font-bold uppercase tracking-wider">Checkpoint Deadlines</p><ul class="list-disc list-inside text-xs mt-1 text-text space-y-1">${deadlines.map(d => `<li>${d.name} (${d.target} ${d.unit || ''})</li>`).join('')}</ul></div>`;
+    deadlinesHtml = `<div class="border-t border-border pt-2 mt-2"><p class="text-[10px] text-red font-bold uppercase tracking-wider">Checkpoint Deadlines</p><ul class="list-disc list-inside text-xs mt-1 text-text space-y-1">${deadlines.map(d => `<li>${escapeHtml(d.name)} (${d.target} ${escapeHtml(d.unit || '')})</li>`).join('')}</ul></div>`;
   }
 
   let blocksHtml = "";
@@ -470,9 +473,10 @@ function renderReviewDayDetails(dateStr) {
   getLinkedBlocks().forEach(b => {
     const logData = log[b.id] || {};
     let ok = isBlockCompleted(b, logData);
+    const amounts = b.fields.filter(f => f.type === "number").map(f => `${logData[f.id] || 0} ${f.label || f.id}`).join(", ");
     blocksHtml += `<div class="flex items-center justify-between text-xs py-1.5 px-2 rounded ${ok ? 'bg-green/[0.06]' : 'bg-[rgba(255,255,255,0.015)]'}">
-      <span class="${ok ? 'text-text font-bold' : 'text-text-dim/40'}">${b.name}</span>
-      <span class="${ok ? 'text-green' : 'text-text-dim/30'}">${ok ? '✓' : '—'}</span>
+      <span class="${ok ? 'text-text font-bold' : 'text-text-dim/40'}">${escapeHtml(b.name)}</span>
+      <span class="${ok ? 'text-green' : 'text-text-dim/30'}">${escapeHtml(amounts || (ok ? '✓' : '—'))}</span>
     </div>`;
   });
   }
@@ -482,14 +486,14 @@ function renderReviewDayDetails(dateStr) {
   container.innerHTML = `
     <div class="flex items-center justify-between border-b border-border pb-2.5">
       <h4 class="font-bold text-xs text-text">${formattedDate}</h4>
-      <button onclick="switchTab('today')" class="text-[10px] bg-white/5 border border-border px-2 py-1 rounded hover:bg-white/10 text-text font-bold flex items-center gap-1"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button>
+      <button onclick="editExecutionDate('${dateStr}')" class="text-[10px] bg-white/5 border border-border px-2 py-1 rounded hover:bg-white/10 text-text font-bold flex items-center gap-1"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button>
     </div>
     <div class="space-y-3 pt-2">
       <div class="space-y-0.5">${blocksHtml}</div>
       <div class="border-t border-border pt-2 space-y-1.5 text-xs">
         ${log.feelingScore ? `<div><span class="text-text-dim">Mood:</span> <strong class="text-text">${moodLabel[log.feelingScore] || log.feelingScore}</strong></div>` : ''}
-        ${log.biggestWin ? `<div><span class="text-text-dim">Win:</span> <strong class="text-text">"${log.biggestWin}"</strong></div>` : ''}
-        ${log.biggestLearning ? `<div><span class="text-text-dim">Learning:</span> <strong class="text-text">"${log.biggestLearning}"</strong></div>` : ''}
+        ${log.biggestWin ? `<div><span class="text-text-dim">Win:</span> <strong class="text-text">"${escapeHtml(log.biggestWin)}"</strong></div>` : ''}
+        ${log.biggestLearning ? `<div><span class="text-text-dim">Learning:</span> <strong class="text-text">"${escapeHtml(log.biggestLearning)}"</strong></div>` : ''}
       </div>
       ${deadlinesHtml}
     </div>`;

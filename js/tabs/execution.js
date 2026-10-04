@@ -6,6 +6,8 @@
 // ============================================================
 
 function renderToday() {
+  const picker = document.getElementById("execution-date");
+  if (picker) { picker.value = trackerDate; picker.max = getLocalDateString(); }
   updateTodayDateHeader();
   calculateStreaks();
   renderHabitMonthGrids();
@@ -17,7 +19,7 @@ function renderToday() {
 let pendingCheckpointCompletion = null;
 
 function updateTodayDateHeader() {
-  const d = new Date(trackerDate);
+  const d = parseLocalDate(trackerDate);
   const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const h1 = document.getElementById("today-day-header");
@@ -31,7 +33,7 @@ function renderHabitMonthGrids() {
   if (!container) return;
   container.innerHTML = "";
   const todayStr = getLocalDateString();
-  const today = new Date(todayStr);
+  const today = parseLocalDate(trackerDate || todayStr);
 
   if (getLinkedBlocks().length === 0) {
     container.innerHTML = `
@@ -66,12 +68,18 @@ function renderHabitMonthGrids() {
       const isToday = dStr === todayStr;
       const isFuture = dStr > todayStr;
 
-      const cell = document.createElement("div");
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.textContent = i;
+      cell.disabled = isFuture;
+      cell.setAttribute("aria-label", `${block.name}, ${dStr}`);
+      cell.setAttribute("aria-pressed", String(checked));
       cell.className = `habit-month-cell${checked ? ' checked' : ''}${isToday ? ' today' : ''}${isFuture ? ' future' : ''}`;
       cell.title = isFuture ? `${block.name}: ${dStr} (future dates cannot be marked complete yet)` : `${block.name}: ${dStr}`;
       if (!isFuture) {
         cell.onclick = () => {
-          toggleBlockQuickCompletion(dStr, block.id, !checked);
+          if (block.fields.some(f => f.type !== "checkbox")) openHabitLog(dStr, block.id);
+          else toggleBlockQuickCompletion(dStr, block.id, !checked);
         };
       }
       grid.appendChild(cell);
@@ -84,8 +92,8 @@ function renderHabitMonthGrids() {
     const streak = getBlockStreak(block.id);
     header.innerHTML = `
       <div>
-        <p class="text-[11px] font-bold text-text leading-tight">${block.name}</p>
-        <span class="text-[9px] text-text-dim">${block.time || ''}</span>
+        <p class="text-[11px] font-bold text-text leading-tight">${escapeHtml(block.name)}</p>
+        <span class="text-[9px] text-text-dim">${escapeHtml(block.time || '')}</span>
       </div>
       <span class="flex items-center gap-1.5 text-sm font-bold"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span>
     `;
@@ -98,26 +106,20 @@ function renderHabitMonthGrids() {
 
 function toggleBlockQuickCompletion(dateStr, blockId, checked) {
   if (dateStr > getLocalDateString()) return;
-  if (!appState.logs[dateStr]) appState.logs[dateStr] = {};
-  if (checked) playTapSound();
-  const log = appState.logs[dateStr];
-  log[blockId] = log[blockId] || {};
   const block = appState.settings.scheduleBlocks.find(b => b.id === blockId);
-  const numberField = block?.fields.find(f => f.type === "number");
-  if (numberField) {
-    log[blockId][numberField.id] = checked ? 60 : 0;
-  } else {
-    log[blockId].completed = checked;
-  }
-  persistState();
-  calculateStreaks();
-  renderToday();
+  if (!block) return;
+  if (block.fields.some(f => f.type !== "checkbox")) { openHabitLog(dateStr, blockId); return; }
+  appState.logs[dateStr] ??= {};
+  appState.logs[dateStr][blockId] ??= {};
+  appState.logs[dateStr][blockId].completed = checked;
+  if (checked) playTapSound();
+  persistState(); renderAll();
 }
 
 // ─── Reflection ──────────────────────────────────────────
 
 function getReflectionType() {
-  const d = new Date(trackerDate);
+  const d = parseLocalDate(trackerDate);
   const isFriday = d.getDay() === 5;
   const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
   const isLastDayOfMonth = d.getDate() === lastDay;
@@ -160,7 +162,7 @@ function loadDailyFields() {
   const dateLog = appState.logs[trackerDate] || {};
 
   const savedFeeling = dateLog.feelingScore;
-  if (savedFeeling !== undefined) {
+  {
     const btns = document.querySelectorAll("#mood-selector button");
     btns.forEach(b => {
       b.classList.remove("bg-green/20", "border-green", "text-green");
@@ -208,7 +210,7 @@ function saveWeeklyReflectionField(key, val) {
 }
 
 function loadMonthlyReflection() {
-  const monthKey = `${new Date(trackerDate).getFullYear()}-${String(new Date(trackerDate).getMonth() + 1).padStart(2, "0")}`;
+  const monthKey = `${parseLocalDate(trackerDate).getFullYear()}-${String(parseLocalDate(trackerDate).getMonth() + 1).padStart(2, "0")}`;
   const review = appState.monthlyReviews[monthKey] || {};
   const q = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ""; };
   q("monthly-lesson", review.lesson);
@@ -225,7 +227,7 @@ function loadMonthlyReflection() {
 }
 
 function saveMonthlyReflectionField(key, val) {
-  const monthKey = `${new Date(trackerDate).getFullYear()}-${String(new Date(trackerDate).getMonth() + 1).padStart(2, "0")}`;
+  const monthKey = `${parseLocalDate(trackerDate).getFullYear()}-${String(parseLocalDate(trackerDate).getMonth() + 1).padStart(2, "0")}`;
   if (!appState.monthlyReviews[monthKey]) appState.monthlyReviews[monthKey] = {};
   appState.monthlyReviews[monthKey][key] = val;
   persistState();
@@ -261,7 +263,8 @@ function renderTodayDeadlines() {
   }
 
   if (due.length === 0 && appState.settings.upcomingHidden) {
-    container.classList.add("hidden");
+    container.classList.remove("hidden");
+    container.innerHTML = `<button class="btn btn-outline" onclick="showUpcoming()">Show upcoming checkpoints</button>`;
     return;
   }
 
@@ -283,7 +286,7 @@ function renderTodayDeadlines() {
     if (due.length > 0) html += `<div class="border-t border-border pt-3 mt-1"></div>`;
     html += `<div class="flex items-center justify-between">
       <div class="card-header text-blue !border-0 !p-0 !m-0"><i data-lucide="calendar" class="w-3.5 h-3.5 inline mr-1"></i>Upcoming Checkpoints</div>
-      <button onclick="dismissUpcoming()" class="text-text-dim/50 hover:text-text p-1" title="Hide"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+      <button aria-label="Close or remove" onclick="dismissUpcoming()" class="text-text-dim/50 hover:text-text p-1" title="Hide"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
     </div>
     <div class="space-y-2">`;
     upcoming.forEach(g => {
@@ -311,8 +314,8 @@ function makeCheckpointDeadlineRow(g, done, badge) {
           <i data-lucide="${done ? 'check-check' : 'flag'}" class="w-4 h-4 ${done ? 'text-green' : 'text-blue'}"></i>
         </div>
         <div>
-          <span class="text-xs font-bold ${done ? 'text-green' : 'text-text'}">${g.name}</span>
-          <span class="text-[9px] text-text-dim block">${g.progress}/${g.target} ${g.unit || ''} · ${g.typeLabel}</span>
+          <span class="text-xs font-bold ${done ? 'text-green' : 'text-text'}">${escapeHtml(g.name)}</span>
+          <span class="text-[9px] text-text-dim block">${g.progress}/${g.target} ${escapeHtml(g.unit || '')} · ${g.typeLabel}</span>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
@@ -348,14 +351,11 @@ function getUpcomingDeadlines(fromDate, daysAhead) {
     { key: "threeMonth", label: "3-Month" },
     { key: "oneMonth", label: "1-Month" }
   ];
-  const from = new Date(fromDate);
-  const until = new Date(from);
-  until.setDate(until.getDate() + daysAhead);
+  const until = addDateDays(fromDate, daysAhead);
   levels.forEach(level => {
     (appState.goals[level.key] || []).forEach(g => {
       if (!g.deadline) return;
-      const d = new Date(g.deadline);
-      if (d > from && d <= until && g.deadline !== fromDate) {
+      if (g.deadline > fromDate && g.deadline <= until) {
         result.push({ ...g, type: level.key, typeLabel: level.label });
       }
     });
@@ -382,6 +382,8 @@ function toggleGoalDeadline(type, id, checked) {
   const goal = goals.find(g => g.id === id);
   if (!goal) return;
   goal.completed = checked;
+  if (checked && goal.target > 0) goal.progress = goal.target;
+  if (!checked && goal.progress >= goal.target) goal.progress = 0;
   persistState();
   renderToday();
   if (typeof renderGoalsHub === "function") renderGoalsHub();
@@ -420,14 +422,6 @@ function submitCheckpointComplete() {
   const input = document.getElementById("checkpoint-complete-input");
   const msg = document.getElementById("checkpoint-complete-msg");
   if (!input || !pendingCheckpointCompletion) return;
-  const normalized = input.value.trim().toLowerCase().replace(/\s+/g, " ");
-  if (normalized !== "yea boi") {
-    if (msg) {
-      msg.className = "text-xs font-semibold text-red";
-      msg.textContent = 'Type "yea boi" exactly to continue.';
-    }
-    return;
-  }
   toggleGoalDeadline(pendingCheckpointCompletion.type, pendingCheckpointCompletion.id, true);
   closeCheckpointCompleteModal();
   celebrate();
@@ -457,7 +451,7 @@ function renderAllGoalsCountdown() {
   const showAll = appState.settings.goalsCountdownCollapsed;
   const filtered = showAll ? all : all.filter(g => {
     const diff = Math.ceil((new Date(g.deadline) - today) / 86400000);
-    return diff >= 0 && diff <= 20;
+    return !g.completed && diff <= 20;
   });
 
   if (toggleBtn) {
@@ -480,8 +474,8 @@ function renderAllGoalsCountdown() {
           <span class="text-[9px] uppercase tracking-[0.18em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${g.type === 'sixMonth' ? '6-Month' : g.type === 'threeMonth' ? '3-Month' : '1-Month'}</span>
           <span class="text-[11px] ${accent}/80 font-bold">${done ? 'Completed' : diff < 0 ? Math.abs(diff) + 'd overdue' : diff + 'd left'}</span>
         </div>
-        <div class="text-sm font-bold ${done ? 'text-green' : 'text-text'} leading-snug">${g.name}</div>
-        <div class="text-[11px] text-text-dim">${g.progress}/${g.target} ${g.unit || ''}</div>
+        <div class="text-sm font-bold ${done ? 'text-green' : 'text-text'} leading-snug">${escapeHtml(g.name)}</div>
+        <div class="text-[11px] text-text-dim">${g.progress}/${g.target} ${escapeHtml(g.unit || '')}</div>
       </div>
       <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="w-full text-[10px] font-bold px-3 py-2 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
         ${done ? 'Completed checkpoint' : 'Complete checkpoint'}
@@ -489,7 +483,7 @@ function renderAllGoalsCountdown() {
     </div>`;
   });
 
-  body.innerHTML = html;
+  body.innerHTML = html || '<p class="text-sm text-text-dim col-span-full">No overdue checkpoints or deadlines in the next 20 days.</p>';
 }
 
 function toggleAllGoals() {

@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 
@@ -123,6 +123,7 @@
       <span class="text-[11px] text-text-dim font-bold uppercase tracking-[0.15em]">Execution Hub</span>
       <h2 class="font-display text-3xl md:text-5xl text-text leading-none mt-1" style="font-family:'Newsreader',serif" id="today-day-header">Saturday</h2>
       <p class="text-text-dim text-sm mt-2" id="today-date-header">May 23, 2026</p>
+      <div class="execution-date-controls"><label for="execution-date">Viewing day</label><input type="date" id="execution-date" onchange="editExecutionDate(this.value)"><button class="btn btn-outline" onclick="editExecutionDate(getLocalDateString())">Today</button></div>
     </div>
 
     <!-- Today's Deadlines -->
@@ -157,12 +158,12 @@
         </div>
         <div class="space-y-3 border-t border-border pt-4 mt-4">
           <div class="space-y-1">
-            <label class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Biggest win of the day</label>
-            <input type="text" id="field-biggestWin" placeholder="What went right today?" class="w-full text-xs" onblur="autoSaveField('biggestWin', this.value)">
+            <label for="field-biggestWin" class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Biggest win of the day</label>
+            <input type="text" id="field-biggestWin" placeholder="What went right today?" class="w-full text-xs" oninput="autoSaveField('biggestWin', this.value)">
           </div>
           <div class="space-y-1">
-            <label class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Biggest learning of the day</label>
-            <textarea id="field-biggestLearning" rows="2" placeholder="What did you learn today?" class="w-full text-xs resize-none" onblur="autoSaveField('biggestLearning', this.value)"></textarea>
+            <label for="field-biggestLearning" class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Biggest learning of the day</label>
+            <textarea id="field-biggestLearning" rows="2" placeholder="What did you learn today?" class="w-full text-xs resize-none" oninput="autoSaveField('biggestLearning', this.value)"></textarea>
           </div>
         </div>
       </div>
@@ -172,9 +173,9 @@
         <div class="card-header">Weekly Pulse Check</div>
         <p class="text-xs text-text-dim mb-4">Quick check before the weekend.</p>
         <div class="space-y-3">
-          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">Top win this week</label><input type="text" id="weekly-win" placeholder="e.g. Hit 4 gym sessions" class="w-full text-xs" onblur="saveWeeklyReflectionField('win', this.value)"></div>
-          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">Biggest struggle</label><input type="text" id="weekly-struggle" placeholder="e.g. YouTube binge on Monday" class="w-full text-xs" onblur="saveWeeklyReflectionField('struggle', this.value)"></div>
-          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">One adjustment</label><input type="text" id="weekly-adjustment" placeholder="e.g. Sleep by 8:45 PM" class="w-full text-xs" onblur="saveWeeklyReflectionField('adjustment', this.value)"></div>
+          <div><label for="weekly-win" class="block text-xs font-bold text-text-dim uppercase tracking-wider">Top win this week</label><input type="text" id="weekly-win" placeholder="e.g. Hit 4 gym sessions" class="w-full text-xs" oninput="saveWeeklyReflectionField('win', this.value)"></div>
+          <div><label for="weekly-struggle" class="block text-xs font-bold text-text-dim uppercase tracking-wider">Biggest struggle</label><input type="text" id="weekly-struggle" placeholder="e.g. YouTube binge on Monday" class="w-full text-xs" oninput="saveWeeklyReflectionField('struggle', this.value)"></div>
+          <div><label for="weekly-adjustment" class="block text-xs font-bold text-text-dim uppercase tracking-wider">One adjustment</label><input type="text" id="weekly-adjustment" placeholder="e.g. Sleep by 8:45 PM" class="w-full text-xs" oninput="saveWeeklyReflectionField('adjustment', this.value)"></div>
         </div>
       </div>
 
@@ -184,16 +185,16 @@
         <p class="text-xs text-text-dim mb-4">End-of-month. Celebrate progress, recalibrate.</p>
         <div class="space-y-3">
           <div>
-            <label class="block text-xs font-bold text-text-dim uppercase tracking-wider mb-2">Are we on track?</label>
+            <label for="monthly-change" class="block text-xs font-bold text-text-dim uppercase tracking-wider mb-2">Are we on track?</label>
             <div class="flex gap-2" id="monthly-track-selector">
               <button type="button" data-value="yes" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setMonthlyTrack('yes', this)">On Track</button>
               <button type="button" data-value="partial" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setMonthlyTrack('partial', this)">Partial</button>
               <button type="button" data-value="no" class="flex-1 py-2 rounded text-xs font-bold border border-border bg-[rgba(255,255,255,0.02)] hover:bg-white/5 transition-colors" onclick="setMonthlyTrack('no', this)">Off Track</button>
             </div>
           </div>
-          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">What needs to change</label><textarea id="monthly-change" rows="2" placeholder="What's not working? What to adjust?" class="w-full text-xs resize-none" onblur="saveMonthlyReflectionField('change', this.value)"></textarea></div>
-          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">What did this month teach you</label><textarea id="monthly-lesson" rows="2" placeholder="Key insight from this month" class="w-full text-xs resize-none" onblur="saveMonthlyReflectionField('lesson', this.value)"></textarea></div>
-          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">Goal for next month</label><input type="text" id="monthly-goal" placeholder="e.g. 6-day gym streak consistency" class="w-full text-xs" onblur="saveMonthlyReflectionField('goal', this.value)"></div>
+          <div><label class="block text-xs font-bold text-text-dim uppercase tracking-wider">What needs to change</label><textarea id="monthly-change" rows="2" placeholder="What's not working? What to adjust?" class="w-full text-xs resize-none" oninput="saveMonthlyReflectionField('change', this.value)"></textarea></div>
+          <div><label for="monthly-lesson" class="block text-xs font-bold text-text-dim uppercase tracking-wider">What did this month teach you</label><textarea id="monthly-lesson" rows="2" placeholder="Key insight from this month" class="w-full text-xs resize-none" oninput="saveMonthlyReflectionField('lesson', this.value)"></textarea></div>
+          <div><label for="monthly-goal" class="block text-xs font-bold text-text-dim uppercase tracking-wider">Goal for next month</label><input type="text" id="monthly-goal" placeholder="e.g. 6-day gym streak consistency" class="w-full text-xs" oninput="saveMonthlyReflectionField('goal', this.value)"></div>
         </div>
       </div>
     </div>
@@ -235,7 +236,7 @@
     <!-- Calendar + Details (weekly/monthly only) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="review-calendar-section">
       <div class="lg:col-span-2 card">
-        <div class="grid grid-cols-7 text-center text-[10px] font-bold text-text-dim uppercase tracking-wider mb-3">
+        <div id="review-weekday-labels" class="grid grid-cols-7 text-center text-[10px] font-bold text-text-dim uppercase tracking-wider mb-3">
           <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
         </div>
         <div class="calendar-grid" id="review-calendar-days-container"></div>
@@ -245,6 +246,7 @@
         <p class="text-xs text-text-dim">Pick a day to view logged data.</p>
       </div>
     </div>
+    <div id="period-reflection" class="card"></div>
   </section>
 
   <!-- ==================== TAB: CONSTITUTION ==================== -->
@@ -298,14 +300,14 @@
           </div>
           <p class="text-xs text-text-dim leading-relaxed mb-4">Connect Supabase to sync your data across devices.</p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">API URL <button onclick="openSupabaseHelp('url')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
-            <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Anon Key / Publishable Key <button onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
+            <div><label for="settings-supabase-url" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">API URL <button aria-label="circle help" onclick="openSupabaseHelp('url')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
+            <div><label for="settings-supabase-key" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Anon Key / Publishable Key <button aria-label="circle help" onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
           </div>
           <div class="flex items-center gap-3">
             <button onclick="testAndSaveSupabaseConnection()" id="settings-connect-btn" class="btn btn-primary">Verify &amp; Connect</button>
             <button onclick="syncNow()" id="settings-sync-btn" class="btn btn-primary hidden"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sync Now</button>
             <button onclick="disconnectSupabase()" id="settings-supabase-disconnect" class="btn btn-danger hidden">Disconnect</button>
-            <span id="supabase-msg" class="text-xs font-semibold"></span>
+            <div id="sync-conflict-controls" class="hidden flex gap-2"><button class="btn btn-outline" onclick="resolveSyncConflict('local')">Keep this device’s version</button><button class="btn btn-outline" onclick="resolveSyncConflict('cloud')">Use cloud version</button></div><span id="supabase-msg" class="text-xs font-semibold"></span>
           </div>
         </div>
 
@@ -337,9 +339,9 @@
 
         <div class="card">
           <div class="card-header">Restore</div>
-          <p class="text-xs text-text-dim leading-relaxed mb-3">Import a JSON backup to restore your data.</p>
+          <p class="text-xs text-text-dim leading-relaxed mb-3">Import a complete plan or restore a JSON backup. A plan replaces your habits and goals; existing logs are kept.</p>
           <label for="import-file-input" class="w-full bg-[rgba(255,255,255,0.02)] border border-border hover:bg-white/5 text-xs font-bold py-2.5 px-3 rounded flex items-center justify-center gap-2 cursor-pointer transition-colors">
-            <i data-lucide="upload" class="w-4 h-4 text-amber"></i> Choose Backup File
+            <i data-lucide="upload" class="w-4 h-4 text-amber"></i> Choose JSON File
           </label>
           <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDataJSON(event)">
           <span id="import-msg" class="block text-center text-[10px] mt-2 font-medium"></span>
@@ -371,7 +373,7 @@
   <div class="bg-surface border border-border w-full max-w-2xl rounded-lg p-5 space-y-4 shadow-xl">
     <div class="flex items-center justify-between border-b border-border pb-3">
       <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber inline mr-1.5"></i>AI Goal Generator</h3>
-      <button onclick="closeAIModal()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+      <button aria-label="Close" onclick="closeAIModal()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
     <div id="ai-question-container" class="min-h-[180px]"></div>
   </div>
@@ -382,13 +384,13 @@
   <div class="bg-surface border border-border w-full max-w-lg rounded-lg p-5 space-y-4 shadow-xl">
     <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">Add New Goal</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="md:col-span-2"><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Goal Name</label><input type="text" id="goal-form-name" placeholder="e.g. Build Portfolios" class="w-full text-xs" oninput="validateGoalForm()"></div>
-      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Level</label><select id="goal-form-type" class="w-full text-xs" onchange="validateGoalForm()"><option value="sixMonth">6-Month</option><option value="threeMonth">3-Month</option></select></div>
-      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">North Star</label><select id="goal-form-northstar" class="w-full text-xs" onchange="validateGoalForm()"></select></div>
-      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Target</label><input type="number" id="goal-form-target" min="1" placeholder="e.g. 5" class="w-full text-xs" oninput="validateGoalForm()"></div>
-      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Unit</label><input type="text" id="goal-form-unit" placeholder="projects" class="w-full text-xs" oninput="validateGoalForm()"></div>
-      <div><label class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Deadline</label><input type="date" id="goal-form-deadline" class="w-full text-xs" oninput="validateGoalForm()"></div>
-      <div class="md:col-span-2 text-[9px] text-text-dim/60 italic">Checkpoints flow down from North Star pillars to keep everything connected.</div>
+      <div class="md:col-span-2"><label for="goal-form-name" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Goal Name</label><input type="text" id="goal-form-name" placeholder="e.g. Build Portfolios" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div><label for="goal-form-type" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Level</label><select id="goal-form-type" class="w-full text-xs" onchange="validateGoalForm()"><option value="sixMonth">6-Month</option><option value="threeMonth">3-Month</option><option value="oneMonth">1-Month</option></select></div>
+      <div><label for="goal-form-northstar" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">North Star</label><select id="goal-form-northstar" class="w-full text-xs" onchange="validateGoalForm()"></select></div>
+      <div><label for="goal-form-target" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Target</label><input type="number" id="goal-form-target" min="1" placeholder="e.g. 5" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div><label for="goal-form-unit" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Unit</label><input type="text" id="goal-form-unit" placeholder="projects" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div><label for="goal-form-deadline" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Deadline</label><input type="date" id="goal-form-deadline" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div class="md:col-span-2 text-[9px] text-text-dim/60 italic">Checkpoints and daily habits are grouped under their North Star.</div>
     </div>
     <div class="flex items-center gap-3 pt-1">
       <button id="goal-add-btn" onclick="addNewGoal()" class="btn btn-primary flex-1 justify-center" disabled><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Goal</button>
@@ -402,21 +404,14 @@
   <div class="bg-surface border border-border w-full max-w-md rounded-lg p-5 space-y-4 shadow-xl">
     <div class="space-y-2">
       <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">Complete Checkpoint</h3>
-      <p id="checkpoint-complete-title" class="text-sm font-bold text-text"></p>
-      <p class="text-sm text-text">Type in <span class="font-bold text-green">yea boi</span> in the text box below to mark this checkpoint as complete.</p>
+      <p class="text-sm text-text-dim">Mark this as complete. You can reopen it later.</p>
     </div>
     <div class="space-y-2">
-      <input
-        type="text"
-        id="checkpoint-complete-input"
-        placeholder="yea boi"
-        class="w-full text-xs"
-        onkeydown="if(event.key==='Enter')submitCheckpointComplete()"
-      >
+      <input type="hidden" id="checkpoint-complete-input">
       <span id="checkpoint-complete-msg" class="block text-xs font-semibold"></span>
     </div>
     <div class="flex items-center gap-3">
-      <button onclick="submitCheckpointComplete()" class="btn btn-primary flex-1 justify-center">Submit</button>
+      <button onclick="submitCheckpointComplete()" class="btn btn-primary flex-1 justify-center">Mark complete</button>
       <button onclick="closeCheckpointCompleteModal()" class="btn btn-outline flex-1 justify-center">Not yet</button>
     </div>
   </div>
@@ -427,21 +422,14 @@
   <div class="bg-surface border border-border w-full max-w-md rounded-lg p-5 space-y-4 shadow-xl">
     <div class="space-y-2">
       <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">Complete North Star</h3>
-      <p id="northstar-review-complete-title" class="text-sm font-bold text-text"></p>
-      <p class="text-sm text-text">Type in <span class="font-bold text-green">yea boi</span> in the text box below to mark this goal as complete.</p>
+      <p class="text-sm text-text-dim">Mark this as complete. You can reopen it later.</p>
     </div>
     <div class="space-y-2">
-      <input
-        type="text"
-        id="northstar-review-complete-input"
-        placeholder="yea boi"
-        class="w-full text-xs"
-        onkeydown="if(event.key==='Enter')submitNorthStarReviewComplete()"
-      >
+      <input type="hidden" id="northstar-review-complete-input">
       <span id="northstar-review-complete-msg" class="block text-xs font-semibold"></span>
     </div>
     <div class="flex items-center gap-3">
-      <button onclick="submitNorthStarReviewComplete()" class="btn btn-primary flex-1 justify-center">Submit</button>
+      <button onclick="submitNorthStarReviewComplete()" class="btn btn-primary flex-1 justify-center">Mark complete</button>
       <button onclick="closeNorthStarReviewModal()" class="btn btn-outline flex-1 justify-center">Not yet</button>
     </div>
   </div>
@@ -473,9 +461,7 @@
       <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">
         <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber inline mr-1.5"></i>Welcome to Life OS
       </h3>
-      <button onclick="closeOnboardingModal()" class="text-text-dim/50 hover:text-text p-1">
-        <i data-lucide="x" class="w-4 h-4"></i>
-      </button>
+      <button aria-label="Close" onclick="closeOnboardingModal()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
     <div class="space-y-4">
       <p class="text-sm text-text leading-relaxed">Set up in 3 steps:</p>
@@ -515,7 +501,7 @@
   <div class="bg-surface border border-border w-full max-w-lg rounded-lg p-5 space-y-4 shadow-xl" onclick="event.stopPropagation()">
     <div class="flex items-center justify-between border-b border-border pb-3">
       <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim"><i data-lucide="database" class="w-3.5 h-3.5 inline mr-1.5 text-green"></i>Where to Find Your Supabase Credentials</h3>
-      <button onclick="closeSupabaseHelp()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+      <button aria-label="Close" onclick="closeSupabaseHelp()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
     <div class="space-y-4 text-xs text-text-dim leading-relaxed">
       <div>
@@ -556,17 +542,33 @@ create policy "Enable all" on public.life_os_sync
   </div>
 </div>
 
-<script src="mockData.js?v=7"></script>
-<script src="js/config.js?v=4"></script>
-<script src="js/state.js?v=7"></script>
-<script src="js/utils.js?v=8"></script>
-<script src="js/tabs/execution.js?v=1"></script>
-<script src="js/tabs/progress.js?v=1"></script>
-<script src="js/tabs/blueprint.js?v=1"></script>
-<script src="js/tabs/system.js?v=2"></script>
-<script src="js/tabs/constitution.js?v=2"></script>
-<script src="js/ai-goal-prompt.js?v=10"></script>
-<script src="js/ai-goals.js?v=11"></script>
-<script src="app.js?v=7"></script>
+
+<div id="habit-log-modal" class="desktop-editor hidden" style="display:none">
+  <div class="card"><h3 id="habit-log-title">Log habit</h3><div id="habit-log-fields"></div><p id="habit-log-error" role="alert"></p><div class="editor-actions"><button class="btn btn-primary" onclick="saveHabitLog()">Save log</button><button class="btn btn-outline" onclick="closeEditor('habit-log-modal')">Cancel</button></div></div>
+</div>
+<div id="habit-editor-modal" class="desktop-editor hidden" style="display:none">
+  <div class="card"><h3>Edit daily habit</h3>
+    <label class="editor-field">Habit name<input id="habit-name" type="text"></label>
+    <label class="editor-field">Time or window<input id="habit-time" type="text" placeholder="e.g. After lunch, or leave blank"></label>
+    <label class="editor-field">Tracking<select id="habit-type" onchange="updateHabitTrackingFields()"><option value="checkbox">Completed / not completed</option><option value="number">Numeric amount</option></select></label>
+    <label class="editor-field">Numeric field label<input id="habit-unit-label" type="text"></label>
+    <label class="editor-field">North Star<select id="habit-northstar"></select></label>
+    <p id="habit-editor-error" role="alert"></p><div class="editor-actions"><button class="btn btn-primary" onclick="saveHabitDefinition()">Save habit</button><button class="btn btn-outline" onclick="closeEditor('habit-editor-modal')">Cancel</button><button id="habit-delete" class="btn btn-danger" onclick="deleteHabitDefinition()">Remove habit</button></div>
+  </div>
+</div>
+
+<script src="mockData.js?v=8"></script>
+<script src="js/config.js?v=5"></script>
+<script src="js/state.js?v=8"></script>
+<script src="js/utils.js?v=9"></script>
+<script src="js/tabs/execution.js?v=2"></script>
+<script src="js/tabs/progress.js?v=2"></script>
+<script src="js/tabs/blueprint.js?v=2"></script>
+<script src="js/tabs/system.js?v=3"></script>
+<script src="js/tabs/constitution.js?v=3"></script>
+<script src="js/ai-goal-prompt.js?v=11"></script>
+<script src="js/ai-goals.js?v=12"></script>
+<script src="js/desktop.js?v=2"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>

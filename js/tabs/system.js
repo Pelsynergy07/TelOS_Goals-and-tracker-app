@@ -13,7 +13,7 @@ function renderSettings() {
   if (dbClient && hasCreds && navigator.onLine === false) {
     updateSyncStatusBadge(false, "Offline");
   } else {
-    updateSyncStatusBadge(!!dbClient && hasCreds);
+    updateSyncStatusBadge(!!dbClient && hasCreds && !syncError, syncError ? (syncConflict ? "Conflict" : "Sync failed") : undefined);
   }
 }
 
@@ -35,7 +35,8 @@ async function testAndSaveSupabaseConnection() {
     dbClient = testClient;
     updateSyncStatusBadge(true);
     if (msgEl) { msgEl.className = "text-xs font-semibold text-blue"; msgEl.textContent = "Pulling cloud data..."; }
-    await pullFromCloud();
+    if (syncMeta.dirty) await pushToCloud();
+    else await pullFromCloud();
     if (msgEl) { msgEl.className = "text-xs font-semibold text-green"; msgEl.textContent = "Synced!"; }
     persistState();
     saveCredentialsToNative(url, key);
@@ -43,7 +44,7 @@ async function testAndSaveSupabaseConnection() {
     lucide.createIcons();
   } catch (err) {
     if (msgEl) { msgEl.className = "text-xs font-semibold text-red"; msgEl.textContent = err.message || "Connection failed."; }
-    updateSyncStatusBadge(false, "Failed");
+    markSyncError(err);
   }
 }
 
@@ -61,7 +62,8 @@ function disconnectSupabase() {
     appState.settings.supabaseKey = "";
     appState.settings.syncEnabled = false;
     dbClient = null;
-    persistState();
+    syncMeta = { dirty: false, base: null }; syncConflict = false; syncError = ""; saveSyncMeta();
+    persistState({ sync: false });
     updateSyncStatusBadge(false);
     const urlEl = document.getElementById("settings-supabase-url");
     const keyEl = document.getElementById("settings-supabase-key");
@@ -104,6 +106,7 @@ async function submitWipe() {
   localStorage.removeItem(APP_CONFIG.storageKey);
   appState = JSON.parse(JSON.stringify(initialMockData));
   dbClient = null;
+    syncMeta = { dirty: false, base: null }; syncConflict = false; syncError = ""; saveSyncMeta();
   appState.settings.supabaseUrl = "";
   appState.settings.supabaseKey = "";
   appState.settings.syncEnabled = false;
@@ -125,13 +128,14 @@ function executeReset(type) {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
     Object.keys(appState.logs).forEach(dStr => {
-      const d = new Date(dStr);
+      const d = parseLocalDate(dStr);
       if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) delete appState.logs[dStr];
     });
   } else if (type === "all") {
     localStorage.removeItem(APP_CONFIG.storageKey);
     appState = JSON.parse(JSON.stringify(initialMockData));
     dbClient = null;
+    syncMeta = { dirty: false, base: null }; syncConflict = false; syncError = ""; saveSyncMeta();
     appState.settings.supabaseUrl = "";
     appState.settings.supabaseKey = "";
     appState.settings.syncEnabled = false;
@@ -190,7 +194,13 @@ function importDataJSON(event) {
     try {
       const imported = JSON.parse(e.target.result);
       if (imported.logs && imported.goals && imported.settings) {
-        appState = imported;
+        const candidate = normalizeBackup(imported);
+        appState = candidate;
+        dbClient = null;
+    syncMeta = { dirty: false, base: null }; syncConflict = false; syncError = ""; saveSyncMeta();
+        syncMeta = { dirty: true, base: null };
+        syncConflict = false;
+        syncError = "";
         if (!appState.identityStatement) appState.identityStatement = { title: "Who I Am Becoming", description: "" };
         if (!Array.isArray(appState.dangerAreas)) appState.dangerAreas = [];
         if (!Array.isArray(appState.rules)) appState.rules = [];

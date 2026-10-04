@@ -26,7 +26,7 @@ function renderAIImportMode() {
         <span id="ai-import-msg" class="text-xs font-semibold text-text-dim"></span>
       </div>
       <div class="space-y-2">
-        <label class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Paste generated JSON</label>
+        <label for="ai-import-json" class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Paste generated JSON</label>
         <textarea id="ai-import-json" rows="12" class="w-full text-xs" placeholder='{"identityStatement":{...},"dangerAreas":[...],"rules":[...],"northStar":[...],"sixMonth":[...],"threeMonth":[...],"oneMonth":[...],"dailyHabits":[...],"linkedHabits":[...]}' oninput="validateAIImportInput()"></textarea>
       </div>
       <div class="flex items-center justify-between gap-3 flex-wrap">
@@ -99,7 +99,9 @@ function validateGoalCascade(content) {
   };
   const northStarIds = checkIds(content.northStar, "northStar");
   const habitIds = checkIds(habits, "dailyHabits");
+  const reservedLogKeys = new Set(["feelingScore","biggestWin","biggestLearning","energyLevel","moodGuiltLevel","pmoAvoided","avoidanceFriction","adjustment"]);
   const blocks = habits.map(habit => {
+    if (reservedLogKeys.has(habit.id)) throw new Error(`Habit ID "${habit.id}" is reserved for reflection data.`);
     if (typeof habit.name !== "string" || !habit.name.trim()) throw new Error(`Habit "${habit.id}" needs a name.`);
     if (habit.time !== undefined && typeof habit.time !== "string") throw new Error(`Habit "${habit.id}": time must be text.`);
     const fields = habit.fields ?? [{ id: "completed", type: "checkbox", label: "Completed" }];
@@ -116,6 +118,8 @@ function validateGoalCascade(content) {
     const goals = content[level] || [];
     checkIds(goals, level);
     for (const goal of goals) {
+      if (!Number.isFinite(Number(goal.progress || 0)) || !Number.isFinite(Number(goal.target || 0)) || Number(goal.progress || 0) < 0 || Number(goal.target || 0) < 0) throw new Error(`${level}: checkpoint numbers must be non-negative and finite.`);
+      if (goal.deadline && (!/^\d{4}-\d{2}-\d{2}$/.test(goal.deadline) || addDateDays(goal.deadline, 0) !== goal.deadline)) throw new Error(`${level}: invalid deadline.`);
       if (!northStarIds.has(goal.northStarId)) throw new Error(`${level}: checkpoint "${goal.id}" references an unknown North Star.`);
     }
   }
