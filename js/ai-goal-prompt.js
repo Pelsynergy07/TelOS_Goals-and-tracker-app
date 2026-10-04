@@ -569,7 +569,7 @@ Rules:
 * Confirm the user's realistic daily actions and preferred times before generating JSON. If no time is agreed, use an empty string.
 * Always include dailyHabits, oneMonth, and linkedHabits arrays. This is a complete replacement plan, not a patch.
 * Each daily habit must have a unique id, name, time, and fields array.
-* Use a checkbox with id "completed" for yes/no habits. For numeric habits use a number field (for example id "minutes"); any positive number currently counts as completion. Optional text and time fields may accompany it.
+* Use a checkbox with id "completed" for yes/no habits. For numeric habits use a number field (for example id "minutes"); amounts are optional details. The user marks completion directly, independently of the amount. Optional text and time fields may accompany it.
 * Each habit needs at least one checkbox or number field. Allowed field types: checkbox, number, text, time.
 * Every linkedHabits.habitId must exactly match a dailyHabits.id. Link every daily habit to exactly one valid northStarId.
 * Checkpoints and habits share a North Star; linkedHabits references habits, never checkpoint IDs.

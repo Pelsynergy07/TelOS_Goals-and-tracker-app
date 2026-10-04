@@ -78,8 +78,7 @@ function renderHabitMonthGrids() {
       cell.title = isFuture ? `${block.name}: ${dStr} (future dates cannot be marked complete yet)` : `${block.name}: ${dStr}`;
       if (!isFuture) {
         cell.onclick = () => {
-          if (block.fields.some(f => f.type !== "checkbox")) openHabitLog(dStr, block.id);
-          else toggleBlockQuickCompletion(dStr, block.id, !checked);
+          toggleBlockQuickCompletion(dStr, block.id, !checked);
         };
       }
       grid.appendChild(cell);
@@ -92,13 +91,30 @@ function renderHabitMonthGrids() {
     const streak = getBlockStreak(block.id);
     header.innerHTML = `
       <div>
-        <p class="text-[11px] font-bold text-text leading-tight">${escapeHtml(block.name)}</p>
-        <span class="text-[9px] text-text-dim">${escapeHtml(block.time || '')}</span>
+        <p class="text-caption font-bold text-text leading-tight">${escapeHtml(block.name)}</p>
+        <span class="text-caption text-text-dim">${escapeHtml(block.time || '')}</span>
       </div>
       <span class="flex items-center gap-1.5 text-sm font-bold"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span>
     `;
     card.appendChild(header);
+    const complete = document.createElement("button");
+    complete.type = "button";
+    const dayDone = isBlockCompleted(block, appState.logs[trackerDate]?.[block.id]);
+    complete.className = "habit-complete-button" + (dayDone ? " is-done" : "");
+    complete.setAttribute("aria-pressed", String(dayDone));
+    complete.setAttribute("aria-label", `${dayDone ? 'Undo' : 'Complete'} ${block.name} for ${trackerDate}`);
+    complete.innerHTML = `<span class="habit-check" aria-hidden="true">${dayDone ? '&#10003;' : ''}</span><span>${dayDone ? 'Done' : 'Mark done'} · ${formatDateLabelShort(trackerDate)}</span>`;
+    complete.onclick = () => toggleBlockQuickCompletion(trackerDate, block.id, !dayDone);
+    card.appendChild(complete);
     card.appendChild(grid);
+    if (block.fields.some(f => f.type !== "checkbox")) {
+      const details = document.createElement("details");
+      details.className = "habit-details";
+      const values = appState.logs[trackerDate]?.[block.id] || {};
+      details.innerHTML = `<summary>Optional details · ${formatDateLabelShort(trackerDate)}</summary><form class="habit-details-form">${block.fields.filter(f => f.type !== "checkbox").map(f => `<label class="editor-field">${escapeHtml(f.label || f.id)}<input data-detail-field="${f.id}" type="${f.type}" ${f.type === 'number' ? 'min="0" step="any"' : ''} value="${escapeHtml(values[f.id] ?? '')}"></label>`).join('')}<p class="habit-details-error" role="status"></p><button type="submit" class="btn btn-outline">Save details</button></form>`;
+      details.querySelector("form").onsubmit = event => { event.preventDefault(); saveInlineHabitDetails(trackerDate, block.id, event.currentTarget); };
+      card.appendChild(details);
+    }
     container.appendChild(card);
   });
   lucide.createIcons();
@@ -108,10 +124,10 @@ function toggleBlockQuickCompletion(dateStr, blockId, checked) {
   if (dateStr > getLocalDateString()) return;
   const block = appState.settings.scheduleBlocks.find(b => b.id === blockId);
   if (!block) return;
-  if (block.fields.some(f => f.type !== "checkbox")) { openHabitLog(dateStr, blockId); return; }
   appState.logs[dateStr] ??= {};
   appState.logs[dateStr][blockId] ??= {};
   appState.logs[dateStr][blockId].completed = checked;
+  block.fields.filter(f => f.type === "checkbox").forEach(f => { appState.logs[dateStr][blockId][f.id] = checked; });
   if (checked) playTapSound();
   persistState(); renderAll();
 }
@@ -299,7 +315,7 @@ function renderTodayDeadlines() {
   }
 
   if (upcoming.length > 0 && appState.settings.upcomingHidden && due.length > 0) {
-    html += `<button onclick="showUpcoming()" class="text-[9px] text-blue/60 hover:text-blue font-bold mt-1">Show upcoming checkpoints</button>`;
+    html += `<button onclick="showUpcoming()" class="text-caption text-blue/60 hover:text-blue font-bold mt-1">Show upcoming checkpoints</button>`;
   }
 
   container.innerHTML = html;
@@ -315,12 +331,12 @@ function makeCheckpointDeadlineRow(g, done, badge) {
         </div>
         <div>
           <span class="text-xs font-bold ${done ? 'text-green' : 'text-text'}">${escapeHtml(g.name)}</span>
-          <span class="text-[9px] text-text-dim block">${g.progress}/${g.target} ${escapeHtml(g.unit || '')} · ${g.typeLabel}</span>
+          <span class="text-caption text-text-dim block">${g.progress}/${g.target} ${escapeHtml(g.unit || '')} · ${g.typeLabel}</span>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
-        <span class="text-[9px] font-bold ${done ? 'text-green' : 'text-text-dim'}">${badge || (done ? '✓ Done' : 'Pending')}</span>
-        <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="text-[10px] font-bold px-3 py-1.5 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
+        <span class="text-caption font-bold ${done ? 'text-green' : 'text-text-dim'}">${badge || (done ? '✓ Done' : 'Pending')}</span>
+        <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="text-caption font-bold px-3 py-1.5 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
           ${done ? 'Completed' : 'Mark complete'}
         </button>
       </div>
@@ -471,13 +487,13 @@ function renderAllGoalsCountdown() {
     html += `<div class="border ${done ? 'border-green/30 bg-green/[0.04]' : 'border-border bg-[rgba(255,255,255,0.02)]'} rounded-[14px] px-[14px] py-5 flex flex-col justify-between gap-3 min-h-[148px]">
       <div class="space-y-1.5">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-[9px] uppercase tracking-[0.18em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${g.type === 'sixMonth' ? '6-Month' : g.type === 'threeMonth' ? '3-Month' : '1-Month'}</span>
-          <span class="text-[11px] ${accent}/80 font-bold">${done ? 'Completed' : diff < 0 ? Math.abs(diff) + 'd overdue' : diff + 'd left'}</span>
+          <span class="text-caption uppercase tracking-[0.18em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${g.type === 'sixMonth' ? '6-Month' : g.type === 'threeMonth' ? '3-Month' : '1-Month'}</span>
+          <span class="text-caption ${accent}/80 font-bold">${done ? 'Completed' : diff < 0 ? Math.abs(diff) + 'd overdue' : diff + 'd left'}</span>
         </div>
         <div class="text-sm font-bold ${done ? 'text-green' : 'text-text'} leading-snug">${escapeHtml(g.name)}</div>
-        <div class="text-[11px] text-text-dim">${g.progress}/${g.target} ${escapeHtml(g.unit || '')}</div>
+        <div class="text-caption text-text-dim">${g.progress}/${g.target} ${escapeHtml(g.unit || '')}</div>
       </div>
-      <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="w-full text-[10px] font-bold px-3 py-2 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
+      <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="w-full text-caption font-bold px-3 py-2 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
         ${done ? 'Completed checkpoint' : 'Complete checkpoint'}
       </button>
     </div>`;

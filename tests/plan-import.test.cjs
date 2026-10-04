@@ -128,12 +128,18 @@ test('malformed backup does not replace or persist existing state', async () => 
   assert.deepEqual(JSON.parse(storage.get('telos_data')), before);
 });
 
-test('numeric quick completion opens an editor without fabricating a value', () => {
-  const { ctx, run, state } = setup(); ctx.plan = plan(); run('applyGeneratedGoalCascade(plan)');
+test('direct completion toggles numeric and mixed habits without a modal or invented amount', () => {
+  const { ctx, run, state } = setup(); ctx.plan = plan();
+  ctx.plan.dailyHabits[0].fields = [{id:'completed',type:'checkbox'}, {id:'actual_time',type:'time'}];
+  run('applyGeneratedGoalCascade(plan)');
   vm.runInContext(fs.readFileSync(path.join(root,'js/tabs/execution.js'),'utf8'),ctx);
-  ctx.opened = null; ctx.capture = (date,id) => { ctx.opened = {date,id}; };
-  run('openHabitLog = capture; toggleBlockQuickCompletion("2026-10-01", "practice", true)');
-  assert.equal(ctx.opened.id, 'practice'); assert.deepEqual(state().logs, {});
+  run('toggleBlockQuickCompletion("2026-10-01", "practice", true); toggleBlockQuickCompletion("2026-10-01", "lunch_walk", true)');
+  assert.equal(state().logs['2026-10-01'].practice.completed,true);
+  assert.equal(state().logs['2026-10-01'].practice.minutes,undefined);
+  assert.equal(state().logs['2026-10-01'].lunch_walk.completed,true);
+  run('appState.logs["2026-10-01"].practice.minutes=12; toggleBlockQuickCompletion("2026-10-01", "practice", false)');
+  assert.equal(state().logs['2026-10-01'].practice.minutes,12);
+  assert.equal(run('isBlockCompleted(appState.settings.scheduleBlocks[1],appState.logs["2026-10-01"].practice)'),false);
 });
 
 test('monthly metrics use actual days; historical edit transfers selected date', () => {
@@ -213,4 +219,12 @@ test('serialized writes flush edits arriving while a request is in flight', asyn
   run('appState.identityStatement.description="Latest edit"; stateRevision++; syncMeta.dirty=true');
   release(); await writing;
   assert.equal(cloud.remote.data.identityStatement.description,'Latest edit'); assert.equal(run('syncMeta.dirty'),false); assert.equal(cloud.writes,2);
+});
+
+test('cloud reset replaces stale dirty local state before it can be uploaded', async () => {
+  const {ctx,run,state}=setup(); ctx.plan=plan(); run('applyGeneratedGoalCascade(plan)');
+  const empty=state(); empty.logs={}; empty.settings.scheduleBlocks=[]; empty.goals={northStar:[],yearly:[],sixMonth:[],threeMonth:[],oneMonth:[],linkedHabits:[]}; empty.cloudResetAt='2026-10-05T00:00:00Z';
+  const cloud=fakeCloud({id:'life_os_data',updated_at:empty.cloudResetAt,data:empty}); connect(ctx,run,cloud);
+  await run('pushToCloud()');
+  assert.equal(cloud.writes,0); assert.equal(state().settings.scheduleBlocks.length,0); assert.equal(state().cloudResetAt,empty.cloudResetAt); assert.equal(run('syncMeta.dirty'),false);
 });

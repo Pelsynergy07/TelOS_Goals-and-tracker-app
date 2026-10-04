@@ -21,17 +21,17 @@ function renderAIImportMode() {
         <p class="text-xs text-text-dim mt-1">Copy the prompt below into ChatGPT, answer the curated questions there, then paste the final JSON back here.</p>
       </div>
       <div class="flex items-center gap-2 flex-wrap">
-        <button onclick="copyAIGoalPrompt()" class="btn btn-outline border-green/30 text-green hover:bg-green/[0.06] text-[10px]">Copy ChatGPT Prompt</button>
-        <button onclick="openChatGPTPlanner()" class="btn btn-outline text-[10px]">Open ChatGPT</button>
+        <button onclick="copyAIGoalPrompt()" class="btn btn-outline border-green/30 text-green hover:bg-green/[0.06] text-caption">Copy ChatGPT Prompt</button>
+        <button onclick="openChatGPTPlanner()" class="btn btn-outline text-caption">Open ChatGPT</button>
         <span id="ai-import-msg" class="text-xs font-semibold text-text-dim"></span>
       </div>
       <div class="space-y-2">
-        <label for="ai-import-json" class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Paste generated JSON</label>
+        <label for="ai-import-json" class="text-caption text-text-dim font-bold uppercase tracking-wider block">Paste generated JSON</label>
         <textarea id="ai-import-json" rows="12" class="w-full text-xs" placeholder='{"identityStatement":{...},"dangerAreas":[...],"rules":[...],"northStar":[...],"sixMonth":[...],"threeMonth":[...],"oneMonth":[...],"dailyHabits":[...],"linkedHabits":[...]}' oninput="validateAIImportInput()"></textarea>
       </div>
       <div class="flex items-center justify-between gap-3 flex-wrap">
-        <button onclick="closeAIModal()" class="text-[10px] font-bold text-text-dim hover:text-text">Cancel</button>
-        <button id="ai-import-btn" onclick="importAIGoalsFromTextarea()" class="btn btn-green text-[10px] opacity-50" disabled>Import JSON</button>
+        <button onclick="closeAIModal()" class="text-caption font-bold text-text-dim hover:text-text">Cancel</button>
+        <button id="ai-import-btn" onclick="importAIGoalsFromTextarea()" class="btn btn-green text-caption opacity-50" disabled>Import JSON</button>
       </div>
     </div>`;
   validateAIImportInput();

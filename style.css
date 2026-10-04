@@ -25,12 +25,13 @@
   unicode-range: U+30-39, U+2E;
 }
 
-html { font-size: 15px; }
+html { font-size: 16px; }
 
 body {
   background: var(--bg);
   color: var(--text);
-  font-family: "Num", "Geist", system-ui, -apple-system, sans-serif;
+  font-family: "Geist", system-ui, -apple-system, sans-serif;
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
   line-height: 1.5;
 }
@@ -289,7 +290,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 @media (hover: hover) {
   .habit-month-cell:hover {
-    transform: scale(1.3); border-color: rgba(34,211,160,0.3);
+    border-color: rgba(34,211,160,0.3);
   }
 }
 .habit-month-cell.checked {
@@ -614,7 +615,7 @@ section { animation: fadeUp 0.25s ease; }
 
 /* Mobile */
 @media (max-width: 767px) {
-  html { font-size: 14px; }
+  html { font-size: 16px; }
 
   .app-content {
     padding-top: 1rem !important;
@@ -683,9 +684,7 @@ section { animation: fadeUp 0.25s ease; }
 
 /* ─── Personal Constitution ───────────────────────────── */
 
-.identity-hero {
-  border-left: 3px solid rgba(34, 211, 160, 0.4);
-}
+.identity-hero { border-color: rgba(34, 211, 160, 0.25); }
 
 .identity-hero textarea {
   font-family: "Newsreader", serif;
@@ -913,3 +912,76 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .habit-month-cell { min-height:32px; }
 }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
+
+/* Shared product type and spacing roles. Existing colour tokens remain unchanged. */
+:root { --type-caption:.75rem; --type-small:.875rem; --type-body:1rem; --type-title:1.5rem; --touch-target:48px; }
+body { line-height:1.55; }
+.text-caption { font-size:var(--type-caption); line-height:1.5; }
+.text-small,.text-xs,.text-sm { font-size:var(--type-small); line-height:1.5; }
+h1,h2,h3 { text-wrap:balance; letter-spacing:-.02em; }
+.app-content > section > div h2 { font-size:var(--type-title); line-height:1.25; }
+#today-day-header { font-size:2.5rem; line-height:1.15; }
+p { text-wrap:pretty; }
+button,input,select,textarea { font:inherit; }
+input[type=text],input[type=password],input[type=date],input[type=number],input[type=time],select,textarea { font-size:var(--type-small) !important; line-height:1.5; min-height:42px; }
+input::placeholder,textarea::placeholder { color:var(--text-dim) !important; }
+.btn,.btn-sm,.nav-btn { min-height:42px; font-size:var(--type-small); }
+.card-header,.field-group label,.metric-card .label { font-size:var(--type-caption); line-height:1.5; }
+.card,.cascade-card,.career-blueprint-grid > *,.app-content section { min-width:0; }
+.card p,.northstar-card,.career-habit-name,.goal-name { overflow-wrap:anywhere; }
+.app-content { max-width:1280px; }
+.app-main { min-height:100dvh; }
+#today-habit-cards-container { grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr)); gap:16px; }
+#today-habit-cards-container > .card { padding:16px !important; }
+#today-habit-cards-container > .card header,.habit-month-grid { min-width:0; }
+.habit-month-grid { grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+.habit-month-cell { min-height:44px; font-size:var(--type-small); aspect-ratio:auto; border-radius:6px; }
+.habit-complete-button { width:100%; min-height:48px; display:flex; align-items:center; gap:12px; padding:10px 12px; margin:12px 0; border:1px solid var(--border-hover); border-radius:var(--radius-sm); background:var(--surface-hover); color:var(--text); text-align:left; cursor:pointer; }
+.habit-complete-button.is-done { color:var(--green); border-color:rgba(34,211,160,.4); background:rgba(34,211,160,.08); }
+.habit-check { display:grid; place-items:center; width:24px; height:24px; flex:none; border:1px solid currentColor; border-radius:6px; font-weight:700; }
+.habit-details { margin-top:12px; border-top:1px solid var(--border); }
+.habit-details summary { cursor:pointer; padding:14px 0; min-height:48px; font-size:var(--type-small); color:var(--text-dim); }
+.habit-details .editor-field { margin:12px 0; }
+.habit-details-error { color:var(--text-dim); font-size:var(--type-small); margin-bottom:12px; }
+#review-period-selector { flex-shrink:0; }
+#review-period-selector button { min-width:44px; min-height:44px; }
+#review-period-selector span { min-width:150px; width:auto; }
+#review-weekday-labels { letter-spacing:0; font-size:var(--type-caption); }
+#period-reflection { max-width:760px; }
+#sync-conflict-controls { flex-wrap:wrap; }
+button { touch-action:manipulation; }
+.editor-field[hidden] { display:none; }
+@media (min-width:768px) and (max-width:1100px) {
+ .app-content { padding:24px !important; }
+ .career-blueprint-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ #review-calendar-section { grid-template-columns:1fr; }
+ #tab-settings > .grid { grid-template-columns:1fr; }
+}
+@media (max-width:767px) {
+ :root { --type-caption:.875rem; }
+ .app-content { padding-left:16px !important; padding-right:16px !important; padding-bottom:calc(100px + env(safe-area-inset-bottom)) !important; }
+ .app-shell > .app-frame > header { padding-top:calc(16px + env(safe-area-inset-top)); }
+ .app-frame > nav { padding-bottom:calc(8px + env(safe-area-inset-bottom)); }
+ .app-frame > nav button { min-height:56px; font-size:.75rem; gap:4px; }
+ .app-frame > nav svg { width:20px; height:20px; }
+ .btn,.btn-sm,button[aria-label],.editor-actions button { min-height:48px; }
+ input[type=text],input[type=password],input[type=date],input[type=number],input[type=time],select,textarea { font-size:1rem !important; min-height:48px; }
+ #today-day-header { font-size:2rem; }
+ .app-content section > .flex { flex-wrap:wrap; gap:12px; }
+ #today-habit-cards-container { grid-template-columns:1fr; }
+ .habit-month-cell { min-height:48px; }
+ .calendar-day-cell { min-height:48px; padding:4px; }
+ .desktop-editor { padding:16px; }
+ .desktop-editor > .card { max-height:calc(100dvh - 32px); }
+ .telos-subtitle { font-size:.75rem; }
+}
+@media (max-width:420px) {
+ /* Dates remain in order in a roomy five-column month list on compact phones. */
+ .habit-month-grid { grid-template-columns:repeat(5,minmax(48px,1fr)); gap:8px; }
+ .habit-month-grid > div { display:none; }
+ #goals-countdown-body { grid-template-columns:1fr; }
+ #review-weekday-labels { font-size:.75rem; }
+}
+
+#today-habit-cards-container .card > .flex p { font-size:1rem; line-height:1.4; }
+#mood-selector button { min-height:48px; min-width:48px; }

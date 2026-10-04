@@ -10,7 +10,7 @@ function setReviewTab(tab) {
   if (tab === "weekly" || tab === "monthly") reviewMode = tab;
   ["weekly", "monthly", "cascade"].forEach(t => {
     const btn = document.getElementById("review-tab-" + t);
-    if (btn) btn.className = `text-[10px] px-3 py-1.5 rounded font-bold ${t === tab ? "bg-green/15 text-green" : "text-text-dim hover:text-text"}`;
+    if (btn) btn.className = `text-caption px-3 py-1.5 rounded font-bold ${t === tab ? "bg-green/15 text-green" : "text-text-dim hover:text-text"}`;
   });
   renderReview();
 }
@@ -57,14 +57,14 @@ function renderReview() {
       const weekLabel = `${formatDateLabelShort(getWeekStartDate(reviewWeekId))} - ${formatDateLabelShort(getWeekDates(getWeekStartDate(reviewWeekId))[6])}`;
       periodSelector.innerHTML = `
         <button aria-label="Previous period" onclick="shiftReviewWeek(-1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-        <span class="text-[11px] font-bold px-2 text-center w-32 select-none">${weekLabel}</span>
+        <span class="text-caption font-bold px-2 text-center w-32 select-none">${weekLabel}</span>
         <button aria-label="Next period" onclick="shiftReviewWeek(1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
       `;
     } else {
       const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
       periodSelector.innerHTML = `
         <button aria-label="Previous period" onclick="shiftReviewMonth(-1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-        <span class="text-[11px] font-bold px-2 text-center w-28 select-none">${months[reviewMonth]} ${reviewYear}</span>
+        <span class="text-caption font-bold px-2 text-center w-28 select-none">${months[reviewMonth]} ${reviewYear}</span>
         <button aria-label="Next period" onclick="shiftReviewMonth(1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
       `;
     }
@@ -111,7 +111,7 @@ function renderReview() {
         cell.type = "button";
         cell.className = "calendar-day-cell inactive";
         cell.disabled = true;
-        cell.innerHTML = `<span class="text-[9px] text-text-dim/40">${prevMonthTotalDays - i}</span>`;
+        cell.innerHTML = `<span class="text-caption text-text-dim/40">${prevMonthTotalDays - i}</span>`;
         container.appendChild(cell);
       }
 
@@ -177,7 +177,7 @@ function renderReviewMetrics() {
       <div class="flex flex-col items-center justify-center py-8 text-center col-span-full">
         <i data-lucide="map" class="w-8 h-8 text-text-dim/30 mb-2"></i>
         <p class="text-xs font-bold text-text-dim mb-1">No habits linked yet</p>
-        <p class="text-[10px] text-text-dim/60">Link habits to your North Stars on the Blueprint page.</p>
+        <p class="text-caption text-text-dim/60">Link habits to your North Stars on the Blueprint page.</p>
       </div>`;
     lucide.createIcons();
     return;
@@ -347,13 +347,13 @@ function renderCascadeImpact() {
     html += `<div class="flex items-center justify-between border-b border-border pb-3">
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 rounded-full ${pillar.completed ? 'bg-green/[0.15]' : 'bg-blue/[0.12]'} flex items-center justify-center">${pillar.completed ? '<i data-lucide="check" class="w-3.5 h-3.5 text-green"></i>' : '<i data-lucide="star" class="w-3.5 h-3.5 text-blue"></i>'}</div>
-        <span class="text-[11px] font-bold ${pillar.completed ? 'text-green' : 'text-text'}">${escapeHtml(pillar.title)}</span>
+        <span class="text-caption font-bold ${pillar.completed ? 'text-green' : 'text-text'}">${escapeHtml(pillar.title)}</span>
       </div>
-      <span class="text-[8px] font-bold ${pillar.completed ? 'text-green' : avgCls}">${pillar.completed ? '✓ Done' : avgPct + '%'}</span>
+      <span class="text-caption font-bold ${pillar.completed ? 'text-green' : avgCls}">${pillar.completed ? '✓ Done' : avgPct + '%'}</span>
     </div>`;
 
     if (goals.length === 0 && linkedHabits.length === 0) {
-      html += '<p class="text-[10px] text-text-dim italic flex-1">No links yet.</p>';
+      html += '<p class="text-caption text-text-dim italic flex-1">No links yet.</p>';
     }
 
     if (goals.length > 0) {
@@ -366,11 +366,11 @@ function renderCascadeImpact() {
         const days = calculateDaysRemaining(g.deadline);
         html += `<div class="flex items-center gap-3">
           <div class="relative w-[46px] h-[46px] rounded-full shrink-0 flex items-center justify-center" style="background:conic-gradient(${hexClr} 0% ${pct}%, rgba(255,255,255,0.04) ${pct}% 100%)">
-            <div class="w-[34px] h-[34px] rounded-full bg-surface flex items-center justify-center"><span class="text-[9px] font-bold ${txtCls}">${pct}%</span></div>
+            <div class="w-[34px] h-[34px] rounded-full bg-surface flex items-center justify-center"><span class="text-caption font-bold ${txtCls}">${pct}%</span></div>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="text-[9px] font-bold ${done ? 'text-green' : 'text-text'} truncate">${escapeHtml(g.name)}</div>
-            <div class="text-[8px] text-text-dim/60">${g.levelLabel} · ${done ? 'Checkpoint completed' : `${g.progress}/${g.target}${g.unit ? ' ' + escapeHtml(g.unit) : ''}`}${g.deadline ? ' · ' + days : ''}</div>
+            <div class="text-caption font-bold ${done ? 'text-green' : 'text-text'} truncate">${escapeHtml(g.name)}</div>
+            <div class="text-caption text-text-dim/60">${g.levelLabel} · ${done ? 'Checkpoint completed' : `${g.progress}/${g.target}${g.unit ? ' ' + escapeHtml(g.unit) : ''}`}${g.deadline ? ' · ' + days : ''}</div>
           </div>
         </div>`;
       });
@@ -379,7 +379,7 @@ function renderCascadeImpact() {
 
     if (linkedHabits.length > 0) {
       html += `<div class="border-t border-border pt-3 mt-auto space-y-2.5">
-        <div class="text-[7px] font-bold text-text-dim/50 uppercase tracking-widest">Daily Habits</div>`;
+        <div class="text-caption font-bold text-text-dim/50 uppercase tracking-widest">Daily Habits</div>`;
       linkedHabits.forEach(lh => {
         const block = appState.settings.scheduleBlocks.find(b => b.id === lh.habitId);
         if (!block) return;
@@ -387,16 +387,16 @@ function renderCascadeImpact() {
         dates.forEach(dStr => { dots += `<div class="w-[7px] h-[7px] rounded-full ${dotColor(lh.habitId, dStr)}"></div>`; });
         const completed = getHabitCompletionInPeriod(lh.habitId, dates);
         html += `<div class="flex items-center justify-between gap-2">
-          <span class="text-[9px] text-text-dim shrink-0 min-w-[48px]">${escapeHtml(block.name)}</span>
+          <span class="text-caption text-text-dim shrink-0 min-w-[48px]">${escapeHtml(block.name)}</span>
           <div class="flex items-center gap-[3px] flex-wrap justify-end">${dots}</div>
-          <span class="text-[8px] font-bold text-text-dim shrink-0 w-[32px] text-right">${completed}/${daysInPeriod}</span>
+          <span class="text-caption font-bold text-text-dim shrink-0 w-[32px] text-right">${completed}/${daysInPeriod}</span>
         </div>`;
       });
       html += `</div>`;
     }
 
     html += `<div class="mt-auto pt-3">
-      <button onclick="${pillar.completed ? `toggleNorthStarReviewComplete('${pillar.id}',false)` : `openNorthStarReviewModal('${pillar.id}')`}" class="w-full text-[10px] font-bold px-3 py-2 rounded-full border transition-colors ${pillar.completed ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
+      <button onclick="${pillar.completed ? `toggleNorthStarReviewComplete('${pillar.id}',false)` : `openNorthStarReviewModal('${pillar.id}')`}" class="w-full text-caption font-bold px-3 py-2 rounded-full border transition-colors ${pillar.completed ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
         ${pillar.completed ? 'Completed' : 'Complete North Star'}
       </button>
     </div>`;
@@ -410,12 +410,12 @@ function renderCascadeImpact() {
     html += `<div class="border border-border rounded-2xl p-4 md:p-5 bg-[rgba(255,255,255,0.015)] space-y-4 mt-4">
       <div class="flex items-center justify-between gap-3 border-b border-border pb-3">
         <div>
-          <div class="text-[10px] font-bold uppercase tracking-[0.18em] text-text-dim/70">Configured Checkpoints</div>
+          <div class="text-caption font-bold uppercase tracking-[0.18em] text-text-dim/70">Configured Checkpoints</div>
           <p class="text-xs text-text-dim mt-1">All milestones defined on the Blueprint page.</p>
         </div>
         <div class="text-right shrink-0">
           <div class="text-lg font-bold text-text">${completedCheckpoints}/${checkpoints.length}</div>
-          <div class="text-[10px] uppercase tracking-[0.16em] text-text-dim/60">Completed</div>
+          <div class="text-caption uppercase tracking-[0.16em] text-text-dim/60">Completed</div>
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">`;
@@ -427,20 +427,20 @@ function renderCascadeImpact() {
       html += `<div class="rounded-xl border ${done ? 'border-green/30 bg-green/[0.04]' : 'border-border bg-[rgba(255,255,255,0.02)]'} px-4 py-3 space-y-3">
         <div class="flex items-start justify-between gap-3">
           <div>
-            <div class="text-[9px] uppercase tracking-[0.16em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${goal.levelLabel}</div>
+            <div class="text-caption uppercase tracking-[0.16em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${goal.levelLabel}</div>
             <div class="text-xs font-bold ${done ? 'text-green' : 'text-text'} mt-1">${escapeHtml(goal.name)}</div>
           </div>
-          <span class="text-[9px] font-bold px-2 py-1 rounded-full border ${done ? 'bg-green/15 text-green border-green/30' : 'bg-white/[0.03] text-text-dim border-border'}">${done ? 'Completed' : 'Active'}</span>
+          <span class="text-caption font-bold px-2 py-1 rounded-full border ${done ? 'bg-green/15 text-green border-green/30' : 'bg-white/[0.03] text-text-dim border-border'}">${done ? 'Completed' : 'Active'}</span>
         </div>
-        <div class="text-[10px] text-text-dim">${escapeHtml(goal.northStarTitle)}</div>
-        <div class="flex items-center justify-between text-[10px] text-text-dim">
+        <div class="text-caption text-text-dim">${escapeHtml(goal.northStarTitle)}</div>
+        <div class="flex items-center justify-between text-caption text-text-dim">
           <span>${goal.progress}/${goal.target}${goal.unit ? ' ' + escapeHtml(goal.unit) : ''}</span>
           <span>${days}</span>
         </div>
         <div class="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
           <div class="h-full ${done ? 'bg-green' : 'bg-blue'}" style="width:${done ? 100 : pct}%"></div>
         </div>
-        <button onclick="${done ? `toggleGoalDeadline('${goal.levelKey}','${goal.id}',false)` : `openCheckpointCompleteModal('${goal.levelKey}','${goal.id}')`}" class="w-full text-[10px] font-bold px-3 py-2 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
+        <button onclick="${done ? `toggleGoalDeadline('${goal.levelKey}','${goal.id}',false)` : `openCheckpointCompleteModal('${goal.levelKey}','${goal.id}')`}" class="w-full text-caption font-bold px-3 py-2 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
           ${done ? 'Completed checkpoint' : 'Complete checkpoint'}
         </button>
       </div>`;
@@ -463,12 +463,12 @@ function renderReviewDayDetails(dateStr) {
 
   let deadlinesHtml = "";
   if (deadlines.length > 0) {
-    deadlinesHtml = `<div class="border-t border-border pt-2 mt-2"><p class="text-[10px] text-red font-bold uppercase tracking-wider">Checkpoint Deadlines</p><ul class="list-disc list-inside text-xs mt-1 text-text space-y-1">${deadlines.map(d => `<li>${escapeHtml(d.name)} (${d.target} ${escapeHtml(d.unit || '')})</li>`).join('')}</ul></div>`;
+    deadlinesHtml = `<div class="border-t border-border pt-2 mt-2"><p class="text-caption text-red font-bold uppercase tracking-wider">Checkpoint Deadlines</p><ul class="list-disc list-inside text-xs mt-1 text-text space-y-1">${deadlines.map(d => `<li>${escapeHtml(d.name)} (${d.target} ${escapeHtml(d.unit || '')})</li>`).join('')}</ul></div>`;
   }
 
   let blocksHtml = "";
   if (getLinkedBlocks().length === 0) {
-    blocksHtml = '<p class="text-[10px] text-text-dim/50 italic py-2">No habits linked yet.</p>';
+    blocksHtml = '<p class="text-caption text-text-dim/50 italic py-2">No habits linked yet.</p>';
   } else {
   getLinkedBlocks().forEach(b => {
     const logData = log[b.id] || {};
@@ -486,7 +486,7 @@ function renderReviewDayDetails(dateStr) {
   container.innerHTML = `
     <div class="flex items-center justify-between border-b border-border pb-2.5">
       <h4 class="font-bold text-xs text-text">${formattedDate}</h4>
-      <button onclick="editExecutionDate('${dateStr}')" class="text-[10px] bg-white/5 border border-border px-2 py-1 rounded hover:bg-white/10 text-text font-bold flex items-center gap-1"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button>
+      <button onclick="editExecutionDate('${dateStr}')" class="text-caption bg-white/5 border border-border px-2 py-1 rounded hover:bg-white/10 text-text font-bold flex items-center gap-1"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button>
     </div>
     <div class="space-y-3 pt-2">
       <div class="space-y-0.5">${blocksHtml}</div>

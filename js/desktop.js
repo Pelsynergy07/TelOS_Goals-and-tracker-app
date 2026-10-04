@@ -53,36 +53,21 @@ function editExecutionDate(date) {
   if (picker) picker.value = date;
 }
 
-let pendingHabitLog = null;
-function openHabitLog(date, id) {
-  if (date > getLocalDateString()) return;
+function saveInlineHabitDetails(date, id, form) {
   const habit = appState.settings.scheduleBlocks.find(b => b.id === id);
-  if (!habit) return;
-  pendingHabitLog = { date, id };
-  const values = appState.logs[date]?.[id] || {};
-  document.getElementById("habit-log-title").textContent = `${habit.name} · ${date}`;
-  document.getElementById("habit-log-fields").innerHTML = habit.fields.map(f => {
-    const value = values[f.id] ?? "";
-    return `<label class="editor-field">${escapeHtml(f.label)}<input data-habit-field="${f.id}" type="${f.type === "text" ? "text" : f.type}" ${f.type === "number" ? 'min="0" step="any"' : ''} ${f.type === "checkbox" ? (value ? 'checked' : '') : `value="${escapeHtml(value)}"`}></label>`;
-  }).join("");
-  document.getElementById("habit-log-error").textContent = "";
-  showEditor("habit-log-modal");
-}
-function saveHabitLog() {
-  if (!pendingHabitLog) return;
-  const { date, id } = pendingHabitLog;
-  const habit = appState.settings.scheduleBlocks.find(b => b.id === id);
-  if (!habit) return;
+  if (!habit || date > getLocalDateString()) return;
   const values = { ...appState.logs[date]?.[id] };
-  for (const field of habit.fields) {
-    const input = document.querySelector(`[data-habit-field="${field.id}"]`);
-    const value = field.type === "checkbox" ? input.checked : field.type === "number" ? Number(input.value) : input.value;
-    if (field.type === "number" && (!Number.isFinite(value) || value < 0)) { document.getElementById("habit-log-error").textContent = "Enter a valid non-negative number."; return; }
+  for (const field of habit.fields.filter(f => f.type !== "checkbox")) {
+    const input = form.querySelector(`[data-detail-field="${field.id}"]`);
+    const value = field.type === "number" ? Number(input.value) : input.value;
+    if (field.type === "number" && (!Number.isFinite(value) || value < 0)) { form.querySelector(".habit-details-error").textContent = "Enter a valid non-negative amount."; return; }
     values[field.id] = value;
   }
   appState.logs[date] ??= {};
   appState.logs[date][id] = values;
-  persistState(); closeEditor("habit-log-modal"); renderAll();
+  persistState();
+  form.querySelector(".habit-details-error").textContent = "Details saved.";
+  renderReview();
 }
 
 let editingHabitId = null;

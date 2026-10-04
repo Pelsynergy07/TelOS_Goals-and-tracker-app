@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Life OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body>
 
@@ -62,7 +62,7 @@
       </nav>
       <div class="sidebar-streak-pill">
         <i data-lucide="flame" class="w-4 h-4 text-green"></i>
-        <span class="text-[11px] font-semibold text-text"><span id="sidebar-streak-val">0</span> day streak</span>
+        <span class="text-caption font-semibold text-text"><span id="sidebar-streak-val">0</span> day streak</span>
       </div>
     </div>
   </div>
@@ -76,32 +76,32 @@
     <span class="telos-mark telos-mark-mobile" aria-hidden="true"></span>
     <span class="telos-wordmark-mobile" id="mobile-header-title">TelOS</span>
   </div>
-  <div class="flex items-center gap-1 bg-white/5 border border-border px-2.5 py-1 rounded-full text-[10px] font-semibold">
+  <div class="flex items-center gap-1 bg-white/5 border border-border px-2.5 py-1 rounded-full text-caption font-semibold">
     <span id="mobile-streak-val">0</span>d streak
   </div>
 </header>
 
 <!-- Mobile Bottom Nav -->
 <nav class="md:hidden bg-surface/95 border-t border-border fixed bottom-0 left-0 right-0 z-50 flex justify-around py-1.5 px-2 backdrop-blur-xl gap-0">
-  <button onclick="switchTab('today')" id="mob-nav-today" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+  <button onclick="switchTab('today')" id="mob-nav-today" class="flex flex-col items-center gap-0.5 text-text-dim text-caption font-bold flex-1 py-1 min-w-0">
     <i data-lucide="play-circle" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">Execution</span>
   </button>
-  <button onclick="switchTab('review')" id="mob-nav-review" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+  <button onclick="switchTab('review')" id="mob-nav-review" class="flex flex-col items-center gap-0.5 text-text-dim text-caption font-bold flex-1 py-1 min-w-0">
     <i data-lucide="trending-up" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">Progress</span>
   </button>
-  <button onclick="switchTab('constitution')" id="mob-nav-constitution" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+  <button onclick="switchTab('constitution')" id="mob-nav-constitution" class="flex flex-col items-center gap-0.5 text-text-dim text-caption font-bold flex-1 py-1 min-w-0">
     <i data-lucide="scroll-text" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">Constitution</span>
   </button>
-  <button onclick="switchTab('career')" id="mob-nav-career" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+  <button onclick="switchTab('career')" id="mob-nav-career" class="flex flex-col items-center gap-0.5 text-text-dim text-caption font-bold flex-1 py-1 min-w-0">
     <i data-lucide="map" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">Blueprint</span>
   </button>
-  <button onclick="switchTab('settings')" id="mob-nav-settings" class="flex flex-col items-center gap-0.5 text-text-dim text-[9px] font-bold flex-1 py-1 min-w-0">
+  <button onclick="switchTab('settings')" id="mob-nav-settings" class="flex flex-col items-center gap-0.5 text-text-dim text-caption font-bold flex-1 py-1 min-w-0">
     <i data-lucide="settings" class="w-4 h-4 shrink-0"></i><span class="truncate max-w-full">System</span>
   </button>
 </nav>
 
 <!-- Main Content -->
-  <main class="overflow-y-auto mb-16 md:mb-0 h-screen">
+  <main class="app-main">
 <div class="app-content mx-auto max-w-[1180px] px-4 py-5 md:px-8 md:py-8 space-y-6">
 
   <!-- Empty state banner (shown when no goals exist) -->
@@ -120,7 +120,7 @@
   <section id="tab-today" class="space-y-6">
 
     <div>
-      <span class="text-[11px] text-text-dim font-bold uppercase tracking-[0.15em]">Execution Hub</span>
+      <span class="text-caption text-text-dim font-bold uppercase tracking-[0.15em]">Execution Hub</span>
       <h2 class="font-display text-3xl md:text-5xl text-text leading-none mt-1" style="font-family:'Newsreader',serif" id="today-day-header">Saturday</h2>
       <p class="text-text-dim text-sm mt-2" id="today-date-header">May 23, 2026</p>
       <div class="execution-date-controls"><label for="execution-date">Viewing day</label><input type="date" id="execution-date" onchange="editExecutionDate(this.value)"><button class="btn btn-outline" onclick="editExecutionDate(getLocalDateString())">Today</button></div>
@@ -132,8 +132,8 @@
     <!-- All Goals Countdown -->
     <div class="card hidden" id="today-goals-countdown">
       <div class="flex items-center justify-between card-header !border-0 !p-0">
-        <span><i data-lucide="target" class="w-3.5 h-3.5 inline mr-1.5"></i>Checkpoints Countdown <span class="font-normal text-text-dim/60 text-[10px]">(due within 20 days)</span></span>
-        <button onclick="toggleAllGoals()" id="toggle-all-goals-btn" class="text-[9px] font-bold text-blue/60 hover:text-blue">View all checkpoints</button>
+        <span><i data-lucide="target" class="w-3.5 h-3.5 inline mr-1.5"></i>Checkpoints Countdown <span class="font-normal text-text-dim/60 text-caption">(due within 20 days)</span></span>
+        <button onclick="toggleAllGoals()" id="toggle-all-goals-btn" class="text-caption font-bold text-blue/60 hover:text-blue">View all checkpoints</button>
       </div>
       <div id="goals-countdown-body" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mt-3"></div>
     </div>
@@ -158,11 +158,11 @@
         </div>
         <div class="space-y-3 border-t border-border pt-4 mt-4">
           <div class="space-y-1">
-            <label for="field-biggestWin" class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Biggest win of the day</label>
+            <label for="field-biggestWin" class="text-caption text-text-dim font-bold uppercase tracking-wider block">Biggest win of the day</label>
             <input type="text" id="field-biggestWin" placeholder="What went right today?" class="w-full text-xs" oninput="autoSaveField('biggestWin', this.value)">
           </div>
           <div class="space-y-1">
-            <label for="field-biggestLearning" class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Biggest learning of the day</label>
+            <label for="field-biggestLearning" class="text-caption text-text-dim font-bold uppercase tracking-wider block">Biggest learning of the day</label>
             <textarea id="field-biggestLearning" rows="2" placeholder="What did you learn today?" class="w-full text-xs resize-none" oninput="autoSaveField('biggestLearning', this.value)"></textarea>
           </div>
         </div>
@@ -211,9 +211,9 @@
     <div class="flex flex-wrap items-center gap-3">
       <!-- Review tabs -->
       <div class="flex items-center gap-1 border border-border rounded p-1 bg-surface">
-        <button onclick="setReviewTab('weekly')" id="review-tab-weekly" class="text-[10px] px-3 py-1.5 rounded font-bold bg-green/15 text-green">Weekly</button>
-        <button onclick="setReviewTab('monthly')" id="review-tab-monthly" class="text-[10px] px-3 py-1.5 rounded font-bold text-text-dim hover:text-text">Monthly</button>
-        <button onclick="setReviewTab('cascade')" id="review-tab-cascade" class="text-[10px] px-3 py-1.5 rounded font-bold text-text-dim hover:text-text">Cascade</button>
+        <button onclick="setReviewTab('weekly')" id="review-tab-weekly" class="text-caption px-3 py-1.5 rounded font-bold bg-green/15 text-green">Weekly</button>
+        <button onclick="setReviewTab('monthly')" id="review-tab-monthly" class="text-caption px-3 py-1.5 rounded font-bold text-text-dim hover:text-text">Monthly</button>
+        <button onclick="setReviewTab('cascade')" id="review-tab-cascade" class="text-caption px-3 py-1.5 rounded font-bold text-text-dim hover:text-text">Cascade</button>
       </div>
       <!-- Period selector (shown for weekly/monthly) -->
       <div id="review-period-selector" class="flex items-center gap-1 border border-border rounded p-1 bg-surface"></div>
@@ -236,7 +236,7 @@
     <!-- Calendar + Details (weekly/monthly only) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="review-calendar-section">
       <div class="lg:col-span-2 card">
-        <div id="review-weekday-labels" class="grid grid-cols-7 text-center text-[10px] font-bold text-text-dim uppercase tracking-wider mb-3">
+        <div id="review-weekday-labels" class="grid grid-cols-7 text-center text-caption font-bold text-text-dim uppercase tracking-wider mb-3">
           <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
         </div>
         <div class="calendar-grid" id="review-calendar-days-container"></div>
@@ -296,12 +296,12 @@
         <div class="card">
           <div class="flex items-center justify-between border-b border-border pb-3">
             <div class="card-header border-0 p-0 m-0">Supabase Cloud Sync</div>
-            <span id="sync-status-badge" class="text-[9px] bg-border px-2 py-0.5 rounded font-bold uppercase tracking-wider text-text-dim">Local Mode</span>
+            <span id="sync-status-badge" class="text-caption bg-border px-2 py-0.5 rounded font-bold uppercase tracking-wider text-text-dim">Local Mode</span>
           </div>
           <p class="text-xs text-text-dim leading-relaxed mb-4">Connect Supabase to sync your data across devices.</p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label for="settings-supabase-url" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">API URL <button aria-label="circle help" onclick="openSupabaseHelp('url')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
-            <div><label for="settings-supabase-key" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Anon Key / Publishable Key <button aria-label="circle help" onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
+            <div><label for="settings-supabase-url" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">API URL <button aria-label="circle help" onclick="openSupabaseHelp('url')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
+            <div><label for="settings-supabase-key" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">Anon Key / Publishable Key <button aria-label="circle help" onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
           </div>
           <div class="flex items-center gap-3">
             <button onclick="testAndSaveSupabaseConnection()" id="settings-connect-btn" class="btn btn-primary">Verify &amp; Connect</button>
@@ -344,7 +344,7 @@
             <i data-lucide="upload" class="w-4 h-4 text-amber"></i> Choose JSON File
           </label>
           <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDataJSON(event)">
-          <span id="import-msg" class="block text-center text-[10px] mt-2 font-medium"></span>
+          <span id="import-msg" class="block text-center text-caption mt-2 font-medium"></span>
         </div>
 
         <div class="card">
@@ -359,7 +359,7 @@
     </div>
     <div class="text-center pt-1">
       <p class="text-xs text-green font-bold tracking-wide flex items-center justify-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4 text-green"></i> Built using Opencode by Pelsynergy! <i data-lucide="sparkles" class="w-4 h-4 text-green"></i></p>
-      <p class="text-[11px] text-text font-medium pt-2">pranavkumar0712@gmail.com</p>
+      <p class="text-caption text-text font-medium pt-2">pranavkumar0712@gmail.com</p>
     </div>
   </section>
 
@@ -384,13 +384,13 @@
   <div class="bg-surface border border-border w-full max-w-lg rounded-lg p-5 space-y-4 shadow-xl">
     <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">Add New Goal</h3>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="md:col-span-2"><label for="goal-form-name" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Goal Name</label><input type="text" id="goal-form-name" placeholder="e.g. Build Portfolios" class="w-full text-xs" oninput="validateGoalForm()"></div>
-      <div><label for="goal-form-type" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Level</label><select id="goal-form-type" class="w-full text-xs" onchange="validateGoalForm()"><option value="sixMonth">6-Month</option><option value="threeMonth">3-Month</option><option value="oneMonth">1-Month</option></select></div>
-      <div><label for="goal-form-northstar" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">North Star</label><select id="goal-form-northstar" class="w-full text-xs" onchange="validateGoalForm()"></select></div>
-      <div><label for="goal-form-target" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Target</label><input type="number" id="goal-form-target" min="1" placeholder="e.g. 5" class="w-full text-xs" oninput="validateGoalForm()"></div>
-      <div><label for="goal-form-unit" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Unit</label><input type="text" id="goal-form-unit" placeholder="projects" class="w-full text-xs" oninput="validateGoalForm()"></div>
-      <div><label for="goal-form-deadline" class="text-[9px] text-text-dim font-bold uppercase tracking-wider block mb-1">Deadline</label><input type="date" id="goal-form-deadline" class="w-full text-xs" oninput="validateGoalForm()"></div>
-      <div class="md:col-span-2 text-[9px] text-text-dim/60 italic">Checkpoints and daily habits are grouped under their North Star.</div>
+      <div class="md:col-span-2"><label for="goal-form-name" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">Goal Name</label><input type="text" id="goal-form-name" placeholder="e.g. Build Portfolios" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div><label for="goal-form-type" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">Level</label><select id="goal-form-type" class="w-full text-xs" onchange="validateGoalForm()"><option value="sixMonth">6-Month</option><option value="threeMonth">3-Month</option><option value="oneMonth">1-Month</option></select></div>
+      <div><label for="goal-form-northstar" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">North Star</label><select id="goal-form-northstar" class="w-full text-xs" onchange="validateGoalForm()"></select></div>
+      <div><label for="goal-form-target" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">Target</label><input type="number" id="goal-form-target" min="1" placeholder="e.g. 5" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div><label for="goal-form-unit" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">Unit</label><input type="text" id="goal-form-unit" placeholder="projects" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div><label for="goal-form-deadline" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">Deadline</label><input type="date" id="goal-form-deadline" class="w-full text-xs" oninput="validateGoalForm()"></div>
+      <div class="md:col-span-2 text-caption text-text-dim/60 italic">Checkpoints and daily habits are grouped under their North Star.</div>
     </div>
     <div class="flex items-center gap-3 pt-1">
       <button id="goal-add-btn" onclick="addNewGoal()" class="btn btn-primary flex-1 justify-center" disabled><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add Goal</button>
@@ -510,22 +510,22 @@
           <li>Log in to your <a href="https://supabase.com" target="_blank" class="text-blue hover:underline">Supabase dashboard</a></li>
           <li>Select your project</li>
           <li>Go to <span class="text-text font-semibold">Project Settings → Data API</span></li>
-          <li>Copy the <span class="text-text font-semibold">Project URL</span> (looks like <code class="text-[10px] bg-white/10 px-1 rounded">https://xxxx.supabase.co</code>)</li>
+          <li>Copy the <span class="text-text font-semibold">Project URL</span> (looks like <code class="text-caption bg-white/10 px-1 rounded">https://xxxx.supabase.co</code>)</li>
         </ol>
       </div>
       <div>
         <p class="font-bold text-text mb-1">Anon Key / Publishable Key</p>
         <ol class="list-decimal list-inside space-y-1 pl-1">
           <li>Go to <span class="text-text font-semibold">Project Settings → API Keys</span></li>
-          <li>Find the <span class="text-text font-semibold">anon public</span> key (starts with <code class="text-[10px] bg-white/10 px-1 rounded">eyJ...</code>)</li>
-          <li>Or if using Supabase Publishing, use your <span class="text-text font-semibold">publishable key</span> (starts with <code class="text-[10px] bg-white/10 px-1 rounded">sb_publishable_...</code>)</li>
+          <li>Find the <span class="text-text font-semibold">anon public</span> key (starts with <code class="text-caption bg-white/10 px-1 rounded">eyJ...</code>)</li>
+          <li>Or if using Supabase Publishing, use your <span class="text-text font-semibold">publishable key</span> (starts with <code class="text-caption bg-white/10 px-1 rounded">sb_publishable_...</code>)</li>
           <li>Paste it into the key field above</li>
         </ol>
       </div>
       <div class="bg-white/5 border border-border rounded p-3">
         <p class="font-bold text-text mb-1 flex items-center gap-1.5"><i data-lucide="info" class="w-3 h-3 text-blue"></i>Need a Supabase project?</p>
         <p class="text-xs">Go to <a href="https://supabase.com" target="_blank" class="text-blue hover:underline">supabase.com</a>, sign up, create a project, then run this SQL in the SQL Editor:</p>
-        <pre class="text-[10px] bg-bg p-2 rounded mt-1 overflow-x-auto">create table public.life_os_sync (
+        <pre class="text-caption bg-bg p-2 rounded mt-1 overflow-x-auto">create table public.life_os_sync (
   id text primary key,
   data jsonb not null default '{}',
   updated_at timestamptz default now()
@@ -543,9 +543,6 @@ create policy "Enable all" on public.life_os_sync
 </div>
 
 
-<div id="habit-log-modal" class="desktop-editor hidden" style="display:none">
-  <div class="card"><h3 id="habit-log-title">Log habit</h3><div id="habit-log-fields"></div><p id="habit-log-error" role="alert"></p><div class="editor-actions"><button class="btn btn-primary" onclick="saveHabitLog()">Save log</button><button class="btn btn-outline" onclick="closeEditor('habit-log-modal')">Cancel</button></div></div>
-</div>
 <div id="habit-editor-modal" class="desktop-editor hidden" style="display:none">
   <div class="card"><h3>Edit daily habit</h3>
     <label class="editor-field">Habit name<input id="habit-name" type="text"></label>
@@ -557,18 +554,18 @@ create policy "Enable all" on public.life_os_sync
   </div>
 </div>
 
-<script src="mockData.js?v=8"></script>
-<script src="js/config.js?v=5"></script>
-<script src="js/state.js?v=8"></script>
-<script src="js/utils.js?v=9"></script>
-<script src="js/tabs/execution.js?v=2"></script>
-<script src="js/tabs/progress.js?v=2"></script>
-<script src="js/tabs/blueprint.js?v=2"></script>
-<script src="js/tabs/system.js?v=3"></script>
-<script src="js/tabs/constitution.js?v=3"></script>
-<script src="js/ai-goal-prompt.js?v=11"></script>
-<script src="js/ai-goals.js?v=12"></script>
-<script src="js/desktop.js?v=2"></script>
-<script src="app.js?v=8"></script>
+<script src="mockData.js?v=20"></script>
+<script src="js/config.js?v=20"></script>
+<script src="js/state.js?v=20"></script>
+<script src="js/utils.js?v=20"></script>
+<script src="js/tabs/execution.js?v=20"></script>
+<script src="js/tabs/progress.js?v=20"></script>
+<script src="js/tabs/blueprint.js?v=20"></script>
+<script src="js/tabs/system.js?v=20"></script>
+<script src="js/tabs/constitution.js?v=20"></script>
+<script src="js/ai-goal-prompt.js?v=20"></script>
+<script src="js/ai-goals.js?v=20"></script>
+<script src="js/desktop.js?v=20"></script>
+<script src="app.js?v=20"></script>
 </body>
 </html>

@@ -131,19 +131,19 @@ function updateSyncStatusBadge(connected, msg) {
   const syncBtn = document.getElementById("settings-sync-btn");
   if (!badge) return;
   if (msg === "Offline") {
-    badge.className = "text-[9px] bg-amber/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-amber border border-amber/20";
+    badge.className = "text-caption bg-amber/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-amber border border-amber/20";
     badge.textContent = "Cloud (Offline)";
     if (discBtn) discBtn.classList.remove("hidden");
     if (connectBtn) connectBtn.classList.add("hidden");
     if (syncBtn) syncBtn.classList.add("hidden");
   } else if (connected) {
-    badge.className = "text-[9px] bg-green/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-green border border-green/20";
+    badge.className = "text-caption bg-green/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-green border border-green/20";
     badge.textContent = "Cloud Connected";
     if (discBtn) discBtn.classList.remove("hidden");
     if (connectBtn) connectBtn.classList.add("hidden");
     if (syncBtn) { syncBtn.classList.remove("hidden"); lucide.createIcons(); }
   } else {
-    badge.className = "text-[9px] bg-border px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-text-dim";
+    badge.className = "text-caption bg-border px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-text-dim";
     badge.textContent = msg ? `Local (${msg})` : "Local Mode";
     if (discBtn) discBtn.classList.toggle("hidden", !dbClient);
     if (connectBtn) connectBtn.classList.toggle("hidden", !!dbClient);
@@ -217,15 +217,18 @@ function conflictError() {
 async function pushToCloud({ force = false } = {}) {
   if (pushJob) return pushJob;
   if (!dbClient || !appState.settings.syncEnabled) return;
-  if (syncConflict && !force) throw conflictError();
   const client = dbClient;
   pushJob = (async () => {
     // Serialize whole-state writes and detect a changed cloud revision before replacing it.
     do {
       const revision = stateRevision;
-      const { data: remote, error: readError } = await client.from('life_os_sync').select('updated_at').eq('id', 'life_os_data').maybeSingle();
+      const { data: remote, error: readError } = await client.from('life_os_sync').select('updated_at,data').eq('id', 'life_os_data').maybeSingle();
       if (readError) throw new Error(readError.message || "Cloud read failed.");
       if (client !== dbClient) return;
+      if (remote?.data?.cloudResetAt && remote.data.cloudResetAt !== appState.cloudResetAt) {
+        applyCloudSnapshot(remote); return;
+      }
+      if (syncConflict && !force) throw conflictError();
       if (remote && !force && (!syncMeta.base || Date.parse(remote.updated_at) !== Date.parse(syncMeta.base))) throw conflictError();
       const updated_at = new Date(Math.max(Date.now(), (Date.parse(remote?.updated_at) || 0) + 1)).toISOString();
       const payload = { id: 'life_os_data', data: cleanCloudState(), updated_at };
@@ -252,6 +255,19 @@ async function pushToCloud({ force = false } = {}) {
   finally { pushJob = null; }
 }
 
+function applyCloudSnapshot(snapshot) {
+  const next = normalizeBackup(snapshot.data);
+  const { scheduleBlocks, ...deviceSettings } = appState.settings;
+  next.settings = { ...next.settings, ...deviceSettings };
+  appState = next;
+  stateRevision++;
+  syncMeta = { dirty: false, base: snapshot.updated_at || null };
+  syncConflict = false; syncError = "";
+  saveSyncMeta(); persistState({ sync: false });
+  document.getElementById("sync-conflict-controls")?.classList.add("hidden");
+  renderAll();
+}
+
 async function pullFromCloud({ force = false } = {}) {
   if (pullJob) return pullJob;
   if (!dbClient || !appState.settings.syncEnabled || pushJob || (syncMeta.dirty && !force)) return;
@@ -269,16 +285,7 @@ async function pullFromCloud({ force = false } = {}) {
     if (force && !data?.data) throw new Error("No cloud snapshot exists. Local data was kept.");
     if (data?.data) {
       if (!force && data.updated_at && syncMeta.base && Date.parse(data.updated_at) === Date.parse(syncMeta.base)) return;
-      const next = normalizeBackup(data.data);
-      const { scheduleBlocks, ...deviceSettings } = appState.settings;
-      next.settings = { ...next.settings, ...deviceSettings };
-      appState = next;
-      syncMeta = { dirty: false, base: data.updated_at || null };
-      syncConflict = false;
-      syncError = "";
-      saveSyncMeta();
-      persistState({ sync: false });
-      renderAll();
+      applyCloudSnapshot(data);
     }
   })();
   try { return await pullJob; }

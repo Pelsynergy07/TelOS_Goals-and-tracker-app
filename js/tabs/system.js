@@ -207,13 +207,13 @@ function importDataJSON(event) {
         persistState();
         await initSupabase();
         renderAll();
-        if (statusMsg) { statusMsg.className = "block text-center text-[10px] mt-2 font-medium text-green"; statusMsg.textContent = "Backup imported successfully."; }
+        if (statusMsg) { statusMsg.className = "block text-center text-caption mt-2 font-medium text-green"; statusMsg.textContent = "Backup imported successfully."; }
       } else {
         applyGeneratedGoalCascade(imported);
-        if (statusMsg) { statusMsg.className = "block text-center text-[10px] mt-2 font-medium text-green"; statusMsg.textContent = "Plan and daily habits imported successfully."; }
+        if (statusMsg) { statusMsg.className = "block text-center text-caption mt-2 font-medium text-green"; statusMsg.textContent = "Plan and daily habits imported successfully."; }
       }
     } catch (err) {
-      if (statusMsg) { statusMsg.className = "block text-center text-[10px] mt-2 font-medium text-red"; statusMsg.textContent = err.message || "Invalid JSON format."; }
+      if (statusMsg) { statusMsg.className = "block text-center text-caption mt-2 font-medium text-red"; statusMsg.textContent = err.message || "Invalid JSON format."; }
     }
   };
   reader.readAsText(file);

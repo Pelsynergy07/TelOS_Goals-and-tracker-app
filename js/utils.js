@@ -64,6 +64,7 @@ function getLoggedCompletionRate(dateStr) {
 
 function isBlockCompleted(block, val) {
   if (!val) return false;
+  if (typeof val.completed === "boolean") return val.completed;
   return block.fields.some(f => {
     if (f.type === "checkbox") return val.completed === true;
     if (f.type === "number") return (val[f.id] || 0) > 0;
