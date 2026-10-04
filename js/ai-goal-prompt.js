@@ -461,7 +461,8 @@ Context about the dashboard:
 * sixMonth = medium-term checkpoints tied to a northStar pillar.
 * threeMonth = shorter checkpoints tied to a northStar pillar.
 * oneMonth = immediate checkpoints tied to a northStar pillar.
-* linkedHabits = daily habits connected to each northStar pillar.
+* dailyHabits = complete personalized habit definitions, including names, agreed schedules, and tracking fields.
+* linkedHabits = links from dailyHabits IDs to northStar IDs. These are references, not habit definitions.
 
 Generate the Constitution section from the conversation.
 
@@ -540,9 +541,19 @@ Schema:
       "completed": false
     }
   ],
+  "dailyHabits": [
+    {
+      "id": "habit_short_slug",
+      "name": "Personalized daily action",
+      "time": "A time or time window agreed with the user, or an empty string",
+      "fields": [
+        { "id": "completed", "type": "checkbox", "label": "Completed" }
+      ]
+    }
+  ],
   "linkedHabits": [
     {
-      "habitId": "habit_id_here",
+      "habitId": "habit_short_slug",
       "northStarId": "matching_north_star_id"
     }
   ]
@@ -554,11 +565,17 @@ Rules:
 * Set sixMonth deadlines roughly within the next 6 months.
 * Set threeMonth deadlines roughly within the next 3 months.
 * Set oneMonth deadlines roughly within the next 1 month.
-* Use only these habit ids in linkedHabits:
-  {{HABIT_IDS}}
+* Create dailyHabits from this user's conversation; do not reuse a preset list of habits or preset wake-up/work/sleep times.
+* Confirm the user's realistic daily actions and preferred times before generating JSON. If no time is agreed, use an empty string.
+* Always include dailyHabits, oneMonth, and linkedHabits arrays. This is a complete replacement plan, not a patch.
+* Each daily habit must have a unique id, name, time, and fields array.
+* Use a checkbox with id "completed" for yes/no habits. For numeric habits use a number field (for example id "minutes"); any positive number currently counts as completion. Optional text and time fields may accompany it.
+* Each habit needs at least one checkbox or number field. Allowed field types: checkbox, number, text, time.
+* Every linkedHabits.habitId must exactly match a dailyHabits.id. Link every daily habit to exactly one valid northStarId.
+* Checkpoints and habits share a North Star; linkedHabits references habits, never checkpoint IDs.
 * Use realistic targets and units.
 * Keep ids short, stable, and slug-like.
-* Every sixMonth and threeMonth goal must map to a valid northStarId.
+* Every sixMonth, threeMonth, and oneMonth goal must map to a valid northStarId.
 * Every northStar should ideally have at least one linked habit.
 * Every user should receive a unique Constitution based on their conversation.
 * Do not create generic danger areas or rules.

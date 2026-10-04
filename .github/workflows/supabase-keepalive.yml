@@ -1,0 +1,44 @@
+name: Supabase keep-alive
+
+on:
+  schedule:
+    # Four database requests daily, away from the top of the hour.
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read the sync table
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$SUPABASE_URL" || -z "$SUPABASE_KEY" ]]; then
+            echo "::error::Add SUPABASE_URL and SUPABASE_KEY in repository Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          if [[ ! "$SUPABASE_URL" =~ ^https://[a-z0-9-]+\.supabase\.co/?$ ]]; then
+            echo "::error::SUPABASE_URL must be your https://PROJECT.supabase.co project URL."
+            exit 1
+          fi
+          headers=(--header "apikey: $SUPABASE_KEY")
+          # Legacy anon keys are JWTs; new publishable keys use only apikey.
+          if [[ "$SUPABASE_KEY" == eyJ* ]]; then
+            headers+=(--header "Authorization: Bearer $SUPABASE_KEY")
+          fi
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --connect-timeout 15 --max-time 30 --retry 2 --retry-delay 5 \
+            "${headers[@]}" \
+            "${SUPABASE_URL%/}/rest/v1/life_os_sync?select=id&limit=1")
+          if [[ "$status" != "200" ]]; then
+            echo "::error::Supabase database check failed (HTTP $status). Check credentials, table access, or resume the project in Supabase."
+            exit 1
+          fi
+          echo "Supabase database request succeeded. No data was changed."

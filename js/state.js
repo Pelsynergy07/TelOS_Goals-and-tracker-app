@@ -197,7 +197,10 @@ async function pullFromCloud() {
     if (data && data.data && data.data.logs && data.data.goals) {
       const localSettings = appState.settings;
       appState = data.data;
-      appState.settings = { ...appState.settings, ...localSettings };
+      // Credentials and device preferences stay local; the habit plan comes from the cloud.
+      const { scheduleBlocks, ...deviceSettings } = localSettings;
+      appState.settings = { ...appState.settings, ...deviceSettings };
+      if (!Array.isArray(appState.settings.scheduleBlocks)) appState.settings.scheduleBlocks = scheduleBlocks;
       persistState();
       renderAll();
     }

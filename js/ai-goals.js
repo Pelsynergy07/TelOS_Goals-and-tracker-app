@@ -27,7 +27,7 @@ function renderAIImportMode() {
       </div>
       <div class="space-y-2">
         <label class="text-[10px] text-text-dim font-bold uppercase tracking-wider block">Paste generated JSON</label>
-        <textarea id="ai-import-json" rows="12" class="w-full text-xs" placeholder='{"identityStatement":{...},"dangerAreas":[...],"rules":[...],"northStar":[...],"sixMonth":[...],"threeMonth":[...],"linkedHabits":[...]}' oninput="validateAIImportInput()"></textarea>
+        <textarea id="ai-import-json" rows="12" class="w-full text-xs" placeholder='{"identityStatement":{...},"dangerAreas":[...],"rules":[...],"northStar":[...],"sixMonth":[...],"threeMonth":[...],"oneMonth":[...],"dailyHabits":[...],"linkedHabits":[...]}' oninput="validateAIImportInput()"></textarea>
       </div>
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <button onclick="closeAIModal()" class="text-[10px] font-bold text-text-dim hover:text-text">Cancel</button>
@@ -49,8 +49,7 @@ function validateAIImportInput() {
 
 function getAIGoalImportPrompt() {
   return AI_GOAL_IMPORT_PROMPT_TEMPLATE
-    .replace("{{TODAY}}", getLocalDateString())
-    .replace("{{HABIT_IDS}}", JSON.stringify(appState.settings.scheduleBlocks.map(b => b.id)));
+    .replace("{{TODAY}}", getLocalDateString());
 }
 
 async function copyAIGoalPrompt() {
@@ -77,15 +76,67 @@ function normalizeGoalItems(items, prefix) {
   }));
 }
 
+// Validate the complete plan before changing any saved data.
 function validateGoalCascade(content) {
-  if (!content || typeof content !== "object") throw new Error("Imported JSON must be an object.");
-  if (!Array.isArray(content.northStar) || !Array.isArray(content.sixMonth) || !Array.isArray(content.threeMonth) || !Array.isArray(content.linkedHabits)) {
-    throw new Error("JSON must include northStar, sixMonth, threeMonth, and linkedHabits arrays.");
+  if (!content || typeof content !== "object" || Array.isArray(content)) throw new Error("Imported JSON must be an object.");
+  for (const key of ["northStar", "sixMonth", "threeMonth", "linkedHabits"]) {
+    if (!Array.isArray(content[key])) throw new Error(`JSON must include a ${key} array.`);
   }
+  if (content.oneMonth !== undefined && !Array.isArray(content.oneMonth)) throw new Error("oneMonth must be an array.");
+  const habits = content.dailyHabits ?? content.scheduleBlocks ?? content.settings?.scheduleBlocks;
+  if (!Array.isArray(habits)) {
+    throw new Error("This plan is missing dailyHabits. Copy the updated planner prompt and regenerate JSON with habit names, times, and IDs; linkedHabits alone cannot define a schedule.");
+  }
+  const safeId = id => typeof id === "string" && /^[a-zA-Z0-9_-]+$/.test(id) && !["__proto__", "constructor", "prototype"].includes(id);
+  const checkIds = (items, label) => {
+    const ids = new Set();
+    for (const item of items) {
+      if (!item || !safeId(item.id)) throw new Error(`${label}: each item needs a valid ID (letters, numbers, underscores or hyphens).`);
+      if (ids.has(item.id)) throw new Error(`${label}: duplicate ID "${item.id}".`);
+      ids.add(item.id);
+    }
+    return ids;
+  };
+  const northStarIds = checkIds(content.northStar, "northStar");
+  const habitIds = checkIds(habits, "dailyHabits");
+  const blocks = habits.map(habit => {
+    if (typeof habit.name !== "string" || !habit.name.trim()) throw new Error(`Habit "${habit.id}" needs a name.`);
+    if (habit.time !== undefined && typeof habit.time !== "string") throw new Error(`Habit "${habit.id}": time must be text.`);
+    const fields = habit.fields ?? [{ id: "completed", type: "checkbox", label: "Completed" }];
+    if (!Array.isArray(fields) || !fields.length) throw new Error(`Habit "${habit.id}" needs tracking fields.`);
+    checkIds(fields, `Habit "${habit.id}" fields`);
+    if (!fields.some(f => f.type === "checkbox" || f.type === "number")) throw new Error(`Habit "${habit.id}" needs a checkbox or number field to track completion.`);
+    for (const field of fields) {
+      if (!["checkbox", "number", "text", "time"].includes(field.type)) throw new Error(`Habit "${habit.id}": unsupported field type "${field.type}".`);
+      if (field.type === "checkbox" && field.id !== "completed") throw new Error(`Habit "${habit.id}": checkbox field ID must be "completed".`);
+    }
+    return { id: habit.id, name: habit.name.trim(), time: habit.time || "", fields: fields.map(f => ({ ...f, label: f.label || f.id })) };
+  });
+  for (const level of ["sixMonth", "threeMonth", "oneMonth"]) {
+    const goals = content[level] || [];
+    checkIds(goals, level);
+    for (const goal of goals) {
+      if (!northStarIds.has(goal.northStarId)) throw new Error(`${level}: checkpoint "${goal.id}" references an unknown North Star.`);
+    }
+  }
+  const linkedIds = new Set();
+  for (const link of content.linkedHabits) {
+    if (!link || !habitIds.has(link.habitId)) throw new Error(`linkedHabits references an unknown daily habit: "${link?.habitId}".`);
+    if (!northStarIds.has(link.northStarId)) throw new Error(`Habit "${link.habitId}" references an unknown North Star.`);
+    if (linkedIds.has(link.habitId)) throw new Error(`Habit "${link.habitId}" is linked more than once. Link each habit to one North Star.`);
+    linkedIds.add(link.habitId);
+  }
+  for (const id of habitIds) {
+    if (!linkedIds.has(id)) throw new Error(`Daily habit "${id}" needs a linkedHabits entry to appear in Execution and Progress.`);
+  }
+  for (const key of ["dangerAreas", "rules"]) {
+    if (content[key] !== undefined && (!Array.isArray(content[key]) || content[key].some(item => !item || typeof item !== "object"))) throw new Error(`${key} must be an array of objects.`);
+  }
+  return blocks;
 }
 
 function applyGeneratedGoalCascade(content) {
-  validateGoalCascade(content);
+  const scheduleBlocks = validateGoalCascade(content);
 
   if (content.identityStatement && typeof content.identityStatement === "object") {
     appState.identityStatement = {
@@ -130,14 +181,13 @@ function applyGeneratedGoalCascade(content) {
   appState.goals.northStar = northStar;
   appState.goals.sixMonth = normalizeGoalItems(content.sixMonth, "g").map(mapGoal);
   appState.goals.threeMonth = normalizeGoalItems(content.threeMonth, "g").map(mapGoal);
-  appState.goals.oneMonth = (content.oneMonth || []).map(mapGoal);
+  appState.goals.oneMonth = normalizeGoalItems(content.oneMonth, "g").map(mapGoal);
   appState.goals.linkedHabits = (content.linkedHabits || []).filter(link => link?.habitId && validNorthStarIds.has(link.northStarId));
 
+  appState.settings.scheduleBlocks = scheduleBlocks;
   persistState();
   closeAIModal();
-  renderGoalsHub();
-  if (typeof renderReview === "function") renderReview();
-  if (typeof renderToday === "function") renderToday();
+  renderAll();
   celebrate();
 }
 

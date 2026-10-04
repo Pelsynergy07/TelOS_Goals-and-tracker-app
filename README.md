@@ -80,3 +80,34 @@ Then open:
 
 - The app expects to be served over HTTP for AI/network features.
 - If you previously used an older local storage key, this version starts fresh with `telos_data`.
+
+## Import a complete personalized plan
+
+Copy the updated planner prompt from the app, generate a new plan in ChatGPT, and paste the JSON into the planner import dialog. The System JSON file importer also accepts the same plan format, as well as full backups.
+
+Plans must include `northStar`, `sixMonth`, `threeMonth`, `dailyHabits`, and `linkedHabits` arrays. Include `oneMonth` for one-month checkpoints. Habit definitions replace the previous schedule; existing logs and connection settings are preserved. Older planner JSON containing only habit links is rejected with instructions to regenerate it, because it cannot specify personalized habits or times.
+
+Example habit definition and link (inside the complete plan):
+
+```json
+"dailyHabits": [
+  { "id": "lunch_walk", "name": "Lunch walk", "time": "12:30 PM",
+    "fields": [{ "id": "completed", "type": "checkbox", "label": "Walk completed" }] }
+],
+"linkedHabits": [{ "habitId": "lunch_walk", "northStarId": "ns_health" }]
+```
+
+The referenced North Star must exist. Each habit must have one link to a North Star. Habit times can be an empty string; no default time is substituted. Omitted fields default to a completion checkbox. Numeric tracking fields count any positive value as completion. Checkpoints and habits are grouped by their shared North Star, rather than directly linked to each other.
+
+Run import regression tests with `npm test` (no dependency installation required).
+
+## Scheduled Supabase activity
+
+The `Supabase keep-alive` GitHub Action performs a read-only request to `life_os_sync` every six hours, independently of whether the app is open. Add these repository secrets in **Settings → Secrets and variables → Actions**:
+
+- `SUPABASE_URL`: the same project URL used in the app.
+- `SUPABASE_KEY`: the app's publishable or legacy anon key. A service-role key is unnecessary.
+
+Then open **Actions → Supabase keep-alive → Run workflow** to verify the connection. The key must have permission to read `life_os_sync`. If the project is already paused, resume it in Supabase first. Failed requests fail the workflow without printing credentials or database records.
+
+Supabase Free projects can be paused for low activity during a seven-day window. Scheduled requests can help maintain activity, but are not a guarantee against pausing. GitHub schedules can be delayed, and scheduled workflows in public repositories can be disabled after 60 days without repository activity; re-enable the workflow if needed. A paid Supabase plan prevents automatic inactivity pausing.

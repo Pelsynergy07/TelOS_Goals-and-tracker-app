@@ -198,9 +198,12 @@ function importDataJSON(event) {
         await initSupabase();
         renderAll();
         if (statusMsg) { statusMsg.className = "block text-center text-[10px] mt-2 font-medium text-green"; statusMsg.textContent = "Backup imported successfully."; }
-      } else throw new Error();
+      } else {
+        applyGeneratedGoalCascade(imported);
+        if (statusMsg) { statusMsg.className = "block text-center text-[10px] mt-2 font-medium text-green"; statusMsg.textContent = "Plan and daily habits imported successfully."; }
+      }
     } catch (err) {
-      if (statusMsg) { statusMsg.className = "block text-center text-[10px] mt-2 font-medium text-red"; statusMsg.textContent = "Invalid backup format."; }
+      if (statusMsg) { statusMsg.className = "block text-center text-[10px] mt-2 font-medium text-red"; statusMsg.textContent = err.message || "Invalid JSON format."; }
     }
   };
   reader.readAsText(file);
