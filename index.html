@@ -6,7 +6,7 @@
   <title>Life OS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body>
 
@@ -47,7 +47,6 @@
       <div class="telos-mark" aria-hidden="true"></div>
       <div class="min-w-0">
         <p class="telos-wordmark" id="sidebar-title">TelOS</p>
-        <p class="telos-subtitle" id="sidebar-subtitle">Goal Operating System</p>
       </div>
     </div>
     <nav class="space-y-1">
@@ -120,7 +119,7 @@
   <section id="tab-today" class="space-y-6">
 
     <div>
-      <h2 class="font-display text-3xl md:text-5xl text-text leading-none mt-1" style="font-family:'Newsreader',serif" id="today-day-header">Saturday</h2>
+      <h2 class="font-display text-3xl md:text-5xl text-text leading-none mt-1" style="font-family:'Instrument Serif',serif" id="today-day-header">Saturday</h2>
       <p class="text-text-dim text-sm mt-2" id="today-date-header">May 23, 2026</p>
       <div class="execution-date-controls"><label for="execution-date">Log habits for</label><div class="execution-date-picker"><input type="date" id="execution-date" onchange="editExecutionDate(this.value)"><button type="button" class="date-picker-button" aria-label="Open calendar to choose a tracking date" onclick="openExecutionDatePicker()"><i data-lucide="calendar-days" aria-hidden="true"></i></button></div><button id="execution-today-button" class="btn btn-outline" onclick="editExecutionDate(getLocalDateString())">Back to today</button></div>
     </div>
@@ -560,7 +559,7 @@ create policy "Enable all" on public.life_os_sync
 </div>
 
 <script src="mockData.js?v=21"></script>
-<script src="js/config.js?v=21"></script>
+<script src="js/config.js?v=22"></script>
 <script src="js/state.js?v=21"></script>
 <script src="js/utils.js?v=21"></script>
 <script src="js/tabs/execution.js?v=22"></script>
@@ -571,6 +570,6 @@ create policy "Enable all" on public.life_os_sync
 <script src="js/ai-goal-prompt.js?v=21"></script>
 <script src="js/ai-goals.js?v=21"></script>
 <script src="js/desktop.js?v=21"></script>
-<script src="app.js?v=21"></script>
+<script src="app.js?v=22"></script>
 </body>
 </html>

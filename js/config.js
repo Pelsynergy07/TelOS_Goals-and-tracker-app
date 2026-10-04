@@ -12,7 +12,6 @@ const APP_CONFIG = {
   userInitials: 'pr',
   userTagline: 'Designing disciplined systems',
   appName: 'TelOS',
-  appSubtitle: 'Goal Operating System',
 
   // ─── Local Storage ────────────────────────────────────
   // All your data is saved in your browser under this key.

@@ -66,7 +66,6 @@ window.addEventListener("hashchange", () => {
 function applyConfig() {
   const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   setText("sidebar-title", APP_CONFIG.appName);
-  setText("sidebar-subtitle", APP_CONFIG.appSubtitle.toUpperCase());
   setText("sidebar-avatar", APP_CONFIG.userInitials);
   setText("sidebar-name", APP_CONFIG.userName);
   setText("sidebar-tagline", APP_CONFIG.userTagline);
