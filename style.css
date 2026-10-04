@@ -975,7 +975,7 @@ button { touch-action:manipulation; }
  .desktop-editor > .card { max-height:calc(100dvh - 32px); }
  .telos-subtitle { font-size:.75rem; }
 }
-@media (max-width:420px) {
+@media (max-width:480px) {
  /* Dates remain in order in a roomy five-column month list on compact phones. */
  .habit-month-grid { grid-template-columns:repeat(5,minmax(48px,1fr)); gap:8px; }
  .habit-month-grid > div { display:none; }
@@ -994,3 +994,5 @@ button { touch-action:manipulation; }
  #today-goals-countdown > .card-header > span { flex-basis:100%; }
  #today-goals-countdown > .card-header button { min-height:48px; }
 }
+
+@media (max-width:360px) { .habit-month-grid { grid-template-columns:repeat(4,minmax(48px,1fr)); } }
