@@ -100,15 +100,6 @@ function renderHabitMonthGrids() {
       <span class="flex items-center gap-1.5 text-sm font-bold"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span>
     `;
     card.appendChild(header);
-    const complete = document.createElement("button");
-    complete.type = "button";
-    const dayDone = isBlockCompleted(block, appState.logs[trackerDate]?.[block.id]);
-    complete.className = "habit-complete-button" + (dayDone ? " is-done" : "");
-    complete.setAttribute("aria-pressed", String(dayDone));
-    complete.setAttribute("aria-label", `${dayDone ? 'Undo' : 'Complete'} ${block.name} for ${trackerDate}`);
-    complete.innerHTML = `<span class="habit-check" aria-hidden="true">${dayDone ? '&#10003;' : ''}</span><span>${dayDone ? 'Done' : 'Mark done'} · ${formatDateLabelShort(trackerDate)}</span>`;
-    complete.onclick = () => toggleBlockQuickCompletion(trackerDate, block.id, !dayDone);
-    card.appendChild(complete);
     card.appendChild(grid);
     if (block.fields.some(f => f.type !== "checkbox")) {
       const details = document.createElement("details");

@@ -936,9 +936,6 @@ input::placeholder,textarea::placeholder { color:var(--text-dim) !important; }
 #today-habit-cards-container > .card header,.habit-month-grid { min-width:0; }
 .habit-month-grid { grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
 .habit-month-cell { min-height:44px; font-size:var(--type-small); aspect-ratio:auto; border-radius:6px; }
-.habit-complete-button { width:100%; min-height:48px; display:flex; align-items:center; gap:12px; padding:10px 12px; margin:12px 0; border:1px solid var(--border-hover); border-radius:var(--radius-sm); background:var(--surface-hover); color:var(--text); text-align:left; cursor:pointer; }
-.habit-complete-button.is-done { color:var(--green); border-color:rgba(34,211,160,.4); background:rgba(34,211,160,.08); }
-.habit-check { display:grid; place-items:center; width:24px; height:24px; flex:none; border:1px solid currentColor; border-radius:6px; font-weight:700; }
 .habit-details { margin-top:12px; border-top:1px solid var(--border); }
 .habit-details summary { cursor:pointer; padding:14px 0; min-height:48px; font-size:var(--type-small); color:var(--text-dim); }
 .habit-details .editor-field { margin:12px 0; }
@@ -1015,3 +1012,5 @@ button { touch-action:manipulation; }
 .checkpoint-disclosure-body { display:flex; flex-direction:column; gap:16px; padding-bottom:16px; }
 .checkpoint-disclosure summary:focus-visible { outline:2px solid var(--blue); outline-offset:3px; }
 @media (max-width:767px) { .execution-date-controls > label { flex-basis:100%; } .checkpoint-disclosure > summary { flex-wrap:wrap; } }
+
+.habit-month-cell.today { outline:2px solid var(--blue); outline-offset:1px; }
