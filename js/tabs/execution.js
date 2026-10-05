@@ -94,7 +94,7 @@ function renderHabitMonthGrids() {
     const streak = getBlockStreak(block.id);
     header.innerHTML = `
       <div>
-        <p class="text-caption font-bold text-text leading-tight">${escapeHtml(block.name)}</p>
+        <p class="item-heading text-caption font-bold text-text leading-tight">${escapeHtml(block.name)}</p>
         <span class="text-caption text-text-dim">${escapeHtml(block.time || '')}</span>
       </div>
       <span class="flex items-center gap-1.5 text-sm font-bold"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span>
@@ -324,7 +324,7 @@ function makeCheckpointDeadlineRow(g, done, badge) {
           <i data-lucide="${done ? 'check-check' : 'flag'}" class="w-4 h-4 ${done ? 'text-green' : 'text-blue'}"></i>
         </div>
         <div>
-          <span class="text-xs font-bold ${done ? 'text-green' : 'text-text'}">${escapeHtml(g.name)}</span>
+          <span class="item-heading text-xs font-bold ${done ? 'text-green' : 'text-text'}">${escapeHtml(g.name)}</span>
           <span class="text-caption text-text-dim block">${g.progress}/${g.target} ${escapeHtml(g.unit || '')} · ${g.typeLabel}</span>
         </div>
       </div>
@@ -484,7 +484,7 @@ function renderAllGoalsCountdown() {
           <span class="text-caption uppercase tracking-[0.18em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${g.type === 'sixMonth' ? '6-Month' : g.type === 'threeMonth' ? '3-Month' : '1-Month'}</span>
           <span class="text-caption ${accent}/80 font-bold">${done ? 'Completed' : diff < 0 ? Math.abs(diff) + 'd overdue' : diff + 'd left'}</span>
         </div>
-        <div class="text-sm font-bold ${done ? 'text-green' : 'text-text'} leading-snug">${escapeHtml(g.name)}</div>
+        <div class="item-heading text-sm font-bold ${done ? 'text-green' : 'text-text'} leading-snug">${escapeHtml(g.name)}</div>
         <div class="text-caption text-text-dim">${g.progress}/${g.target} ${escapeHtml(g.unit || '')}</div>
       </div>
       <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="w-full text-caption font-bold px-3 py-2 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">

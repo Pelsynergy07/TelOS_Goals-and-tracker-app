@@ -130,7 +130,7 @@ function renderNorthStar() {
       const done = item.completed;
       card.className = "northstar-card" + (done ? " completed" : "");
       card.innerHTML = `
-        <span class="text-xs font-bold ${done ? 'text-green' : 'text-text'}">${escapeHtml(item.title)}</span>
+        <span class="item-heading text-xs font-bold ${done ? 'text-green' : 'text-text'}">${escapeHtml(item.title)}</span>
         <p class="text-caption text-text-dim mt-0.5">${escapeHtml(item.description)}</p>
       `;
     }

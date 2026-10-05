@@ -78,7 +78,7 @@ function renderDangerSection() {
           <div class="danger-card-header" onclick="toggleDangerCollapse(this)">
             <div class="flex items-center gap-2 min-w-0">
               <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber shrink-0"></i>
-              <span class="text-xs font-bold text-text">${escapeHtml(area.title)}</span>
+              <span class="item-heading text-xs font-bold text-text">${escapeHtml(area.title)}</span>
             </div>
             <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-text-dim shrink-0 danger-chevron"></i>
           </div>
