@@ -687,7 +687,7 @@ section { animation: fadeUp 0.25s ease; }
 .identity-hero { border-color: rgba(34, 211, 160, 0.25); }
 
 .identity-hero textarea {
-  font-family: "Instrument Serif", serif;
+  font-family: "Geist", system-ui, sans-serif;
 }
 
 /* Danger Area Cards */
@@ -1015,27 +1015,32 @@ button { touch-action:manipulation; }
 
 .habit-month-cell.today { outline:2px solid var(--blue); outline-offset:1px; }
 
-/* One heading face across every page, section and dialog. */
-:root { --font-heading:"Instrument Serif", Georgia, serif; }
-h1,h2,h3,h4,h5,h6,.card-header,.cascade-card-title,.empty-banner-title,.onboarding-step-title,
-.checkpoint-disclosure > summary > span:first-child {
- font-family:var(--font-heading) !important;
- font-weight:400 !important;
- text-transform:none !important;
- letter-spacing:0;
+/* Serif is reserved for page titles; task and section headings stay easy to scan. */
+.page-title {
+ font-family:"Instrument Serif", Georgia, serif;
+ font-weight:400;
+ font-size:2rem;
  line-height:1.2;
-}
-.app-content > section > div h2 { font-size:2rem; }
-.card-header,.cascade-card-title { font-size:1.375rem; }
-h3 { font-size:1.5rem !important; }
-h4,h5,h6,.empty-banner-title,.onboarding-step-title { font-size:1.25rem; }
-.card-header button,.card-header .text-caption { font-family:"Geist",system-ui,sans-serif; }
-.card-header button { font-weight:600; }
-
-.item-heading,#today-habit-cards-container .card > .flex p {
- font-family:var(--font-heading) !important;
- font-weight:400 !important;
- font-size:1.25rem;
- line-height:1.25;
  letter-spacing:0;
+}
+.card-header,.cascade-card-title,.empty-banner-title,.onboarding-step-title {
+ font-family:"Geist", system-ui, sans-serif;
+ font-weight:600;
+ font-size:.875rem;
+ line-height:1.5;
+ text-transform:none;
+ letter-spacing:0;
+}
+.item-heading {
+ font-family:"Geist", system-ui, sans-serif;
+ font-weight:600;
+ font-size:.875rem;
+ line-height:1.4;
+ letter-spacing:0;
+}
+#today-habit-cards-container .card > .flex p {
+ font-family:"Geist", system-ui, sans-serif;
+ font-weight:600;
+ font-size:1rem;
+ line-height:1.4;
 }
