@@ -20,6 +20,15 @@ function renderToday() {
 }
 
 let pendingCheckpointCompletion = null;
+let habitReordering = false;
+
+function toggleHabitReordering() {
+  habitReordering = !habitReordering;
+  const status = document.getElementById("habit-order-status");
+  if (status) status.textContent = habitReordering ? "Use the arrows to change the order. Changes save automatically." : "";
+  renderHabitMonthGrids();
+}
+
 
 function updateTodayDateHeader() {
   const d = parseLocalDate(trackerDate);
@@ -38,7 +47,14 @@ function renderHabitMonthGrids() {
   const todayStr = getLocalDateString();
   const today = parseLocalDate(trackerDate || todayStr);
 
-  if (getLinkedBlocks().length === 0) {
+  const blocks = getLinkedBlocks();
+  const reorderToggle = document.getElementById("habit-reorder-toggle");
+  if (reorderToggle) {
+    reorderToggle.hidden = blocks.length < 2;
+    reorderToggle.textContent = habitReordering ? "Done arranging" : "Reorder habits";
+    reorderToggle.setAttribute("aria-pressed", String(habitReordering));
+  }
+  if (blocks.length === 0) {
     container.innerHTML = `
       <div class="card flex flex-col items-center justify-center py-12 text-center">
         <i data-lucide="map" class="w-10 h-10 text-text-dim/30 mb-3"></i>
@@ -50,7 +66,7 @@ function renderHabitMonthGrids() {
     return;
   }
 
-  getLinkedBlocks().forEach(block => {
+  blocks.forEach((block, blockIndex) => {
     const year = today.getFullYear();
     const month = today.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -100,6 +116,31 @@ function renderHabitMonthGrids() {
       <span class="flex items-center gap-1.5 text-sm font-bold"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span>
     `;
     card.appendChild(header);
+    if (habitReordering) {
+      const controls = document.createElement("div");
+      controls.className = "habit-order-controls";
+      controls.setAttribute("role", "group");
+      controls.setAttribute("aria-label", `Reorder ${block.name}`);
+      [-1, 1].forEach(direction => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "btn btn-outline";
+        button.id = `habit-order-${block.id}-${direction}`;
+        button.textContent = direction === -1 ? "← Earlier" : "Later →";
+        button.setAttribute("aria-label", `Move ${block.name} ${direction === -1 ? "earlier" : "later"}`);
+        button.disabled = direction === -1 ? blockIndex === 0 : blockIndex === blocks.length - 1;
+        button.onclick = () => {
+          moveHabitBlock(block.id, direction);
+          const same = document.getElementById(button.id);
+          const next = same && !same.disabled ? same : document.getElementById(`habit-order-${block.id}-${-direction}`);
+          next?.focus();
+          const status = document.getElementById("habit-order-status");
+          if (status) status.textContent = `${block.name} moved to position ${getLinkedBlocks().findIndex(b => b.id === block.id) + 1} of ${blocks.length}. Order saved.`;
+        };
+        controls.appendChild(button);
+      });
+      card.appendChild(controls);
+    }
     card.appendChild(grid);
     if (block.fields.some(f => f.type !== "checkbox")) {
       const details = document.createElement("details");

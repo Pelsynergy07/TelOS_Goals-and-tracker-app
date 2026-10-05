@@ -169,3 +169,18 @@ if (typeof document.addEventListener === "function") document.addEventListener("
     }
   });
 });
+
+// Reorder definitions, keeping IDs, links and historical logs intact.
+function moveHabitBlock(habitId, direction) {
+  if (direction !== -1 && direction !== 1) return;
+  const visible = getLinkedBlocks();
+  const position = visible.findIndex(block => block.id === habitId);
+  const neighbor = visible[position + direction];
+  if (position < 0 || !neighbor) return;
+  const blocks = appState.settings.scheduleBlocks;
+  const from = blocks.findIndex(block => block.id === habitId);
+  const to = blocks.findIndex(block => block.id === neighbor.id);
+  [blocks[from], blocks[to]] = [blocks[to], blocks[from]];
+  persistState();
+  renderAll();
+}

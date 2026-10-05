@@ -237,3 +237,19 @@ test('inline details preserve completion, reject invalid amounts, and leave blan
   value='-1';run('saveInlineHabitDetails("2026-10-01","practice",form)');assert.equal(state().logs['2026-10-01'].practice.minutes,8);assert.match(message.textContent,/non-negative/);
   value='';run('saveInlineHabitDetails("2026-10-01","practice",form)');assert.equal(state().logs['2026-10-01'].practice.minutes,undefined);assert.equal(state().logs['2026-10-01'].practice.completed,true);
 });
+
+test('habit reordering persists through reload and preserves links and historical logs', () => {
+  const { ctx, run, state } = setup(); ctx.plan = plan();
+  run('applyGeneratedGoalCascade(plan); appState.logs={"2026-10-01":{practice:{completed:true,minutes:25}}}');
+  const before=state();
+  run('moveHabitBlock("practice", -1)');
+  assert.deepEqual(state().settings.scheduleBlocks.map(b=>b.id), ['practice','lunch_walk']);
+  assert.deepEqual(state().logs,before.logs);
+  assert.deepEqual(state().goals.linkedHabits,before.goals.linkedHabits);
+  run('loadLocalData()');
+  assert.deepEqual(run('getLinkedBlocks().map(b=>b.id).join(",")'), 'practice,lunch_walk');
+  run('moveHabitBlock("practice", -1); moveHabitBlock("missing", 1); moveHabitBlock("practice", 2)');
+  assert.deepEqual(state().settings.scheduleBlocks.map(b=>b.id), ['practice','lunch_walk']);
+  run('moveHabitBlock("practice", 1)');
+  assert.deepEqual(state().settings.scheduleBlocks.map(b=>b.id), ['lunch_walk','practice']);
+});
