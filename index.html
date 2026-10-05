@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=15">
+  <link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
 
@@ -303,14 +303,14 @@
             <div class="card-header border-0 p-0 m-0">Cloud sync</div>
             <span id="sync-status-badge" class="sync-status-pill is-local" role="status">Local only</span>
           </div>
-          <p class="settings-description">Keep your goals on your own Supabase database and sync them across your devices.</p>
-          <button type="button" class="setup-guide-link" onclick="openSupabaseHelp()"><i data-lucide="book-open" aria-hidden="true"></i>Setup guide</button>
-          <p class="settings-hint">Each person needs a separate project. Connecting to the same project shares the same plan.</p>
+          <p class="settings-description">Sync your goals across devices using your own Supabase project.</p>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div><label for="settings-supabase-url" class="settings-field-label">Project URL <button type="button" aria-label="Find your project URL" onclick="openSupabaseHelp('url')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="url" autocomplete="off" spellcheck="false" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
             <div><label for="settings-supabase-key" class="settings-field-label">Publishable key <button type="button" aria-label="Find your publishable key" onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" autocomplete="off" spellcheck="false" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
           </div>
           <div class="cloud-actions">
+            <button type="button" class="setup-guide-link" onclick="openSupabaseHelp()">Setup guide</button>
             <button onclick="testAndSaveSupabaseConnection()" id="settings-connect-btn" class="btn btn-primary">Verify &amp; Connect</button>
             <button onclick="syncNow()" id="settings-sync-btn" class="btn btn-primary hidden"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sync Now</button>
             <button onclick="disconnectSupabase()" id="settings-supabase-disconnect" class="btn btn-danger hidden">Disconnect</button>
@@ -507,19 +507,19 @@
 <div id="supabase-help-modal" class="fixed inset-0 bg-bg/85 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" style="display:none" onclick="if(event.target===this)closeSupabaseHelp()">
   <div class="supabase-guide bg-surface border border-border rounded-lg" role="dialog" aria-modal="true" aria-labelledby="supabase-guide-title">
     <div class="supabase-guide-heading">
-      <div><h3 id="supabase-guide-title">Set up your own cloud sync</h3><p>Your database. Your plan. The same habits on every device.</p></div>
+      <h3 id="supabase-guide-title">Connect Supabase</h3>
       <button type="button" class="guide-close" aria-label="Close setup guide" onclick="closeSupabaseHelp()"><i data-lucide="x" aria-hidden="true"></i></button>
     </div>
     <div class="supabase-guide-body">
       <section class="guide-section">
-        <h4>1. Create your own project</h4>
-        <p>Open the <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">Supabase dashboard</a> and create a project. Wait until it is ready. Use a separate project for each person; different keys for the same project do not create separate plans.</p>
+        <h4>1. Create a project</h4>
+        <p>Create your own project at <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">supabase.com</a>. Each person uses a separate project.</p>
       </section>
       <section class="guide-section">
-        <h4>2. Prepare the database</h4>
-        <p>In your new project, open <strong>SQL Editor → New query</strong>. Copy the SQL below, paste it into the editor, and click <strong>Run</strong>. This creates the table TelOS needs.</p>
-        <details class="guide-sql"><summary>Show database setup SQL</summary>
-          <div class="guide-code-toolbar"><span>For a new personal project</span><button type="button" class="btn btn-outline" onclick="copySupabaseSetupSQL(this)">Copy SQL</button></div>
+        <h4>2. Run the setup SQL once</h4>
+        <p>Open <strong>SQL Editor</strong>, paste this SQL, then click <strong>Run</strong>.</p>
+        <details class="guide-sql"><summary>Setup SQL</summary>
+          <div class="guide-code-toolbar"><span>Copy into SQL Editor</span><button type="button" class="btn btn-outline" onclick="copySupabaseSetupSQL(this)">Copy SQL</button></div>
           <pre id="supabase-setup-sql">create table if not exists public.life_os_sync (
   id text primary key,
   data jsonb not null default '{}',
@@ -543,26 +543,15 @@ create policy "TelOS update" on public.life_os_sync
   for update to anon using (id = 'life_os_data')
   with check (id = 'life_os_data');</pre>
         </details>
-        <p class="guide-note">This connection has no sign-in. The setup allows anyone with your project URL and publishable key to read and change the TelOS plan. A publishable key is not a private password. Use this model only for a database you intend to access this way.</p>
       </section>
       <section class="guide-section" id="supabase-guide-url">
-        <h4>3. Copy your project URL and key</h4>
-        <p><strong>Project URL:</strong> open <strong>Integrations → Data API</strong> and copy the URL, such as <code>https://your-project.supabase.co</code>. Some dashboard layouts show this under Settings → Data API.</p>
-        <p id="supabase-guide-key"><strong>Publishable key:</strong> open <strong>Settings → API Keys</strong> and copy a key beginning with <code>sb_publishable_</code>. A legacy <code>anon</code> key also works. Never enter a secret or service-role key.</p>
-        <p>Paste both values into System and choose <strong>Verify &amp; Connect</strong>. They are saved on this device; they are excluded from the cloud plan.</p>
+        <h4>3. Paste your URL and key</h4>
+        <p><strong>URL:</strong> Integrations → Data API.</p>
+        <p id="supabase-guide-key"><strong>Publishable key:</strong> Settings → API Keys. Use the <code>sb_publishable_</code> key, never a secret key.</p>
+        <p>Paste them here and click <strong>Verify &amp; Connect</strong>.</p>
       </section>
-      <section class="guide-section">
-        <h4>4. Connect your other devices</h4>
-        <p>On your first device, choose <strong>Sync Now</strong>. On another device, open TelOS, go to System, and connect with the <strong>same project URL and key</strong>. You do not need to run the SQL again.</p>
-        <p>If there is a conflict on the new device, choose <strong>Use cloud version</strong> to load the plan you already saved. Connected devices check for changes every 10 seconds while the app is open.</p>
-      </section>
-      <details class="guide-troubleshooting"><summary>Connection not working?</summary>
-        <p><strong>Table missing:</strong> run the setup SQL in the project matching your URL.</p>
-        <p><strong>Permission error:</strong> check the SQL ran successfully and Data API access is enabled for the public schema and anon role.</p>
-        <p><strong>Project paused:</strong> restore it from the Supabase dashboard, then reconnect.</p>
-        <p><strong>Stay local:</strong> cloud sync is optional. Export a JSON backup regularly; clearing browser storage removes local data and saved connection settings.</p>
-      </details>
-      <a class="guide-docs" href="https://supabase.com/docs/guides/getting-started/api-keys" target="_blank" rel="noopener noreferrer">Supabase API key documentation ↗</a>
+      <p class="guide-footnote">Another device? Use the same URL and key. If prompted, choose <strong>Use cloud version</strong>.</p>
+      <p class="guide-footnote">Anyone with these connection details can read and change this plan. They are saved on this device.</p>
     </div>
   </div>
 </div>
