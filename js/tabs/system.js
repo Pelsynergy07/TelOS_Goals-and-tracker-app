@@ -48,12 +48,32 @@ async function testAndSaveSupabaseConnection() {
   }
 }
 
+let supabaseGuideReturnFocus = null;
 function openSupabaseHelp(field) {
-  document.getElementById("supabase-help-modal").style.display = "flex";
+  supabaseGuideReturnFocus = document.activeElement;
+  const modal = document.getElementById("supabase-help-modal");
+  modal.style.display = "flex";
+  modal.querySelector(".guide-close").focus();
+  const target = field && document.getElementById(`supabase-guide-${field}`);
+  if (target) target.scrollIntoView({block:"nearest"});
+}
+
+async function copySupabaseSetupSQL(button) {
+  try {
+    await navigator.clipboard.writeText(document.getElementById("supabase-setup-sql").textContent);
+    button.textContent = "Copied";
+    setTimeout(() => { button.textContent = "Copy SQL"; }, 2000);
+  } catch {
+    button.textContent = "Select SQL to copy";
+    const range = document.createRange();
+    range.selectNodeContents(document.getElementById("supabase-setup-sql"));
+    const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+  }
 }
 
 function closeSupabaseHelp() {
   document.getElementById("supabase-help-modal").style.display = "none";
+  supabaseGuideReturnFocus?.focus();
 }
 
 function disconnectSupabase() {
@@ -218,3 +238,15 @@ function importDataJSON(event) {
   };
   reader.readAsText(file);
 }
+
+if (typeof window !== "undefined") document.addEventListener("keydown", event => {
+  const modal = document.getElementById("supabase-help-modal");
+  if (modal?.style.display !== "flex") return;
+  if (event.key === "Escape") { event.preventDefault(); closeSupabaseHelp(); }
+  if (event.key === "Tab") {
+    const controls = [...modal.querySelectorAll("button,a[href],summary")].filter(el => el.getClientRects().length);
+    const first = controls[0], last = controls.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  }
+});

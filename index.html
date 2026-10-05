@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=14">
+  <link rel="stylesheet" href="style.css?v=15">
 </head>
 <body>
 
@@ -299,16 +299,18 @@
 
         <!-- Supabase Cloud Sync -->
         <div class="card">
-          <div class="flex items-center justify-between border-b border-border pb-3">
-            <div class="card-header border-0 p-0 m-0">Supabase Cloud Sync</div>
-            <span id="sync-status-badge" class="text-caption bg-border px-2 py-0.5 rounded font-bold uppercase tracking-wider text-text-dim">Local Mode</span>
+          <div class="cloud-card-heading">
+            <div class="card-header border-0 p-0 m-0">Cloud sync</div>
+            <span id="sync-status-badge" class="sync-status-pill is-local" role="status">Local only</span>
           </div>
-          <p class="text-xs text-text-dim leading-relaxed mb-4">Connect Supabase to sync your data across devices.</p>
+          <p class="settings-description">Keep your goals on your own Supabase database and sync them across your devices.</p>
+          <button type="button" class="setup-guide-link" onclick="openSupabaseHelp()"><i data-lucide="book-open" aria-hidden="true"></i>Setup guide</button>
+          <p class="settings-hint">Each person needs a separate project. Connecting to the same project shares the same plan.</p>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label for="settings-supabase-url" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">API URL <button aria-label="circle help" onclick="openSupabaseHelp('url')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
-            <div><label for="settings-supabase-key" class="text-caption text-text-dim font-bold uppercase tracking-wider block mb-1">Anon Key / Publishable Key <button aria-label="circle help" onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
+            <div><label for="settings-supabase-url" class="settings-field-label">Project URL <button type="button" aria-label="Find your project URL" onclick="openSupabaseHelp('url')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="url" autocomplete="off" spellcheck="false" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
+            <div><label for="settings-supabase-key" class="settings-field-label">Publishable key <button type="button" aria-label="Find your publishable key" onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" autocomplete="off" spellcheck="false" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="cloud-actions">
             <button onclick="testAndSaveSupabaseConnection()" id="settings-connect-btn" class="btn btn-primary">Verify &amp; Connect</button>
             <button onclick="syncNow()" id="settings-sync-btn" class="btn btn-primary hidden"><i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Sync Now</button>
             <button onclick="disconnectSupabase()" id="settings-supabase-disconnect" class="btn btn-danger hidden">Disconnect</button>
@@ -501,52 +503,69 @@
   </div>
 </div>
 
-<!-- Supabase Help Modal -->
+<!-- Supabase setup guide -->
 <div id="supabase-help-modal" class="fixed inset-0 bg-bg/85 backdrop-blur-sm z-[100] hidden items-center justify-center p-4" style="display:none" onclick="if(event.target===this)closeSupabaseHelp()">
-  <div class="bg-surface border border-border w-full max-w-lg rounded-lg p-5 space-y-4 shadow-xl" onclick="event.stopPropagation()">
-    <div class="flex items-center justify-between border-b border-border pb-3">
-      <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim"><i data-lucide="database" class="w-3.5 h-3.5 inline mr-1.5 text-green"></i>Where to Find Your Supabase Credentials</h3>
-      <button aria-label="Close" onclick="closeSupabaseHelp()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+  <div class="supabase-guide bg-surface border border-border rounded-lg" role="dialog" aria-modal="true" aria-labelledby="supabase-guide-title">
+    <div class="supabase-guide-heading">
+      <div><h3 id="supabase-guide-title">Set up your own cloud sync</h3><p>Your database. Your plan. The same habits on every device.</p></div>
+      <button type="button" class="guide-close" aria-label="Close setup guide" onclick="closeSupabaseHelp()"><i data-lucide="x" aria-hidden="true"></i></button>
     </div>
-    <div class="space-y-4 text-xs text-text-dim leading-relaxed">
-      <div>
-        <p class="font-bold text-text mb-1">API URL</p>
-        <ol class="list-decimal list-inside space-y-1 pl-1">
-          <li>Log in to your <a href="https://supabase.com" target="_blank" class="text-blue hover:underline">Supabase dashboard</a></li>
-          <li>Select your project</li>
-          <li>Go to <span class="text-text font-semibold">Project Settings → Data API</span></li>
-          <li>Copy the <span class="text-text font-semibold">Project URL</span> (looks like <code class="text-caption bg-white/10 px-1 rounded">https://xxxx.supabase.co</code>)</li>
-        </ol>
-      </div>
-      <div>
-        <p class="font-bold text-text mb-1">Anon Key / Publishable Key</p>
-        <ol class="list-decimal list-inside space-y-1 pl-1">
-          <li>Go to <span class="text-text font-semibold">Project Settings → API Keys</span></li>
-          <li>Find the <span class="text-text font-semibold">anon public</span> key (starts with <code class="text-caption bg-white/10 px-1 rounded">eyJ...</code>)</li>
-          <li>Or if using Supabase Publishing, use your <span class="text-text font-semibold">publishable key</span> (starts with <code class="text-caption bg-white/10 px-1 rounded">sb_publishable_...</code>)</li>
-          <li>Paste it into the key field above</li>
-        </ol>
-      </div>
-      <div class="bg-white/5 border border-border rounded p-3">
-        <p class="font-bold text-text mb-1 flex items-center gap-1.5"><i data-lucide="info" class="w-3 h-3 text-blue"></i>Need a Supabase project?</p>
-        <p class="text-xs">Go to <a href="https://supabase.com" target="_blank" class="text-blue hover:underline">supabase.com</a>, sign up, create a project, then run this SQL in the SQL Editor:</p>
-        <pre class="text-caption bg-bg p-2 rounded mt-1 overflow-x-auto">create table public.life_os_sync (
+    <div class="supabase-guide-body">
+      <section class="guide-section">
+        <h4>1. Create your own project</h4>
+        <p>Open the <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">Supabase dashboard</a> and create a project. Wait until it is ready. Use a separate project for each person; different keys for the same project do not create separate plans.</p>
+      </section>
+      <section class="guide-section">
+        <h4>2. Prepare the database</h4>
+        <p>In your new project, open <strong>SQL Editor → New query</strong>. Copy the SQL below, paste it into the editor, and click <strong>Run</strong>. This creates the table TelOS needs.</p>
+        <details class="guide-sql"><summary>Show database setup SQL</summary>
+          <div class="guide-code-toolbar"><span>For a new personal project</span><button type="button" class="btn btn-outline" onclick="copySupabaseSetupSQL(this)">Copy SQL</button></div>
+          <pre id="supabase-setup-sql">create table if not exists public.life_os_sync (
   id text primary key,
   data jsonb not null default '{}',
   updated_at timestamptz default now()
 );
 
 alter table public.life_os_sync enable row level security;
-create policy "Enable all" on public.life_os_sync
-  for all using (true) with check (true);</pre>
-      </div>
-    </div>
-    <div class="flex justify-end pt-1">
-      <button onclick="closeSupabaseHelp()" class="btn btn-primary">Got it</button>
+grant usage on schema public to anon;
+grant select, insert, update on public.life_os_sync to anon;
+
+drop policy if exists "TelOS read" on public.life_os_sync;
+create policy "TelOS read" on public.life_os_sync
+  for select to anon using (id = 'life_os_data');
+
+drop policy if exists "TelOS insert" on public.life_os_sync;
+create policy "TelOS insert" on public.life_os_sync
+  for insert to anon with check (id = 'life_os_data');
+
+drop policy if exists "TelOS update" on public.life_os_sync;
+create policy "TelOS update" on public.life_os_sync
+  for update to anon using (id = 'life_os_data')
+  with check (id = 'life_os_data');</pre>
+        </details>
+        <p class="guide-note">This connection has no sign-in. The setup allows anyone with your project URL and publishable key to read and change the TelOS plan. A publishable key is not a private password. Use this model only for a database you intend to access this way.</p>
+      </section>
+      <section class="guide-section" id="supabase-guide-url">
+        <h4>3. Copy your project URL and key</h4>
+        <p><strong>Project URL:</strong> open <strong>Integrations → Data API</strong> and copy the URL, such as <code>https://your-project.supabase.co</code>. Some dashboard layouts show this under Settings → Data API.</p>
+        <p id="supabase-guide-key"><strong>Publishable key:</strong> open <strong>Settings → API Keys</strong> and copy a key beginning with <code>sb_publishable_</code>. A legacy <code>anon</code> key also works. Never enter a secret or service-role key.</p>
+        <p>Paste both values into System and choose <strong>Verify &amp; Connect</strong>. They are saved on this device; they are excluded from the cloud plan.</p>
+      </section>
+      <section class="guide-section">
+        <h4>4. Connect your other devices</h4>
+        <p>On your first device, choose <strong>Sync Now</strong>. On another device, open TelOS, go to System, and connect with the <strong>same project URL and key</strong>. You do not need to run the SQL again.</p>
+        <p>If there is a conflict on the new device, choose <strong>Use cloud version</strong> to load the plan you already saved. Connected devices check for changes every 10 seconds while the app is open.</p>
+      </section>
+      <details class="guide-troubleshooting"><summary>Connection not working?</summary>
+        <p><strong>Table missing:</strong> run the setup SQL in the project matching your URL.</p>
+        <p><strong>Permission error:</strong> check the SQL ran successfully and Data API access is enabled for the public schema and anon role.</p>
+        <p><strong>Project paused:</strong> restore it from the Supabase dashboard, then reconnect.</p>
+        <p><strong>Stay local:</strong> cloud sync is optional. Export a JSON backup regularly; clearing browser storage removes local data and saved connection settings.</p>
+      </details>
+      <a class="guide-docs" href="https://supabase.com/docs/guides/getting-started/api-keys" target="_blank" rel="noopener noreferrer">Supabase API key documentation ↗</a>
     </div>
   </div>
 </div>
-
 
 <div id="habit-editor-modal" class="desktop-editor hidden" style="display:none">
   <div class="card"><h3>Edit daily habit</h3>
@@ -561,12 +580,12 @@ create policy "Enable all" on public.life_os_sync
 
 <script src="mockData.js?v=21"></script>
 <script src="js/config.js?v=22"></script>
-<script src="js/state.js?v=21"></script>
+<script src="js/state.js?v=22"></script>
 <script src="js/utils.js?v=21"></script>
 <script src="js/tabs/execution.js?v=25"></script>
 <script src="js/tabs/progress.js?v=21"></script>
 <script src="js/tabs/blueprint.js?v=21"></script>
-<script src="js/tabs/system.js?v=21"></script>
+<script src="js/tabs/system.js?v=22"></script>
 <script src="js/tabs/constitution.js?v=21"></script>
 <script src="js/ai-goal-prompt.js?v=21"></script>
 <script src="js/ai-goals.js?v=21"></script>

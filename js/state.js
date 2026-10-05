@@ -131,20 +131,20 @@ function updateSyncStatusBadge(connected, msg) {
   const syncBtn = document.getElementById("settings-sync-btn");
   if (!badge) return;
   if (msg === "Offline") {
-    badge.className = "text-caption bg-amber/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-amber border border-amber/20";
-    badge.textContent = "Cloud (Offline)";
+    badge.className = "sync-status-pill is-offline";
+    badge.textContent = "Offline";
     if (discBtn) discBtn.classList.remove("hidden");
     if (connectBtn) connectBtn.classList.add("hidden");
     if (syncBtn) syncBtn.classList.add("hidden");
   } else if (connected) {
-    badge.className = "text-caption bg-green/10 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-green border border-green/20";
-    badge.textContent = "Cloud Connected";
+    badge.className = "sync-status-pill is-connected";
+    badge.textContent = "Connected";
     if (discBtn) discBtn.classList.remove("hidden");
     if (connectBtn) connectBtn.classList.add("hidden");
     if (syncBtn) { syncBtn.classList.remove("hidden"); lucide.createIcons(); }
   } else {
-    badge.className = "text-caption bg-border px-2 py-0.5 rounded-full font-bold uppercase tracking-wider text-text-dim";
-    badge.textContent = msg ? `Local (${msg})` : "Local Mode";
+    badge.className = "sync-status-pill is-local";
+    badge.textContent = msg ? `Local · ${msg}` : "Local only";
     if (discBtn) discBtn.classList.toggle("hidden", !dbClient);
     if (connectBtn) connectBtn.classList.toggle("hidden", !!dbClient);
     if (syncBtn) syncBtn.classList.toggle("hidden", !dbClient);
