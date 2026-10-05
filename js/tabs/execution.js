@@ -20,16 +20,6 @@ function renderToday() {
 }
 
 let pendingCheckpointCompletion = null;
-let habitReordering = false;
-
-function toggleHabitReordering() {
-  habitReordering = !habitReordering;
-  const status = document.getElementById("habit-order-status");
-  if (status) status.textContent = habitReordering ? "Use the arrows to change the order. Changes save automatically." : "";
-  renderHabitMonthGrids();
-}
-
-
 function updateTodayDateHeader() {
   const d = parseLocalDate(trackerDate);
   const days = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -48,12 +38,6 @@ function renderHabitMonthGrids() {
   const today = parseLocalDate(trackerDate || todayStr);
 
   const blocks = getLinkedBlocks();
-  const reorderToggle = document.getElementById("habit-reorder-toggle");
-  if (reorderToggle) {
-    reorderToggle.hidden = blocks.length < 2;
-    reorderToggle.textContent = habitReordering ? "Done arranging" : "Reorder habits";
-    reorderToggle.setAttribute("aria-pressed", String(habitReordering));
-  }
   if (blocks.length === 0) {
     container.innerHTML = `
       <div class="card flex flex-col items-center justify-center py-12 text-center">
@@ -66,7 +50,7 @@ function renderHabitMonthGrids() {
     return;
   }
 
-  blocks.forEach((block, blockIndex) => {
+  blocks.forEach(block => {
     const year = today.getFullYear();
     const month = today.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -104,7 +88,8 @@ function renderHabitMonthGrids() {
     }
 
     const card = document.createElement("div");
-    card.className = "card !p-3";
+    card.className = "card habit-sort-card !p-3";
+    card.dataset.habitId = block.id;
     const header = document.createElement("div");
     header.className = "flex items-center justify-between mb-2";
     const streak = getBlockStreak(block.id);
@@ -116,31 +101,15 @@ function renderHabitMonthGrids() {
       <span class="flex items-center gap-1.5 text-sm font-bold"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span>
     `;
     card.appendChild(header);
-    if (habitReordering) {
-      const controls = document.createElement("div");
-      controls.className = "habit-order-controls";
-      controls.setAttribute("role", "group");
-      controls.setAttribute("aria-label", `Reorder ${block.name}`);
-      [-1, 1].forEach(direction => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "btn btn-outline";
-        button.id = `habit-order-${block.id}-${direction}`;
-        button.textContent = direction === -1 ? "← Earlier" : "Later →";
-        button.setAttribute("aria-label", `Move ${block.name} ${direction === -1 ? "earlier" : "later"}`);
-        button.disabled = direction === -1 ? blockIndex === 0 : blockIndex === blocks.length - 1;
-        button.onclick = () => {
-          moveHabitBlock(block.id, direction);
-          const same = document.getElementById(button.id);
-          const next = same && !same.disabled ? same : document.getElementById(`habit-order-${block.id}-${-direction}`);
-          next?.focus();
-          const status = document.getElementById("habit-order-status");
-          if (status) status.textContent = `${block.name} moved to position ${getLinkedBlocks().findIndex(b => b.id === block.id) + 1} of ${blocks.length}. Order saved.`;
-        };
-        controls.appendChild(button);
-      });
-      card.appendChild(controls);
-    }
+    const handle = document.createElement("button");
+    handle.type = "button";
+    handle.className = "habit-drag-handle";
+    handle.dataset.habitHandle = block.id;
+    handle.innerHTML = '<i data-lucide="grip-vertical" aria-hidden="true"></i>';
+    handle.setAttribute("aria-label", `Drag to reorder ${block.name}. Keyboard: hold Alt and press an arrow key.`);
+    handle.title = "Drag to reorder";
+    header.prepend(handle);
+    bindHabitDrag(handle, card, container);
     card.appendChild(grid);
     if (block.fields.some(f => f.type !== "checkbox")) {
       const details = document.createElement("details");
@@ -153,6 +122,113 @@ function renderHabitMonthGrids() {
     container.appendChild(card);
   });
   lucide.createIcons();
+}
+
+// Pointer events support mouse, pen and touch without making calendar cells draggable.
+function bindHabitDrag(handle, card, container) {
+  let drag = null;
+  const cards = () => [...container.querySelectorAll(".habit-sort-card")];
+  const announce = () => {
+    const status = document.getElementById("habit-order-status");
+    if (status) status.textContent = `Order saved. ${card.querySelector(".item-heading").textContent} is position ${cards().indexOf(card) + 1} of ${cards().length}.`;
+  };
+  const place = () => {
+    if (!drag?.active) return;
+    drag.ghost.style.left = `${drag.x - drag.offsetX}px`;
+    drag.ghost.style.top = `${drag.y - drag.offsetY}px`;
+    const candidates = cards().filter(c => c !== card);
+    let nearest = null, distance = Infinity;
+    candidates.forEach(c => {
+      const rect = c.getBoundingClientRect();
+      const d = Math.hypot(drag.x - (rect.left + rect.width / 2), drag.y - (rect.top + rect.height / 2));
+      if (d < distance) { distance = d; nearest = c; }
+    });
+    if (!nearest) return;
+    const rect = nearest.getBoundingClientRect();
+    // Drop before/after the nearest tile in the grid's reading order.
+    const insideRow = drag.y >= rect.top && drag.y <= rect.bottom;
+    const before = insideRow ? drag.x < rect.left + rect.width / 2 : drag.y < rect.top + rect.height / 2;
+    container.insertBefore(card, before ? nearest : nearest.nextSibling);
+  };
+  const scrollFrame = () => {
+    if (!drag?.active) return;
+    const scroller = container.closest(".app-content");
+    const rect = scroller?.getBoundingClientRect();
+    const top = rect?.top ?? 0, bottom = rect?.bottom ?? window.innerHeight;
+    const delta = drag.y < top + 60 ? -12 : drag.y > bottom - 60 ? 12 : 0;
+    if (delta) {
+      if (scroller && scroller.scrollHeight > scroller.clientHeight) scroller.scrollTop += delta;
+      else window.scrollBy(0, delta);
+      place();
+    }
+    drag.frame = requestAnimationFrame(scrollFrame);
+  };
+  handle.onpointerdown = event => {
+    if (!event.isPrimary || event.button !== 0 || cards().length < 2) return;
+    const rect = card.getBoundingClientRect();
+    drag = { id:event.pointerId, startX:event.clientX, startY:event.clientY,
+      x:event.clientX, y:event.clientY, offsetX:event.clientX-rect.left,
+      offsetY:event.clientY-rect.top, original:cards(), active:false };
+    // Listen outside the tile: moving a DOM node can release pointer capture.
+    window.addEventListener("pointermove", onMove, {passive:false});
+    window.addEventListener("pointerup", onEnd);
+    window.addEventListener("pointercancel", onCancel);
+    window.addEventListener("blur", onBlur);
+  };
+  const onMove = event => {
+    if (!drag || event.pointerId !== drag.id) return;
+    drag.x = event.clientX; drag.y = event.clientY;
+    if (!drag.active && Math.hypot(drag.x-drag.startX, drag.y-drag.startY) < 6) return;
+    event.preventDefault();
+    if (!drag.active) {
+      drag.active = true;
+      const rect = card.getBoundingClientRect();
+      drag.ghost = card.cloneNode(true);
+      drag.ghost.classList.add("habit-drag-ghost");
+      drag.ghost.setAttribute("aria-hidden", "true");
+      drag.ghost.querySelectorAll("[id]").forEach(el => el.removeAttribute("id"));
+      drag.ghost.style.width = `${rect.width}px`;
+      document.body.appendChild(drag.ghost);
+      card.classList.add("habit-drag-placeholder");
+      document.body.classList.add("habit-dragging");
+      drag.frame = requestAnimationFrame(scrollFrame);
+    }
+    place();
+  };
+  const finish = cancelled => {
+    if (!drag) return;
+    const previous = drag;
+    drag = null;
+    cancelAnimationFrame(previous.frame);
+    previous.ghost?.remove();
+    card.classList.remove("habit-drag-placeholder");
+    document.body.classList.remove("habit-dragging");
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onEnd);
+    window.removeEventListener("pointercancel", onCancel);
+    window.removeEventListener("blur", onBlur);
+    if (cancelled) previous.original.forEach(c => container.appendChild(c));
+    else if (previous.active) {
+      saveHabitBlockOrder(cards().map(c => c.dataset.habitId));
+      announce();
+    }
+    handle.focus({preventScroll:true});
+  };
+  const onBlur = () => finish(true);
+  const onEnd = event => { if (event.pointerId === drag?.id) finish(false); };
+  const onCancel = event => { if (event.pointerId === drag?.id) finish(true); };
+  handle.onkeydown = event => {
+    if (event.key === "Escape" && drag) { event.preventDefault(); finish(true); return; }
+    if (!event.altKey || !["ArrowLeft","ArrowRight","ArrowUp","ArrowDown"].includes(event.key)) return;
+    event.preventDefault();
+    const ordered = cards(), index = ordered.indexOf(card);
+    const direction = ["ArrowLeft","ArrowUp"].includes(event.key) ? -1 : 1;
+    const neighbor = ordered[index+direction];
+    if (!neighbor) return;
+    container.insertBefore(card, direction < 0 ? neighbor : neighbor.nextSibling);
+    saveHabitBlockOrder(cards().map(c => c.dataset.habitId));
+    announce(); handle.focus();
+  };
 }
 
 function toggleBlockQuickCompletion(dateStr, blockId, checked) {

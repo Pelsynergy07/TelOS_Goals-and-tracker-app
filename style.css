@@ -1045,9 +1045,13 @@ button { touch-action:manipulation; }
  line-height:1.4;
 }
 
-.habit-order-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:12px; }
-.habit-order-toolbar button[hidden] { display:none; }
-.habit-order-controls { display:flex; gap:8px; margin-bottom:12px; }
-.habit-order-controls button { flex:1; min-width:0; min-height:48px; padding:8px; font-size:.875rem; }
-.habit-order-controls button:disabled { opacity:.35; cursor:default; }
-.habit-order-controls button:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+.habit-sort-card > .flex > div { min-width:0; flex:1; }
+.habit-sort-card > .flex { gap:8px; }
+.habit-drag-handle { display:grid; place-items:center; flex-shrink:0; width:32px; min-height:44px; border:0; border-radius:6px; background:transparent; color:var(--text-dim); cursor:grab; touch-action:none; }
+.habit-drag-handle svg { width:18px; height:18px; }
+.habit-drag-handle:hover { background:var(--surface-hover); color:var(--text); }
+.habit-drag-handle:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
+.habit-drag-placeholder { opacity:.25; outline:2px dashed var(--blue); outline-offset:-2px; }
+.habit-drag-ghost { position:fixed; z-index:100; pointer-events:none; opacity:.95; box-shadow:0 12px 36px rgba(0,0,0,.4); }
+body.habit-dragging { user-select:none; cursor:grabbing; }
+@media (max-width:767px) { .habit-drag-handle { width:44px; min-height:48px; } }

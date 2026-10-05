@@ -238,18 +238,21 @@ test('inline details preserve completion, reject invalid amounts, and leave blan
   value='';run('saveInlineHabitDetails("2026-10-01","practice",form)');assert.equal(state().logs['2026-10-01'].practice.minutes,undefined);assert.equal(state().logs['2026-10-01'].practice.completed,true);
 });
 
-test('habit reordering persists through reload and preserves links and historical logs', () => {
+test('drop order persists arbitrary positions and preserves logs, links and unlinked definitions', () => {
   const { ctx, run, state } = setup(); ctx.plan = plan();
-  run('applyGeneratedGoalCascade(plan); appState.logs={"2026-10-01":{practice:{completed:true,minutes:25}}}');
+  ctx.plan.dailyHabits.push({id:'third',name:'Third habit'});
+  ctx.plan.linkedHabits.push({habitId:'third',northStarId:'ns_health'});
+  run('applyGeneratedGoalCascade(plan); appState.logs={"2026-10-01":{practice:{completed:true,minutes:25}}}; appState.settings.scheduleBlocks.splice(1,0,{id:"unlinked",name:"Unlinked",fields:[]})');
   const before=state();
-  run('moveHabitBlock("practice", -1)');
-  assert.deepEqual(state().settings.scheduleBlocks.map(b=>b.id), ['practice','lunch_walk']);
+  assert.equal(run('saveHabitBlockOrder(["third","lunch_walk","practice"])'),true);
+  assert.deepEqual(state().settings.scheduleBlocks.map(b=>b.id), ['third','unlinked','lunch_walk','practice']);
   assert.deepEqual(state().logs,before.logs);
   assert.deepEqual(state().goals.linkedHabits,before.goals.linkedHabits);
   run('loadLocalData()');
-  assert.deepEqual(run('getLinkedBlocks().map(b=>b.id).join(",")'), 'practice,lunch_walk');
-  run('moveHabitBlock("practice", -1); moveHabitBlock("missing", 1); moveHabitBlock("practice", 2)');
-  assert.deepEqual(state().settings.scheduleBlocks.map(b=>b.id), ['practice','lunch_walk']);
-  run('moveHabitBlock("practice", 1)');
-  assert.deepEqual(state().settings.scheduleBlocks.map(b=>b.id), ['lunch_walk','practice']);
+  assert.equal(run('getLinkedBlocks().map(b=>b.id).join(",")'), 'third,lunch_walk,practice');
+  for(const order of [['third','third','practice'],['missing','practice','third'],['practice'],null]) {
+    ctx.order=order; assert.equal(run('saveHabitBlockOrder(order)'),false);
+  }
+  assert.deepEqual(state().settings.scheduleBlocks.map(b=>b.id), ['third','unlinked','lunch_walk','practice']);
+  assert.equal(run('saveHabitBlockOrder(["third","lunch_walk","practice"])'),false);
 });

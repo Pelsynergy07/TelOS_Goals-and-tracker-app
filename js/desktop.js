@@ -170,17 +170,17 @@ if (typeof document.addEventListener === "function") document.addEventListener("
   });
 });
 
-// Reorder definitions, keeping IDs, links and historical logs intact.
-function moveHabitBlock(habitId, direction) {
-  if (direction !== -1 && direction !== 1) return;
+// Apply a complete visible order, preserving unlinked definitions and all logs.
+function saveHabitBlockOrder(orderedIds) {
   const visible = getLinkedBlocks();
-  const position = visible.findIndex(block => block.id === habitId);
-  const neighbor = visible[position + direction];
-  if (position < 0 || !neighbor) return;
-  const blocks = appState.settings.scheduleBlocks;
-  const from = blocks.findIndex(block => block.id === habitId);
-  const to = blocks.findIndex(block => block.id === neighbor.id);
-  [blocks[from], blocks[to]] = [blocks[to], blocks[from]];
+  const ids = new Set(visible.map(block => block.id));
+  if (!Array.isArray(orderedIds) || orderedIds.length !== ids.size ||
+      new Set(orderedIds).size !== ids.size || orderedIds.some(id => !ids.has(id))) return false;
+  if (visible.every((block, index) => block.id === orderedIds[index])) return false;
+  const definitions = new Map(visible.map(block => [block.id, block]));
+  let index = 0;
+  appState.settings.scheduleBlocks = appState.settings.scheduleBlocks.map(block =>
+    ids.has(block.id) ? definitions.get(orderedIds[index++]) : block);
   persistState();
-  renderAll();
+  return true;
 }
