@@ -90,7 +90,7 @@ function switchTab(tabName) {
     const navBtn = document.getElementById(`nav-${t}`);
     const mobNavBtn = document.getElementById(`mob-nav-${t}`);
     if (sec) sec.classList.add("hidden");
-    if (navBtn) navBtn.classList.remove("nav-active");
+    if (navBtn) { navBtn.classList.remove("nav-active"); navBtn.removeAttribute("aria-current"); }
     if (mobNavBtn) mobNavBtn.className = "flex flex-col items-center gap-0.5 text-text-dim text-caption font-bold flex-1 py-1 min-w-0";
   });
 
@@ -98,7 +98,7 @@ function switchTab(tabName) {
   const activeNav = document.getElementById(`nav-${tabName}`);
   const activeMobNav = document.getElementById(`mob-nav-${tabName}`);
   if (activeSec) activeSec.classList.remove("hidden");
-  if (activeNav) activeNav.classList.add("nav-active");
+  if (activeNav) { activeNav.classList.add("nav-active"); activeNav.setAttribute("aria-current", "page"); }
   if (activeMobNav) activeMobNav.className = "flex flex-col items-center gap-0.5 text-green text-caption font-bold flex-1 py-1 min-w-0";
 
   if (tabName === "today") renderToday();

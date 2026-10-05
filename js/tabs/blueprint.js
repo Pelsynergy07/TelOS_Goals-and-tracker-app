@@ -122,7 +122,7 @@ function renderNorthStar() {
       card.innerHTML = `
         <div class="flex items-center justify-between gap-2">
           <input aria-label="North Star title" type="text" value="${escapeHtml(item.title)}" onchange="updateNorthStar(${idx},'title',this.value)" class="text-xs font-bold bg-transparent text-text border-b border-transparent focus:border-blue py-0.5 flex-1 min-w-0">
-          <button aria-label="Close or remove" onclick="deleteNorthStar(${idx})" class="text-red hover:bg-red/10 p-1 rounded shrink-0"><i data-lucide="x" class="w-3 h-3"></i></button>
+          <button aria-label="Close or remove" onclick="deleteNorthStar(${idx})" class="icon-button text-red"><i data-lucide="x" class="w-3 h-3"></i></button>
         </div>
         <textarea aria-label="North Star description" rows="2" onchange="updateNorthStar(${idx},'description',this.value)" class="text-caption bg-transparent text-text-dim w-full min-w-0 resize-none border border-transparent focus:border-blue rounded px-1 py-0.5 mt-1">${escapeHtml(item.description)}</textarea>
       `;
@@ -195,7 +195,7 @@ function renderGoalList(containerId, goals, type) {
       item.innerHTML = `
         <div class="career-edit-row career-edit-row-top">
           <input aria-label="Checkpoint name" type="text" value="${escapeHtml(goal.name)}" onchange="updateGoalName(${idx},'${type}',this.value)" class="career-edit-name text-xs font-bold bg-transparent text-text border-b border-transparent focus:border-blue py-0.5">
-          <button aria-label="Delete" onclick="deleteGoal(${idx},'${type}')" class="text-red hover:bg-red/10 p-1 rounded shrink-0"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          <button aria-label="Delete" onclick="deleteGoal(${idx},'${type}')" class="icon-button text-red"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
         </div>
         <div class="career-edit-grid mb-2 text-caption">
           <select aria-label="Checkpoint North Star" onchange="updateGoalNorthStar(${idx},'${type}',this.value)" class="career-edit-select bg-transparent text-text-dim border border-border rounded py-1 px-1">

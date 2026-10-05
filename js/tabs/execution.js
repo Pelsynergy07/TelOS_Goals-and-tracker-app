@@ -413,7 +413,7 @@ function renderTodayDeadlines() {
     if (due.length > 0) html += `<div class="border-t border-border pt-3 mt-1"></div>`;
     html += `<div class="flex items-center justify-between">
       <div class="card-header text-blue !border-0 !p-0 !m-0"><i data-lucide="calendar" class="w-3.5 h-3.5 inline mr-1"></i>Upcoming Checkpoints</div>
-      <button aria-label="Close or remove" onclick="dismissUpcoming()" class="text-text-dim/50 hover:text-text p-1" title="Hide"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+      <button aria-label="Close or remove" onclick="dismissUpcoming()" class="icon-button" title="Hide"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
     </div>
     <div class="space-y-2">`;
     upcoming.forEach(g => {
@@ -447,7 +447,7 @@ function makeCheckpointDeadlineRow(g, done, badge) {
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <span class="text-caption font-bold ${done ? 'text-green' : 'text-text-dim'}">${badge || (done ? '✓ Done' : 'Pending')}</span>
-        <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="text-caption font-bold px-3 py-1.5 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
+        <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="btn btn-outline ${done ? 'is-complete' : ''}">
           ${done ? 'Completed' : 'Mark complete'}
         </button>
       </div>
@@ -604,7 +604,7 @@ function renderAllGoalsCountdown() {
         <div class="item-heading text-sm font-bold ${done ? 'text-green' : 'text-text'} leading-snug">${escapeHtml(g.name)}</div>
         <div class="text-caption text-text-dim">${g.progress}/${g.target} ${escapeHtml(g.unit || '')}</div>
       </div>
-      <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="w-full text-caption font-bold px-3 py-2 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
+      <button onclick="${done ? `toggleGoalDeadline('${g.type}','${g.id}',false)` : `openCheckpointCompleteModal('${g.type}','${g.id}')`}" class="btn btn-outline w-full ${done ? 'is-complete' : ''}">
         ${done ? 'Completed checkpoint' : 'Complete checkpoint'}
       </button>
     </div>`;

@@ -10,7 +10,10 @@ function setReviewTab(tab) {
   if (tab === "weekly" || tab === "monthly") reviewMode = tab;
   ["weekly", "monthly", "cascade"].forEach(t => {
     const btn = document.getElementById("review-tab-" + t);
-    if (btn) btn.className = `text-caption px-3 py-1.5 rounded font-bold ${t === tab ? "bg-green/15 text-green" : "text-text-dim hover:text-text"}`;
+    if (btn) {
+      btn.className = `segment-button${t === tab ? " is-active" : ""}`;
+      btn.setAttribute("aria-pressed", String(t === tab));
+    }
   });
   renderReview();
 }
@@ -56,16 +59,16 @@ function renderReview() {
       const monday = parseLocalDate(getWeekStartDate(reviewWeekId));
       const weekLabel = `${formatDateLabelShort(getWeekStartDate(reviewWeekId))} - ${formatDateLabelShort(getWeekDates(getWeekStartDate(reviewWeekId))[6])}`;
       periodSelector.innerHTML = `
-        <button aria-label="Previous period" onclick="shiftReviewWeek(-1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-        <span class="text-caption font-bold px-2 text-center w-32 select-none">${weekLabel}</span>
-        <button aria-label="Next period" onclick="shiftReviewWeek(1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+        <button aria-label="Previous period" onclick="shiftReviewWeek(-1)" class="icon-button"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+        <span class="period-label">${weekLabel}</span>
+        <button aria-label="Next period" onclick="shiftReviewWeek(1)" class="icon-button"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
       `;
     } else {
       const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
       periodSelector.innerHTML = `
-        <button aria-label="Previous period" onclick="shiftReviewMonth(-1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-        <span class="text-caption font-bold px-2 text-center w-28 select-none">${months[reviewMonth]} ${reviewYear}</span>
-        <button aria-label="Next period" onclick="shiftReviewMonth(1)" class="w-7 h-7 rounded hover:bg-white/5 flex items-center justify-center"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+        <button aria-label="Previous period" onclick="shiftReviewMonth(-1)" class="icon-button"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+        <span class="period-label">${months[reviewMonth]} ${reviewYear}</span>
+        <button aria-label="Next period" onclick="shiftReviewMonth(1)" class="icon-button"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
       `;
     }
     lucide.createIcons();
@@ -396,7 +399,7 @@ function renderCascadeImpact() {
     }
 
     html += `<div class="mt-auto pt-3">
-      <button onclick="${pillar.completed ? `toggleNorthStarReviewComplete('${pillar.id}',false)` : `openNorthStarReviewModal('${pillar.id}')`}" class="w-full text-caption font-bold px-3 py-2 rounded-full border transition-colors ${pillar.completed ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
+      <button onclick="${pillar.completed ? `toggleNorthStarReviewComplete('${pillar.id}',false)` : `openNorthStarReviewModal('${pillar.id}')`}" class="btn btn-outline w-full ${pillar.completed ? 'is-complete' : ''}">
         ${pillar.completed ? 'Completed' : 'Complete North Star'}
       </button>
     </div>`;
@@ -440,7 +443,7 @@ function renderCascadeImpact() {
         <div class="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
           <div class="h-full ${done ? 'bg-green' : 'bg-blue'}" style="width:${done ? 100 : pct}%"></div>
         </div>
-        <button onclick="${done ? `toggleGoalDeadline('${goal.levelKey}','${goal.id}',false)` : `openCheckpointCompleteModal('${goal.levelKey}','${goal.id}')`}" class="w-full text-caption font-bold px-3 py-2 rounded-full border transition-colors ${done ? 'bg-green/15 text-green border-green/30 hover:bg-green/20' : 'bg-blue/[0.08] text-blue border-blue/20 hover:bg-blue/[0.14]'}">
+        <button onclick="${done ? `toggleGoalDeadline('${goal.levelKey}','${goal.id}',false)` : `openCheckpointCompleteModal('${goal.levelKey}','${goal.id}')`}" class="btn btn-outline w-full ${done ? 'is-complete' : ''}">
           ${done ? 'Completed checkpoint' : 'Complete checkpoint'}
         </button>
       </div>`;
@@ -486,7 +489,7 @@ function renderReviewDayDetails(dateStr) {
   container.innerHTML = `
     <div class="flex items-center justify-between border-b border-border pb-2.5">
       <h4 class="font-bold text-xs text-text">${formattedDate}</h4>
-      <button onclick="editExecutionDate('${dateStr}')" class="text-caption bg-white/5 border border-border px-2 py-1 rounded hover:bg-white/10 text-text font-bold flex items-center gap-1"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button>
+      <button onclick="editExecutionDate('${dateStr}')" class="btn btn-outline"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button>
     </div>
     <div class="space-y-3 pt-2">
       <div class="space-y-0.5">${blocksHtml}</div>

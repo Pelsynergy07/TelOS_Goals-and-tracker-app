@@ -30,7 +30,7 @@ function renderAIImportMode() {
         <textarea id="ai-import-json" rows="12" class="w-full text-xs" placeholder='{"identityStatement":{...},"dangerAreas":[...],"rules":[...],"northStar":[...],"sixMonth":[...],"threeMonth":[...],"oneMonth":[...],"dailyHabits":[...],"linkedHabits":[...]}' oninput="validateAIImportInput()"></textarea>
       </div>
       <div class="flex items-center justify-between gap-3 flex-wrap">
-        <button onclick="closeAIModal()" class="text-caption font-bold text-text-dim hover:text-text">Cancel</button>
+        <button onclick="closeAIModal()" class="btn btn-outline">Cancel</button>
         <button id="ai-import-btn" onclick="importAIGoalsFromTextarea()" class="btn btn-green text-caption opacity-50" disabled>Import JSON</button>
       </div>
     </div>`;

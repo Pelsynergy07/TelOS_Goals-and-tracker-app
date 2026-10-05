@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Life OS</title>
+  <title>TelOS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=16">
+  <link rel="stylesheet" href="style.css?v=17">
 </head>
 <body>
 
@@ -44,7 +44,6 @@
 <aside class="hidden md:flex flex-col w-[236px] app-sidebar p-4 justify-between fixed top-0 left-0 h-screen overflow-hidden z-30">
   <div class="flex min-h-0 flex-1 flex-col">
     <div class="brand-lockup mb-6">
-      <div class="telos-mark" aria-hidden="true"></div>
       <div class="min-w-0">
         <p class="telos-wordmark" id="sidebar-title">TelOS</p>
       </div>
@@ -52,13 +51,11 @@
     <nav class="space-y-1">
       <button onclick="switchTab('today')" id="nav-today" class="nav-btn nav-active"><i data-lucide="play-circle"></i><span>Execution</span></button>
       <button onclick="switchTab('review')" id="nav-review" class="nav-btn"><i data-lucide="trending-up"></i><span>Progress</span></button>
-    </nav>
-    <div class="mt-auto space-y-4">
-      <nav class="space-y-1">
         <button onclick="switchTab('constitution')" id="nav-constitution" class="nav-btn"><i data-lucide="scroll-text"></i><span>Constitution</span></button>
         <button onclick="switchTab('career')" id="nav-career" class="nav-btn"><i data-lucide="map"></i><span>Blueprint</span></button>
         <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn"><i data-lucide="settings"></i><span>System</span></button>
-      </nav>
+    </nav>
+    <div class="mt-auto space-y-4">
       <div class="sidebar-streak-pill">
         <i data-lucide="flame" class="w-4 h-4 text-green"></i>
         <span class="text-caption font-semibold text-text"><span id="sidebar-streak-val">0</span> day streak</span>
@@ -72,7 +69,6 @@
 <!-- Mobile header -->
 <header class="md:hidden bg-surface/90 border-b border-border px-4 py-4 flex items-center justify-between sticky top-0 z-50 backdrop-blur-xl">
   <div class="mobile-brand">
-    <span class="telos-mark telos-mark-mobile" aria-hidden="true"></span>
     <span class="telos-wordmark-mobile" id="mobile-header-title">TelOS</span>
   </div>
   <div class="flex items-center gap-1 bg-white/5 border border-border px-2.5 py-1 rounded-full text-caption font-semibold">
@@ -121,7 +117,7 @@
     <div>
       <h2 class="page-title text-text mt-1" id="today-day-header">Saturday</h2>
       <p class="text-text-dim text-sm mt-2" id="today-date-header">May 23, 2026</p>
-      <div class="execution-date-controls"><label for="execution-date">Log habits for</label><div class="execution-date-picker"><input type="date" id="execution-date" onchange="editExecutionDate(this.value)"><button type="button" class="date-picker-button" aria-label="Open calendar to choose a tracking date" onclick="openExecutionDatePicker()"><i data-lucide="calendar-days" aria-hidden="true"></i></button></div><button id="execution-today-button" class="btn btn-outline" onclick="editExecutionDate(getLocalDateString())">Back to today</button></div>
+      <div class="execution-date-controls"><label for="execution-date">Log habits for</label><div class="execution-date-picker"><input type="date" id="execution-date" onchange="editExecutionDate(this.value)"><button type="button" class="icon-button" aria-label="Open calendar to choose a tracking date" onclick="openExecutionDatePicker()"><i data-lucide="calendar-days" aria-hidden="true"></i></button></div><button id="execution-today-button" class="btn btn-outline" onclick="editExecutionDate(getLocalDateString())">Back to today</button></div>
     </div>
 
     <details id="execution-checkpoints" class="checkpoint-disclosure" ontoggle="saveCheckpointDisclosure(this.open)">
@@ -213,15 +209,15 @@
       <p class="text-xs text-text-dim">Track momentum, checkpoints, and reflections.</p>
     </div>
 
-    <div class="flex flex-wrap items-center gap-3">
+    <div class="review-toolbar">
       <!-- Review tabs -->
-      <div class="flex items-center gap-1 border border-border rounded p-1 bg-surface">
-        <button onclick="setReviewTab('weekly')" id="review-tab-weekly" class="text-caption px-3 py-1.5 rounded font-bold bg-green/15 text-green">Weekly</button>
-        <button onclick="setReviewTab('monthly')" id="review-tab-monthly" class="text-caption px-3 py-1.5 rounded font-bold text-text-dim hover:text-text">Monthly</button>
-        <button onclick="setReviewTab('cascade')" id="review-tab-cascade" class="text-caption px-3 py-1.5 rounded font-bold text-text-dim hover:text-text">Cascade</button>
+      <div class="segmented-control" role="group" aria-label="Progress view">
+        <button onclick="setReviewTab('weekly')" id="review-tab-weekly" class="segment-button is-active" aria-pressed="true">Weekly</button>
+        <button onclick="setReviewTab('monthly')" id="review-tab-monthly" class="segment-button" aria-pressed="false">Monthly</button>
+        <button onclick="setReviewTab('cascade')" id="review-tab-cascade" class="segment-button" aria-pressed="false">Cascade</button>
       </div>
       <!-- Period selector (shown for weekly/monthly) -->
-      <div id="review-period-selector" class="flex items-center gap-1 border border-border rounded p-1 bg-surface"></div>
+      <div id="review-period-selector" class="period-control" role="group" aria-label="Tracking period"></div>
     </div>
 
     <!-- Goal vs Actual Metrics (weekly/monthly only) -->
@@ -278,8 +274,8 @@
       </div>
       <div class="flex items-center gap-2 flex-wrap shrink-0">
         <button id="career-edit-btn" onclick="toggleCareerEdit()" class="btn btn-outline shrink-0"><i data-lucide="pencil" class="w-3.5 h-3.5" id="career-edit-icon"></i> <span id="career-edit-label">Edit</span></button>
-        <button id="btn-plan-chatgpt" onclick="openAIGoalImport()" class="btn btn-outline shrink-0 text-blue border-blue/30 hover:bg-blue/[0.06]"><i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> <span>Plan with ChatGPT</span></button>
-        <button id="btn-setup-guide" onclick="openOnboardingModal()" class="btn btn-outline shrink-0 text-green border-green/30 hover:bg-green/[0.06]"><i data-lucide="help-circle" class="w-3.5 h-3.5"></i> <span>Setup Guide</span></button>
+        <button id="btn-plan-chatgpt" onclick="openAIGoalImport()" class="btn btn-outline shrink-0"><i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> <span>Plan with ChatGPT</span></button>
+        <button id="btn-setup-guide" onclick="openOnboardingModal()" class="btn btn-outline shrink-0"><i data-lucide="help-circle" class="w-3.5 h-3.5"></i> <span>Setup Guide</span></button>
       </div>
     </div>
 
@@ -306,8 +302,8 @@
           <p class="settings-description">Sync your goals across devices using your own Supabase project.</p>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div><label for="settings-supabase-url" class="settings-field-label">Project URL <button type="button" aria-label="Find your project URL" onclick="openSupabaseHelp('url')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="url" autocomplete="off" spellcheck="false" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
-            <div><label for="settings-supabase-key" class="settings-field-label">Publishable key <button type="button" aria-label="Find your publishable key" onclick="openSupabaseHelp('key')" class="inline align-middle ml-1 text-blue/60 hover:text-blue transition-colors"><i data-lucide="circle-help" class="w-3.5 h-3.5 inline"></i></button></label><input type="password" autocomplete="off" spellcheck="false" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
+            <div><label for="settings-supabase-url" class="settings-field-label">Project URL</label><input type="url" autocomplete="off" spellcheck="false" id="settings-supabase-url" placeholder="https://xxxx.supabase.co" class="w-full text-xs"></div>
+            <div><label for="settings-supabase-key" class="settings-field-label">Publishable key</label><input type="password" autocomplete="off" spellcheck="false" id="settings-supabase-key" placeholder="eyJ... or sb_publishable_..." class="w-full text-xs"></div>
           </div>
           <div class="cloud-actions">
             <button type="button" class="setup-guide-link" onclick="openSupabaseHelp()">Setup guide</button>
@@ -325,11 +321,11 @@
         <div class="card">
           <div class="card-header">Backup</div>
           <div class="space-y-2">
-            <button onclick="exportDataJSON()" class="w-full bg-[rgba(255,255,255,0.02)] hover:bg-white/5 border border-border text-xs font-bold py-2.5 px-3 rounded flex items-center justify-between transition-colors">
+            <button onclick="exportDataJSON()" class="btn btn-outline w-full justify-between">
               <span class="flex items-center gap-2"><i data-lucide="file-json" class="w-4 h-4 text-blue"></i> Export JSON</span>
               <i data-lucide="chevron-right" class="w-4 h-4 text-text-dim"></i>
             </button>
-            <button onclick="exportLogsCSV()" class="w-full bg-[rgba(255,255,255,0.02)] hover:bg-white/5 border border-border text-xs font-bold py-2.5 px-3 rounded flex items-center justify-between transition-colors">
+            <button onclick="exportLogsCSV()" class="btn btn-outline w-full justify-between">
               <span class="flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-4 h-4 text-green"></i> Export CSV</span>
               <i data-lucide="chevron-right" class="w-4 h-4 text-text-dim"></i>
             </button>
@@ -339,7 +335,7 @@
         <div class="card">
           <div class="card-header">Sample Data</div>
           <p class="text-xs text-text-dim leading-relaxed mb-3">Load sample goals, habits, and data to explore the app.</p>
-          <button onclick="loadSampleData()" class="w-full bg-[rgba(255,255,255,0.02)] hover:bg-white/5 border border-border text-xs font-bold py-2.5 px-3 rounded flex items-center justify-center gap-2 transition-colors text-purple border-purple/30">
+          <button onclick="loadSampleData()" class="btn btn-outline w-full justify-center">
             <i data-lucide="database" class="w-4 h-4"></i> Load Sample Data
           </button>
         </div>
@@ -347,9 +343,9 @@
         <div class="card">
           <div class="card-header">Restore</div>
           <p class="text-xs text-text-dim leading-relaxed mb-3">Import a complete plan or restore a JSON backup. A plan replaces your habits and goals; existing logs are kept.</p>
-          <label for="import-file-input" class="w-full bg-[rgba(255,255,255,0.02)] border border-border hover:bg-white/5 text-xs font-bold py-2.5 px-3 rounded flex items-center justify-center gap-2 cursor-pointer transition-colors">
-            <i data-lucide="upload" class="w-4 h-4 text-amber"></i> Choose JSON File
-          </label>
+          <button type="button" onclick="document.getElementById('import-file-input').click()" class="btn btn-outline w-full justify-center">
+            <i data-lucide="upload" class="w-4 h-4 text-amber"></i> Choose JSON file
+          </button>
           <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDataJSON(event)">
           <span id="import-msg" class="block text-center text-caption mt-2 font-medium"></span>
         </div>
@@ -364,7 +360,7 @@
         </div>
       </div>
     </div>
-    <div class="text-center pt-1">
+    <div class="app-footer text-center pt-1">
       <p class="text-xs text-green font-bold tracking-wide flex items-center justify-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4 text-green"></i> Built using Opencode by Pelsynergy! <i data-lucide="sparkles" class="w-4 h-4 text-green"></i></p>
       <p class="text-caption text-text font-medium pt-2">pranavkumar0712@gmail.com</p>
     </div>
@@ -380,7 +376,7 @@
   <div class="bg-surface border border-border w-full max-w-2xl rounded-lg p-5 space-y-4 shadow-xl">
     <div class="flex items-center justify-between border-b border-border pb-3">
       <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber inline mr-1.5"></i>AI Goal Generator</h3>
-      <button aria-label="Close" onclick="closeAIModal()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+      <button aria-label="Close" onclick="closeAIModal()" class="icon-button"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
     <div id="ai-question-container" class="min-h-[180px]"></div>
   </div>
@@ -468,7 +464,7 @@
       <h3 class="font-bold text-xs uppercase tracking-wider text-text-dim">
         <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber inline mr-1.5"></i>Welcome to Life OS
       </h3>
-      <button aria-label="Close" onclick="closeOnboardingModal()" class="text-text-dim/50 hover:text-text p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+      <button aria-label="Close" onclick="closeOnboardingModal()" class="icon-button"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
     <div class="space-y-4">
       <p class="text-sm text-text leading-relaxed">Set up in 3 steps:</p>
@@ -571,14 +567,14 @@ create policy "TelOS update" on public.life_os_sync
 <script src="js/config.js?v=22"></script>
 <script src="js/state.js?v=22"></script>
 <script src="js/utils.js?v=21"></script>
-<script src="js/tabs/execution.js?v=25"></script>
-<script src="js/tabs/progress.js?v=21"></script>
-<script src="js/tabs/blueprint.js?v=21"></script>
+<script src="js/tabs/execution.js?v=26"></script>
+<script src="js/tabs/progress.js?v=22"></script>
+<script src="js/tabs/blueprint.js?v=22"></script>
 <script src="js/tabs/system.js?v=22"></script>
-<script src="js/tabs/constitution.js?v=21"></script>
+<script src="js/tabs/constitution.js?v=22"></script>
 <script src="js/ai-goal-prompt.js?v=21"></script>
-<script src="js/ai-goals.js?v=21"></script>
+<script src="js/ai-goals.js?v=22"></script>
 <script src="js/desktop.js?v=23"></script>
-<script src="app.js?v=22"></script>
+<script src="app.js?v=23"></script>
 </body>
 </html>

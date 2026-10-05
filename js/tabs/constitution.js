@@ -67,7 +67,7 @@ function renderDangerSection() {
         <div class="danger-card editing">
           <div class="flex items-center justify-between gap-2 mb-2">
             <input type="text" value="${escapeHtml(area.title)}" onchange="updateDangerField(${idx},'title',this.value)" class="text-xs font-bold bg-transparent text-amber border-b border-transparent focus:border-amber flex-1 py-0.5 min-w-0" placeholder="Danger area title">
-            <button onclick="deleteDangerArea(${idx})" class="text-red hover:bg-red/10 p-1 rounded shrink-0"><i data-lucide="x" class="w-3 h-3"></i></button>
+            <button aria-label="Remove guardrail" onclick="deleteDangerArea(${idx})" class="icon-button text-red"><i data-lucide="x" class="w-3 h-3"></i></button>
           </div>
           <textarea rows="2" onchange="updateDangerField(${idx},'reality',this.value)" class="w-full text-caption bg-transparent text-text-dim border border-transparent focus:border-amber rounded px-1 py-0.5 mb-1 resize-none" placeholder="What does this pattern look like?">${escapeHtml(area.reality)}</textarea>
           <textarea rows="2" onchange="updateDangerField(${idx},'reminder',this.value)" class="w-full text-caption bg-transparent text-amber/80 border border-transparent focus:border-amber rounded px-1 py-0.5 resize-none font-bold" placeholder="What reminder counters this?">${escapeHtml(area.reminder)}</textarea>
@@ -91,7 +91,7 @@ function renderDangerSection() {
   });
 
   const addBtn = constitutionEditMode
-    ? `<button onclick="addDangerArea()" class="w-full border-2 border-dashed border-red/20 hover:border-red/40 rounded py-3 text-caption font-bold text-text-dim hover:text-red transition-colors"><i data-lucide="plus" class="w-3.5 h-3.5 inline mr-1"></i> Add Danger Area</button>`
+    ? `<button onclick="addDangerArea()" class="btn btn-outline w-full justify-center"><i data-lucide="plus" class="w-3.5 h-3.5 inline mr-1"></i> Add Danger Area</button>`
     : "";
 
   return `
@@ -116,7 +116,7 @@ function renderRulesSection() {
         <div class="rule-item editing">
           <span class="rule-number">${idx + 1}</span>
           <input type="text" value="${escapeHtml(rule.text)}" onchange="updateRuleField(${idx}, this.value)" class="flex-1 text-xs bg-transparent text-text border-b border-transparent focus:border-blue py-0.5 min-w-0" placeholder="Your personal law...">
-          <button onclick="deleteRule(${idx})" class="text-red hover:bg-red/10 p-1 rounded shrink-0"><i data-lucide="x" class="w-3 h-3"></i></button>
+          <button aria-label="Remove rule" onclick="deleteRule(${idx})" class="icon-button text-red"><i data-lucide="x" class="w-3 h-3"></i></button>
         </div>`;
     });
   } else {
@@ -130,7 +130,7 @@ function renderRulesSection() {
   }
 
   const addBtn = constitutionEditMode
-    ? `<button onclick="addRule()" class="w-full border-2 border-dashed border-green/20 hover:border-green/40 rounded py-3 text-caption font-bold text-text-dim hover:text-green transition-colors mt-2"><i data-lucide="plus" class="w-3.5 h-3.5 inline mr-1"></i> Add Rule</button>`
+    ? `<button onclick="addRule()" class="btn btn-outline w-full justify-center mt-2"><i data-lucide="plus" class="w-3.5 h-3.5 inline mr-1"></i> Add Rule</button>`
     : "";
 
   return `
