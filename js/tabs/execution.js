@@ -30,15 +30,38 @@ function updateTodayDateHeader() {
   if (h2) h2.textContent = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
 }
 
+const HABIT_VIEW_KEY = "telos_habit_view";
+function getHabitView() {
+  let saved = null;
+  try { saved = localStorage.getItem(HABIT_VIEW_KEY); } catch {}
+  if (saved === "compact" || saved === "expanded") return saved;
+  return window.innerWidth < 768 ? "compact" : "expanded";
+}
+function setHabitView(view) {
+  try { localStorage.setItem(HABIT_VIEW_KEY, view); } catch {}
+  renderHabitMonthGrids();
+}
+
 function renderHabitMonthGrids() {
   const container = document.getElementById("today-habit-cards-container");
   if (!container) return;
   container.innerHTML = "";
   const todayStr = getLocalDateString();
   const today = parseLocalDate(trackerDate || todayStr);
+  const view = getHabitView();
+  const compact = view === "compact";
+  container.className = `habit-cards ${compact ? "is-compact" : "is-expanded"}`;
+  ["compact", "expanded"].forEach(v => {
+    const btn = document.getElementById(`habit-view-${v}`);
+    if (btn) { btn.classList.toggle("is-active", v === view); btn.setAttribute("aria-pressed", String(v === view)); }
+  });
 
   const blocks = getLinkedBlocks();
+  const summary = document.getElementById("habit-day-summary");
+  const toolbar = document.querySelector("#tab-today .habit-toolbar");
+  if (toolbar) toolbar.hidden = blocks.length === 0;
   if (blocks.length === 0) {
+    container.className = "habit-cards";
     container.innerHTML = `
       <div class="card flex flex-col items-center justify-center py-12 text-center">
         <i data-lucide="map" class="w-10 h-10 text-text-dim/30 mb-3"></i>
@@ -49,6 +72,16 @@ function renderHabitMonthGrids() {
     lucide.createIcons();
     return;
   }
+  const doneCount = blocks.filter(b => isBlockCompleted(b, appState.logs[trackerDate]?.[b.id])).length;
+  if (summary) summary.textContent = `${doneCount} of ${blocks.length} done · ${formatDateLabelShort(trackerDate)}`;
+
+  if (compact) {
+    blocks.forEach(block => container.appendChild(renderHabitRow(block, container)));
+    lucide.createIcons();
+    return;
+  }
+
+  const weekdayRow = '<div class="habit-month-weekdays" aria-hidden="true">' + ["S","M","T","W","T","F","S"].map(d => `<span>${d}</span>`).join("") + "</div>";
 
   blocks.forEach(block => {
     const year = today.getFullYear();
@@ -77,7 +110,7 @@ function renderHabitMonthGrids() {
       cell.disabled = isFuture;
       cell.setAttribute("aria-label", `${block.name}, ${dStr}`);
       cell.setAttribute("aria-pressed", String(checked));
-      cell.className = `habit-month-cell${checked ? ' checked' : ''}${isToday ? ' today' : ''}${isFuture ? ' future' : ''}`;
+      cell.className = `habit-month-cell${checked ? ' checked' : ''}${isToday ? ' today' : ''}${isFuture ? ' future' : ''}${dStr === trackerDate && !isToday ? ' tracking' : ''}`;
       cell.title = isFuture ? `${block.name}: ${dStr} (future dates cannot be marked complete yet)` : `${block.name}: ${dStr}`;
       if (!isFuture) {
         cell.onclick = () => {
@@ -98,18 +131,13 @@ function renderHabitMonthGrids() {
         <p class="item-heading text-caption font-bold text-text leading-tight">${escapeHtml(block.name)}</p>
         <span class="text-caption text-text-dim">${escapeHtml(block.time || '')}</span>
       </div>
-      <span class="flex items-center gap-1.5 text-sm font-bold"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span>
+      <span class="flex items-center gap-1.5 text-sm font-bold" title="Current streak"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span>
     `;
     card.appendChild(header);
-    const handle = document.createElement("button");
-    handle.type = "button";
-    handle.className = "habit-drag-handle";
-    handle.dataset.habitHandle = block.id;
-    handle.innerHTML = '<i data-lucide="grip-vertical" aria-hidden="true"></i>';
-    handle.setAttribute("aria-label", `Drag to reorder ${block.name}. Keyboard: hold Alt and press an arrow key.`);
-    handle.title = "Drag to reorder";
+    const handle = makeHabitDragHandle(block);
     header.prepend(handle);
     bindHabitDrag(handle, card, container);
+    card.insertAdjacentHTML("beforeend", weekdayRow);
     card.appendChild(grid);
     if (block.fields.some(f => f.type !== "checkbox")) {
       const details = document.createElement("details");
@@ -122,6 +150,70 @@ function renderHabitMonthGrids() {
     container.appendChild(card);
   });
   lucide.createIcons();
+}
+
+function makeHabitDragHandle(block) {
+  const handle = document.createElement("button");
+  handle.type = "button";
+  handle.className = "habit-drag-handle";
+  handle.dataset.habitHandle = block.id;
+  handle.innerHTML = '<i data-lucide="grip-vertical" aria-hidden="true"></i>';
+  handle.setAttribute("aria-label", `Drag to reorder ${block.name}. Keyboard: hold Alt and press an arrow key.`);
+  handle.title = "Drag to reorder";
+  return handle;
+}
+
+// Condensed view: one checkbox row per habit for the tracking date.
+function renderHabitRow(block, container) {
+  const values = appState.logs[trackerDate]?.[block.id] || {};
+  const done = isBlockCompleted(block, values);
+  const row = document.createElement("div");
+  row.className = `habit-row habit-sort-card${done ? " is-done" : ""}`;
+  row.dataset.habitId = block.id;
+
+  const handle = makeHabitDragHandle(block);
+  row.appendChild(handle);
+
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "habit-row-toggle";
+  toggle.setAttribute("role", "checkbox");
+  toggle.setAttribute("aria-checked", String(done));
+  toggle.innerHTML = `<span class="habit-row-box" aria-hidden="true"><i data-lucide="check"></i></span>
+    <span class="habit-row-text"><span class="item-heading">${escapeHtml(block.name)}</span>${block.time ? `<span class="habit-row-time">${escapeHtml(block.time)}</span>` : ""}</span>`;
+  toggle.onclick = () => toggleBlockQuickCompletion(trackerDate, block.id, !done);
+  row.appendChild(toggle);
+
+  block.fields.filter(f => f.type === "number").forEach(f => {
+    const input = document.createElement("input");
+    input.type = "number"; input.min = "0"; input.step = "any";
+    input.className = "habit-row-amount";
+    input.placeholder = f.label || "Amount";
+    input.value = values[f.id] ?? "";
+    input.setAttribute("aria-label", `${block.name}: ${f.label || "amount"}`);
+    input.onchange = () => saveHabitAmount(trackerDate, block.id, f.id, input.value);
+    row.appendChild(input);
+  });
+
+  const streak = document.createElement("span");
+  streak.className = "habit-row-streak";
+  streak.title = "Current streak";
+  streak.innerHTML = `<i data-lucide="flame" aria-hidden="true"></i>${getBlockStreak(block.id)}`;
+  row.appendChild(streak);
+
+  bindHabitDrag(handle, row, container);
+  return row;
+}
+
+function saveHabitAmount(dateStr, blockId, fieldId, raw) {
+  if (dateStr > getLocalDateString()) return;
+  const value = raw.trim() === "" ? null : Number(raw);
+  if (value !== null && (!Number.isFinite(value) || value < 0)) return;
+  appState.logs[dateStr] ??= {};
+  appState.logs[dateStr][blockId] ??= {};
+  if (value === null) delete appState.logs[dateStr][blockId][fieldId];
+  else appState.logs[dateStr][blockId][fieldId] = value;
+  persistState(); renderAll();
 }
 
 // Pointer events support mouse, pen and touch without making calendar cells draggable.
@@ -146,7 +238,7 @@ function bindHabitDrag(handle, card, container) {
     if (!nearest) return;
     const rect = nearest.getBoundingClientRect();
     // Drop before/after the nearest tile in the grid's reading order.
-    const insideRow = drag.y >= rect.top && drag.y <= rect.bottom;
+    const insideRow = drag.y >= rect.top && drag.y <= rect.bottom && !container.classList.contains("is-compact");
     const before = insideRow ? drag.x < rect.left + rect.width / 2 : drag.y < rect.top + rect.height / 2;
     container.insertBefore(card, before ? nearest : nearest.nextSibling);
   };

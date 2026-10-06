@@ -1,9 +1,11 @@
 // ============================================================
 //  📊 Life OS — Review Tab
 //  ============================================================
-//  Combined weekly & monthly review: period selector, calendar
-//  grid, day details panel, goal-vs-actual metric cards.
+//  Weekly & monthly review: period summary, habit matrix,
+//  compact calendar with day details, and the goal cascade.
 // ============================================================
+
+const REVIEW_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
 function setReviewTab(tab) {
   reviewTab = tab;
@@ -36,174 +38,152 @@ function shiftReviewMonth(dir) {
   renderReview();
 }
 
+function getPeriodLabel() {
+  if (reviewMode === "weekly") {
+    const start = getWeekStartDate(reviewWeekId);
+    return `${formatDateLabelShort(start)} – ${formatDateLabelShort(getWeekDates(start)[6])}`;
+  }
+  return `${REVIEW_MONTHS[reviewMonth]} ${reviewYear}`;
+}
+
+// Rate colour: judged against days that have actually elapsed, not the whole period.
+function rateClass(pct) {
+  if (pct === null) return "text-text-dim";
+  return pct >= 80 ? "text-green" : pct >= 50 ? "text-amber" : "text-red";
+}
+
 function renderReview() {
-  const container = document.getElementById("review-calendar-days-container");
   const periodSelector = document.getElementById("review-period-selector");
   if (!periodSelector) return;
 
   const isPeriodView = reviewTab === "weekly" || reviewTab === "monthly";
+  const shift = reviewMode === "weekly" ? "shiftReviewWeek" : "shiftReviewMonth";
+  periodSelector.innerHTML = `
+    <button aria-label="Previous period" onclick="${shift}(-1)" class="icon-button"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+    <span class="period-label">${getPeriodLabel()}</span>
+    <button aria-label="Next period" onclick="${shift}(1)" class="icon-button"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>`;
 
-  // Period selector visibility
-  periodSelector.style.display = "";
-
-  // Show/hide sections
-  const metricsSection = document.getElementById("review-metrics-section");
-  const calendarSection = document.getElementById("review-calendar-section");
-  const cascadeCard = document.getElementById("review-cascade-card");
-
-  if (metricsSection) metricsSection.classList.toggle("hidden", !isPeriodView);
-  if (calendarSection) calendarSection.classList.toggle("hidden", !isPeriodView);
-  if (cascadeCard) cascadeCard.classList.toggle("hidden", isPeriodView);
-
-  if (reviewMode === "weekly") {
-      const monday = parseLocalDate(getWeekStartDate(reviewWeekId));
-      const weekLabel = `${formatDateLabelShort(getWeekStartDate(reviewWeekId))} - ${formatDateLabelShort(getWeekDates(getWeekStartDate(reviewWeekId))[6])}`;
-      periodSelector.innerHTML = `
-        <button aria-label="Previous period" onclick="shiftReviewWeek(-1)" class="icon-button"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-        <span class="period-label">${weekLabel}</span>
-        <button aria-label="Next period" onclick="shiftReviewWeek(1)" class="icon-button"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-      `;
-    } else {
-      const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-      periodSelector.innerHTML = `
-        <button aria-label="Previous period" onclick="shiftReviewMonth(-1)" class="icon-button"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-        <span class="period-label">${months[reviewMonth]} ${reviewYear}</span>
-        <button aria-label="Next period" onclick="shiftReviewMonth(1)" class="icon-button"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-      `;
-    }
-    lucide.createIcons();
+  ["review-summary", "review-calendar-section", "period-reflection"].forEach(id => {
+    document.getElementById(id)?.classList.toggle("hidden", !isPeriodView);
+  });
+  document.getElementById("review-cascade-card")?.classList.toggle("hidden", isPeriodView);
 
   if (isPeriodView) {
-    if (!container) return;
-    const todayStr = getLocalDateString();
-    container.innerHTML = "";
-
-    if (reviewTab === "weekly") {
-      const weekDates = getWeekDates(getWeekStartDate(reviewWeekId));
-      weekDates.forEach(dStr => {
-        const dayNum = parseLocalDate(dStr).getDate();
-        const completionRate = getLoggedCompletionRate(dStr);
-        const cell = document.createElement("button");
-        cell.type = "button";
-        cell.className = "calendar-day-cell";
-        if (dStr === todayStr) cell.classList.add("today");
-
-        let bgStyle = "";
-        if (completionRate > 0) {
-          if (completionRate >= 0.75) bgStyle = "background:rgba(34,211,160,0.2);border-color:rgba(34,211,160,0.4)";
-          else bgStyle = "background:rgba(34,211,160,0.08);border-color:rgba(34,211,160,0.2)";
-        }
-        cell.innerHTML = `<span class="day-number ${dStr === todayStr ? 'text-blue' : ''}">${dayNum}</span>`;
-        if (bgStyle) cell.setAttribute("style", bgStyle);
-        cell.setAttribute("aria-label", `View ${dStr}`);
-        cell.onclick = () => {
-          renderReviewDayDetails(dStr);
-          document.querySelectorAll("#review-calendar-days-container .calendar-day-cell").forEach(c => c.classList.remove("selected"));
-          cell.classList.add("selected");
-        };
-        container.appendChild(cell);
-      });
-    } else {
-      const year = reviewYear, month = reviewMonth;
-      const firstDay = new Date(year, month, 1).getDay();
-      const totalDays = new Date(year, month + 1, 0).getDate();
-      const prevMonthTotalDays = new Date(year, month, 0).getDate();
-
-      for (let i = firstDay - 1; i >= 0; i--) {
-        const cell = document.createElement("button");
-        cell.type = "button";
-        cell.className = "calendar-day-cell inactive";
-        cell.disabled = true;
-        cell.innerHTML = `<span class="text-caption text-text-dim/40">${prevMonthTotalDays - i}</span>`;
-        container.appendChild(cell);
-      }
-
-      for (let i = 1; i <= totalDays; i++) {
-        const cellDateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-        const completionRate = getLoggedCompletionRate(cellDateStr);
-        const cell = document.createElement("button");
-        cell.type = "button";
-        cell.className = "calendar-day-cell";
-        if (cellDateStr === todayStr) cell.classList.add("today");
-
-        let bgStyle = "";
-        if (completionRate > 0) {
-          if (completionRate >= 0.75) bgStyle = "background:rgba(34,211,160,0.2);border-color:rgba(34,211,160,0.4)";
-          else bgStyle = "background:rgba(34,211,160,0.08);border-color:rgba(34,211,160,0.2)";
-        }
-
-        const deadlinesCount = getDeadlinesForDate(cellDateStr).length;
-        cell.innerHTML = `<div class="flex justify-between items-start w-full"><span class="day-number ${cellDateStr === todayStr ? 'text-blue' : ''}">${i}</span>${deadlinesCount > 0 ? '<span class="w-1.5 h-1.5 rounded-full bg-red mt-1" title="Checkpoint due"></span>' : ''}</div>`;
-        if (bgStyle) cell.setAttribute("style", bgStyle);
-
-        cell.setAttribute("aria-label", `View ${cellDateStr}`);
-        cell.onclick = () => {
-          renderReviewDayDetails(cellDateStr);
-          document.querySelectorAll("#review-calendar-days-container .calendar-day-cell").forEach(c => c.classList.remove("selected"));
-          cell.classList.add("selected");
-        };
-        container.appendChild(cell);
-      }
-    }
-
     const period = getPeriodDates();
     if (!period.includes(selectedReviewDate)) selectedReviewDate = period.includes(getLocalDateString()) ? getLocalDateString() : period[0];
-    renderReviewDayDetails(selectedReviewDate);
+    renderReviewSummary();
     renderReviewMetrics();
+    renderReviewCalendar();
+    renderReviewDayDetails(selectedReviewDate);
+    renderPeriodReflection();
+  } else {
+    renderCascadeImpact();
   }
-
-  const weekdays = document.getElementById("review-weekday-labels");
-  if (weekdays) weekdays.innerHTML = (reviewMode === "weekly" ? ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"] : ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]).map(d => `<span>${d}</span>`).join("");
-  renderPeriodReflection();
-  renderCascadeImpact();
+  lucide.createIcons();
 }
 
+function getElapsedPeriodDates() {
+  const todayStr = getLocalDateString();
+  return getPeriodDates().filter(d => d <= todayStr);
+}
+
+function renderReviewSummary() {
+  const container = document.getElementById("review-summary");
+  if (!container) return;
+  const blocks = getLinkedBlocks();
+  if (blocks.length === 0) { container.innerHTML = ""; container.classList.add("hidden"); return; }
+
+  const elapsed = getElapsedPeriodDates();
+  const possible = blocks.length * elapsed.length;
+  let done = 0, perfect = 0;
+  elapsed.forEach(d => {
+    const dayDone = blocks.filter(b => isBlockCompleted(b, appState.logs[d]?.[b.id])).length;
+    done += dayDone;
+    if (dayDone === blocks.length) perfect++;
+  });
+  const rates = blocks.map(b => ({ name: b.name, pct: elapsed.length ? Math.round(getBlockActual(b.id, elapsed) / elapsed.length * 100) : null }));
+  const ranked = rates.filter(r => r.pct !== null).sort((a, b) => b.pct - a.pct);
+  const overall = possible ? Math.round(done / possible * 100) : null;
+
+  const tile = (label, value, sub, cls = "") => `<div class="summary-tile"><span class="summary-label">${label}</span><span class="summary-value ${cls}">${value}</span><span class="summary-sub">${sub}</span></div>`;
+  container.innerHTML = [
+    tile("Completion", overall === null ? "—" : overall + "%", overall === null ? "Period hasn't started" : `${done} of ${possible} check-ins`, rateClass(overall)),
+    tile("Perfect days", elapsed.length ? `${perfect}/${elapsed.length}` : "—", "All habits done"),
+    tile("Strongest", ranked[0] ? escapeHtml(ranked[0].name) : "—", ranked[0] ? `${ranked[0].pct}% of days` : "No data yet"),
+    tile("Needs focus", ranked.length > 1 ? escapeHtml(ranked.at(-1).name) : "—", ranked.length > 1 ? `${ranked.at(-1).pct}% of days` : "No data yet", ranked.length > 1 ? rateClass(ranked.at(-1).pct) : "")
+  ].join("");
+}
+
+// Habit × day matrix: replaces the old "Goal vs Actual" tiles.
 function renderReviewMetrics() {
   const container = document.getElementById("review-metrics-container");
   if (!container) return;
-  container.innerHTML = "";
-
-  let dates = [];
-  if (reviewMode === "weekly") {
-    dates = getWeekDates(getWeekStartDate(reviewWeekId));
-  } else {
-    const daysInMonth = new Date(reviewYear, reviewMonth + 1, 0).getDate();
-    for (let i = 1; i <= daysInMonth; i++) {
-      dates.push(`${reviewYear}-${String(reviewMonth + 1).padStart(2,'0')}-${String(i).padStart(2,'0')}`);
-    }
-  }
-
-
-
-  if (getLinkedBlocks().length === 0) {
+  const blocks = getLinkedBlocks();
+  if (blocks.length === 0) {
     container.innerHTML = `
-      <div class="flex flex-col items-center justify-center py-8 text-center col-span-full">
+      <div class="flex flex-col items-center justify-center py-8 text-center">
         <i data-lucide="map" class="w-8 h-8 text-text-dim/30 mb-2"></i>
         <p class="text-xs font-bold text-text-dim mb-1">No habits linked yet</p>
         <p class="text-caption text-text-dim/60">Link habits to your North Stars on the Blueprint page.</p>
       </div>`;
-    lucide.createIcons();
     return;
   }
 
-  getLinkedBlocks().forEach(b => {
-    const target = dates.length;
-    const actual = getBlockActual(b.id, dates);
-    const pct = target > 0 ? Math.min(Math.round((actual / target) * 100), 100) : 0;
-    const card = document.createElement("div");
-    card.className = "metric-card";
-    card.innerHTML = `
-      <div class="flex items-center gap-2 mb-1">
-        <i data-lucide="activity" class="w-3.5 h-3.5 text-text-dim shrink-0"></i>
-        <span class="label">${escapeHtml(b.name)}</span>
-      </div>
-      <div class="value ${pct >= 100 ? 'text-green' : pct >= 50 ? 'text-amber' : 'text-red'}">${formatBlockActual(b.id, actual)} / ${formatBlockTarget(b.id, target)}</div>
-      <div class="progress-bar mt-1.5">
-        <div class="progress-bar-fill ${pct >= 100 ? 'bg-green' : pct >= 50 ? 'bg-amber' : 'bg-red'}" style="width:${pct}%"></div>
-      </div>
-    `;
-    container.appendChild(card);
+  const todayStr = getLocalDateString();
+  const dates = getPeriodDates();
+  const elapsed = dates.filter(d => d <= todayStr);
+  const weekly = reviewMode === "weekly";
+  container.classList.toggle("is-monthly", !weekly);
+  container.style.setProperty("--matrix-days", dates.length);
+
+  const dayHead = weekly
+    ? `<div class="matrix-row matrix-head" aria-hidden="true"><span></span><span class="matrix-dots">${dates.map(d => `<span class="matrix-day${d === todayStr ? " is-today" : ""}">${["S","M","T","W","T","F","S"][parseLocalDate(d).getDay()]}</span>`).join("")}</span><span></span></div>`
+    : "";
+
+  container.innerHTML = dayHead + blocks.map(b => {
+    const actual = getBlockActual(b.id, elapsed);
+    const pct = elapsed.length ? Math.round(actual / elapsed.length * 100) : null;
+    const dots = dates.map(d => {
+      const done = isBlockCompleted(b, appState.logs[d]?.[b.id]);
+      const state = done ? " is-done" : d > todayStr ? " is-future" : "";
+      return `<span class="matrix-dot${state}${d === selectedReviewDate ? " is-selected" : ""}" title="${formatDateLabelShort(d)}: ${done ? "done" : d > todayStr ? "upcoming" : "missed"}"></span>`;
+    }).join("");
+    return `<div class="matrix-row">
+      <span class="matrix-name" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
+      <span class="matrix-dots" role="img" aria-label="${escapeHtml(b.name)}: done ${actual} of ${elapsed.length} days so far">${dots}</span>
+      <span class="matrix-score"><strong class="${rateClass(pct)}">${pct === null ? "—" : pct + "%"}</strong><span>${actual}/${elapsed.length}</span></span>
+    </div>`;
+  }).join("");
+}
+
+function renderReviewCalendar() {
+  const container = document.getElementById("review-calendar-days-container");
+  const weekdays = document.getElementById("review-weekday-labels");
+  if (!container) return;
+  const todayStr = getLocalDateString();
+  const weekly = reviewMode === "weekly";
+  const labels = weekly ? ["M","T","W","T","F","S","S"] : ["S","M","T","W","T","F","S"];
+  if (weekdays) weekdays.innerHTML = labels.map(d => `<span>${d}</span>`).join("");
+
+  let html = "";
+  if (!weekly) {
+    const firstDay = new Date(reviewYear, reviewMonth, 1).getDay();
+    for (let i = 0; i < firstDay; i++) html += `<span class="mini-day is-blank"></span>`;
+  }
+  getPeriodDates().forEach(d => {
+    const rate = getLoggedCompletionRate(d);
+    const level = rate >= 1 ? 3 : rate >= 0.5 ? 2 : rate > 0 ? 1 : 0;
+    const due = getDeadlinesForDate(d).length > 0;
+    html += `<button type="button" class="mini-day heat-${level}${d === todayStr ? " is-today" : ""}${d === selectedReviewDate ? " is-selected" : ""}${d > todayStr ? " is-future" : ""}" onclick="selectReviewDay('${d}')" aria-label="${formatDateLabelShort(d)}, ${Math.round(rate * 100)}% done${due ? ", checkpoint due" : ""}" aria-pressed="${d === selectedReviewDate}">${parseLocalDate(d).getDate()}${due ? '<span class="mini-day-flag"></span>' : ""}</button>`;
   });
+  container.innerHTML = html;
+}
+
+function selectReviewDay(dateStr) {
+  selectedReviewDate = dateStr;
+  renderReviewCalendar();
+  renderReviewMetrics();
+  renderReviewDayDetails(dateStr);
   lucide.createIcons();
 }
 
@@ -256,6 +236,7 @@ function getConfiguredCheckpoints() {
       const northStar = appState.goals.northStar.find(n => n.id === goal.northStarId);
       checkpoints.push({
         ...goal,
+        levelKey: level.key,
         levelLabel: level.label,
         northStarTitle: northStar?.title || "Unlinked"
       });
@@ -305,155 +286,88 @@ function toggleNorthStarReviewComplete(id, completed) {
 
 function submitNorthStarReviewComplete() {
   const input = document.getElementById("northstar-review-complete-input");
-  const msg = document.getElementById("northstar-review-complete-msg");
   if (!input || !pendingNorthStarReviewCompletion) return;
   toggleNorthStarReviewComplete(pendingNorthStarReviewCompletion, true);
   closeNorthStarReviewModal();
   celebrate();
 }
 
+// One card per North Star: checkpoints (with inline complete) and linked habit rates.
 function renderCascadeImpact() {
   const container = document.getElementById("review-cascade-container");
   if (!container) return;
-  container.innerHTML = "";
 
-  const dates = getPeriodDates();
-  const daysInPeriod = dates.length;
   const pillars = appState.goals.northStar;
-
   if (pillars.length === 0) {
-    container.innerHTML = '<p class="text-xs text-text-dim italic">No North Star pillars defined. Set them up in Career tab.</p>';
+    container.innerHTML = '<div class="card"><p class="text-xs text-text-dim">No North Stars defined yet. Set them up on the Blueprint page.</p></div>';
     return;
   }
 
-  function dotColor(habitId, dStr) {
-    const block = appState.settings.scheduleBlocks.find(b => b.id === habitId);
-    if (!block) return "bg-white/[0.04]";
-    return isBlockCompleted(block, appState.logs[dStr]?.[habitId]) ? "bg-green" : "bg-white/[0.04]";
-  }
-
+  const elapsed = getElapsedPeriodDates();
   const checkpoints = getConfiguredCheckpoints();
   const completedCheckpoints = checkpoints.filter(c => c.completed).length;
+  const completedPillars = pillars.filter(p => p.completed).length;
 
-  let html = "";
-  html += `<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">`;
+  let html = `<div class="cascade-overview">
+    <span><strong>${completedPillars}/${pillars.length}</strong> North Stars complete</span>
+    <span><strong>${completedCheckpoints}/${checkpoints.length}</strong> checkpoints complete</span>
+    <span>Habit rates for <strong>${getPeriodLabel()}</strong></span>
+  </div><div class="cascade-review-grid">`;
 
   pillars.forEach(pillar => {
     const goals = getGoalsByNorthStar(pillar.id);
     const linkedHabits = appState.goals.linkedHabits.filter(l => l.northStarId === pillar.id);
     const goalPcts = goals.map(g => g.completed ? 100 : (g.target > 0 ? Math.min(Math.round((g.progress / g.target) * 100), 100) : 0));
     const avgPct = goalPcts.length > 0 ? Math.round(goalPcts.reduce((a, b) => a + b, 0) / goalPcts.length) : 0;
-    const avgCls = avgPct >= 80 ? "text-green" : avgPct >= 50 ? "text-amber" : "text-text-dim";
 
-    html += `<div class="border border-border rounded-xl p-4 bg-[rgba(255,255,255,0.015)] space-y-4 min-h-[320px] flex flex-col ${pillar.completed ? 'border-green/30 bg-green/[0.02]' : ''}">`;
-
-    html += `<div class="flex items-center justify-between border-b border-border pb-3">
-      <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-full ${pillar.completed ? 'bg-green/[0.15]' : 'bg-blue/[0.12]'} flex items-center justify-center">${pillar.completed ? '<i data-lucide="check" class="w-3.5 h-3.5 text-green"></i>' : '<i data-lucide="star" class="w-3.5 h-3.5 text-blue"></i>'}</div>
-        <span class="text-caption font-bold ${pillar.completed ? 'text-green' : 'text-text'}">${escapeHtml(pillar.title)}</span>
-      </div>
-      <span class="text-caption font-bold ${pillar.completed ? 'text-green' : avgCls}">${pillar.completed ? '✓ Done' : avgPct + '%'}</span>
-    </div>`;
+    html += `<article class="card cascade-review-card${pillar.completed ? " is-complete" : ""}">
+      <header class="cascade-review-head">
+        <span class="cascade-review-icon">${pillar.completed ? '<i data-lucide="check"></i>' : '<i data-lucide="star"></i>'}</span>
+        <h3>${escapeHtml(pillar.title)}</h3>
+        <span class="cascade-review-pct ${pillar.completed ? "text-green" : "text-text-dim"}">${pillar.completed ? "Done" : goals.length ? avgPct + "%" : ""}</span>
+      </header>`;
 
     if (goals.length === 0 && linkedHabits.length === 0) {
-      html += '<p class="text-caption text-text-dim italic flex-1">No links yet.</p>';
+      html += '<p class="text-caption text-text-dim">Nothing linked yet.</p>';
     }
 
     if (goals.length > 0) {
-      html += `<div class="flex-1 space-y-3">`;
+      html += `<ul class="cascade-goal-list">`;
       goals.forEach(g => {
         const done = !!g.completed;
         const pct = done ? 100 : (g.target > 0 ? Math.min(Math.round((g.progress / g.target) * 100), 100) : 0);
-        const hexClr = done ? "#22d3a0" : pct >= 50 ? "#f59e0b" : "#f87171";
-        const txtCls = done ? "text-green" : pct >= 50 ? "text-amber" : "text-red";
-        const days = calculateDaysRemaining(g.deadline);
-        html += `<div class="flex items-center gap-3">
-          <div class="relative w-[46px] h-[46px] rounded-full shrink-0 flex items-center justify-center" style="background:conic-gradient(${hexClr} 0% ${pct}%, rgba(255,255,255,0.04) ${pct}% 100%)">
-            <div class="w-[34px] h-[34px] rounded-full bg-surface flex items-center justify-center"><span class="text-caption font-bold ${txtCls}">${pct}%</span></div>
+        html += `<li class="cascade-goal${done ? " is-done" : ""}">
+          <button type="button" class="cascade-goal-check" role="checkbox" aria-checked="${done}" aria-label="${done ? "Reopen" : "Complete"} ${escapeHtml(g.name)}" onclick="${done ? `toggleGoalDeadline('${g.levelKey}','${g.id}',false)` : `openCheckpointCompleteModal('${g.levelKey}','${g.id}')`}"><i data-lucide="check"></i></button>
+          <div class="cascade-goal-body">
+            <span class="cascade-goal-name">${escapeHtml(g.name)}</span>
+            <span class="cascade-goal-meta">${g.levelLabel} · ${g.progress}/${g.target}${g.unit ? " " + escapeHtml(g.unit) : ""}${g.deadline ? " · " + calculateDaysRemaining(g.deadline) : ""}</span>
+            <span class="cascade-goal-bar"><span style="width:${pct}%"></span></span>
           </div>
-          <div class="flex-1 min-w-0">
-            <div class="text-caption font-bold ${done ? 'text-green' : 'text-text'} truncate">${escapeHtml(g.name)}</div>
-            <div class="text-caption text-text-dim/60">${g.levelLabel} · ${done ? 'Checkpoint completed' : `${g.progress}/${g.target}${g.unit ? ' ' + escapeHtml(g.unit) : ''}`}${g.deadline ? ' · ' + days : ''}</div>
-          </div>
-        </div>`;
+        </li>`;
       });
-      html += `</div>`;
+      html += `</ul>`;
     }
 
     if (linkedHabits.length > 0) {
-      html += `<div class="border-t border-border pt-3 mt-auto space-y-2.5">
-        <div class="text-caption font-bold text-text-dim/50 uppercase tracking-widest">Daily Habits</div>`;
+      html += `<div class="cascade-habits"><span class="cascade-section-label">Daily habits</span>`;
       linkedHabits.forEach(lh => {
         const block = appState.settings.scheduleBlocks.find(b => b.id === lh.habitId);
         if (!block) return;
-        let dots = "";
-        dates.forEach(dStr => { dots += `<div class="w-[7px] h-[7px] rounded-full ${dotColor(lh.habitId, dStr)}"></div>`; });
-        const completed = getHabitCompletionInPeriod(lh.habitId, dates);
-        html += `<div class="flex items-center justify-between gap-2">
-          <span class="text-caption text-text-dim shrink-0 min-w-[48px]">${escapeHtml(block.name)}</span>
-          <div class="flex items-center gap-[3px] flex-wrap justify-end">${dots}</div>
-          <span class="text-caption font-bold text-text-dim shrink-0 w-[32px] text-right">${completed}/${daysInPeriod}</span>
-        </div>`;
+        const completed = getHabitCompletionInPeriod(lh.habitId, elapsed);
+        const pct = elapsed.length ? Math.round(completed / elapsed.length * 100) : null;
+        html += `<div class="cascade-habit"><span>${escapeHtml(block.name)}</span><span class="${rateClass(pct)}">${completed}/${elapsed.length}</span></div>`;
       });
       html += `</div>`;
     }
 
-    html += `<div class="mt-auto pt-3">
-      <button onclick="${pillar.completed ? `toggleNorthStarReviewComplete('${pillar.id}',false)` : `openNorthStarReviewModal('${pillar.id}')`}" class="btn btn-outline w-full ${pillar.completed ? 'is-complete' : ''}">
-        ${pillar.completed ? 'Completed' : 'Complete North Star'}
+    html += `<button onclick="${pillar.completed ? `toggleNorthStarReviewComplete('${pillar.id}',false)` : `openNorthStarReviewModal('${pillar.id}')`}" class="btn btn-outline w-full mt-auto ${pillar.completed ? "is-complete" : ""}">
+        ${pillar.completed ? "Completed · reopen" : "Complete North Star"}
       </button>
-    </div>`;
-
-    html += `</div>`;
+    </article>`;
   });
 
   html += `</div>`;
-
-  if (checkpoints.length > 0) {
-    html += `<div class="border border-border rounded-2xl p-4 md:p-5 bg-[rgba(255,255,255,0.015)] space-y-4 mt-4">
-      <div class="flex items-center justify-between gap-3 border-b border-border pb-3">
-        <div>
-          <div class="text-caption font-bold uppercase tracking-[0.18em] text-text-dim/70">Configured Checkpoints</div>
-          <p class="text-xs text-text-dim mt-1">All milestones defined on the Blueprint page.</p>
-        </div>
-        <div class="text-right shrink-0">
-          <div class="text-lg font-bold text-text">${completedCheckpoints}/${checkpoints.length}</div>
-          <div class="text-caption uppercase tracking-[0.16em] text-text-dim/60">Completed</div>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">`;
-
-    checkpoints.forEach(goal => {
-      const done = !!goal.completed;
-      const pct = goal.target > 0 ? Math.min(Math.round((goal.progress / goal.target) * 100), 100) : 0;
-      const days = calculateDaysRemaining(goal.deadline);
-      html += `<div class="rounded-xl border ${done ? 'border-green/30 bg-green/[0.04]' : 'border-border bg-[rgba(255,255,255,0.02)]'} px-4 py-3 space-y-3">
-        <div class="flex items-start justify-between gap-3">
-          <div>
-            <div class="text-caption uppercase tracking-[0.16em] font-bold ${done ? 'text-green/80' : 'text-text-dim/60'}">${goal.levelLabel}</div>
-            <div class="text-xs font-bold ${done ? 'text-green' : 'text-text'} mt-1">${escapeHtml(goal.name)}</div>
-          </div>
-          <span class="text-caption font-bold px-2 py-1 rounded-full border ${done ? 'bg-green/15 text-green border-green/30' : 'bg-white/[0.03] text-text-dim border-border'}">${done ? 'Completed' : 'Active'}</span>
-        </div>
-        <div class="text-caption text-text-dim">${escapeHtml(goal.northStarTitle)}</div>
-        <div class="flex items-center justify-between text-caption text-text-dim">
-          <span>${goal.progress}/${goal.target}${goal.unit ? ' ' + escapeHtml(goal.unit) : ''}</span>
-          <span>${days}</span>
-        </div>
-        <div class="h-1.5 rounded-full bg-white/[0.05] overflow-hidden">
-          <div class="h-full ${done ? 'bg-green' : 'bg-blue'}" style="width:${done ? 100 : pct}%"></div>
-        </div>
-        <button onclick="${done ? `toggleGoalDeadline('${goal.levelKey}','${goal.id}',false)` : `openCheckpointCompleteModal('${goal.levelKey}','${goal.id}')`}" class="btn btn-outline w-full ${done ? 'is-complete' : ''}">
-          ${done ? 'Completed checkpoint' : 'Complete checkpoint'}
-        </button>
-      </div>`;
-    });
-
-    html += `</div></div>`;
-  }
-
   container.innerHTML = html;
-  lucide.createIcons();
 }
 
 function renderReviewDayDetails(dateStr) {
@@ -462,43 +376,35 @@ function renderReviewDayDetails(dateStr) {
   selectedReviewDate = dateStr;
   const log = appState.logs[dateStr] || {};
   const deadlines = getDeadlinesForDate(dateStr);
-  const formattedDate = formatDateLabelShort(dateStr);
-
-  let deadlinesHtml = "";
-  if (deadlines.length > 0) {
-    deadlinesHtml = `<div class="border-t border-border pt-2 mt-2"><p class="text-caption text-red font-bold uppercase tracking-wider">Checkpoint Deadlines</p><ul class="list-disc list-inside text-xs mt-1 text-text space-y-1">${deadlines.map(d => `<li>${escapeHtml(d.name)} (${d.target} ${escapeHtml(d.unit || '')})</li>`).join('')}</ul></div>`;
-  }
-
-  let blocksHtml = "";
-  if (getLinkedBlocks().length === 0) {
-    blocksHtml = '<p class="text-caption text-text-dim/50 italic py-2">No habits linked yet.</p>';
-  } else {
-  getLinkedBlocks().forEach(b => {
-    const logData = log[b.id] || {};
-    let ok = isBlockCompleted(b, logData);
-    const amounts = b.fields.filter(f => f.type === "number" && logData[f.id] !== undefined && logData[f.id] !== "").map(f => `${logData[f.id]} ${f.label || f.id}`).join(", ");
-    blocksHtml += `<div class="flex items-center justify-between text-xs py-1.5 px-2 rounded ${ok ? 'bg-green/[0.06]' : 'bg-[rgba(255,255,255,0.015)]'}">
-      <span class="${ok ? 'text-text font-bold' : 'text-text-dim/40'}">${escapeHtml(b.name)}</span>
-      <span class="${ok ? 'text-green' : 'text-text-dim/30'}">${escapeHtml([ok ? 'Done' : (typeof logData.completed === 'boolean' ? 'Not done' : ''), amounts].filter(Boolean).join(' · ') || '—')}</span>
-    </div>`;
-  });
-  }
-
+  const blocks = getLinkedBlocks();
+  const isFuture = dateStr > getLocalDateString();
+  const doneCount = blocks.filter(b => isBlockCompleted(b, log[b.id])).length;
   const moodLabel = {5:"Great",4:"Good",3:"Okay",2:"Rough",1:"Tough"};
 
+  const rows = blocks.map(b => {
+    const logData = log[b.id] || {};
+    const ok = isBlockCompleted(b, logData);
+    const amounts = b.fields.filter(f => f.type === "number" && logData[f.id] !== undefined && logData[f.id] !== "").map(f => `${logData[f.id]} ${escapeHtml(f.label || f.id)}`).join(", ");
+    return `<li class="day-habit${ok ? " is-done" : ""}"><i data-lucide="${ok ? "check-circle-2" : "circle"}" aria-hidden="true"></i><span>${escapeHtml(b.name)}</span>${amounts ? `<span class="day-habit-amount">${amounts}</span>` : ""}</li>`;
+  }).join("");
+
+  const notes = [
+    log.feelingScore ? `<div><dt>Mood</dt><dd>${moodLabel[log.feelingScore] || log.feelingScore}</dd></div>` : "",
+    log.biggestWin ? `<div><dt>Win</dt><dd>${escapeHtml(log.biggestWin)}</dd></div>` : "",
+    log.biggestLearning ? `<div><dt>Learning</dt><dd>${escapeHtml(log.biggestLearning)}</dd></div>` : ""
+  ].join("");
+
   container.innerHTML = `
-    <div class="flex items-center justify-between border-b border-border pb-2.5">
-      <h4 class="font-bold text-xs text-text">${formattedDate}</h4>
-      <button onclick="editExecutionDate('${dateStr}')" class="btn btn-outline"><i data-lucide="edit" class="w-3 h-3"></i> Edit</button>
+    <div class="day-details-head">
+      <div><h4>${formattedDayLabel(dateStr)}</h4><span>${isFuture ? "Upcoming" : blocks.length ? `${doneCount} of ${blocks.length} habits done` : ""}</span></div>
+      ${isFuture ? "" : `<button onclick="editExecutionDate('${dateStr}')" class="btn btn-outline"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Edit</button>`}
     </div>
-    <div class="space-y-3 pt-2">
-      <div class="space-y-0.5">${blocksHtml}</div>
-      <div class="border-t border-border pt-2 space-y-1.5 text-xs">
-        ${log.feelingScore ? `<div><span class="text-text-dim">Mood:</span> <strong class="text-text">${moodLabel[log.feelingScore] || log.feelingScore}</strong></div>` : ''}
-        ${log.biggestWin ? `<div><span class="text-text-dim">Win:</span> <strong class="text-text">"${escapeHtml(log.biggestWin)}"</strong></div>` : ''}
-        ${log.biggestLearning ? `<div><span class="text-text-dim">Learning:</span> <strong class="text-text">"${escapeHtml(log.biggestLearning)}"</strong></div>` : ''}
-      </div>
-      ${deadlinesHtml}
-    </div>`;
-  lucide.createIcons();
+    ${blocks.length ? `<ul class="day-habit-list">${rows}</ul>` : '<p class="text-caption text-text-dim">No habits linked yet.</p>'}
+    ${notes ? `<dl class="day-notes">${notes}</dl>` : ""}
+    ${deadlines.length ? `<div class="day-deadlines"><span class="cascade-section-label text-red">Checkpoints due</span><ul>${deadlines.map(d => `<li>${escapeHtml(d.name)} (${d.target} ${escapeHtml(d.unit || "")})</li>`).join("")}</ul></div>` : ""}`;
+}
+
+function formattedDayLabel(dateStr) {
+  const d = parseLocalDate(dateStr);
+  return `${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]}, ${formatDateLabelShort(dateStr)}`;
 }

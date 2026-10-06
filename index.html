@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=17">
+  <link rel="stylesheet" href="style.css?v=19">
 </head>
 <body>
 
@@ -139,8 +139,18 @@
     </details>
 
     <!-- Habit month grids -->
+    <div class="habit-toolbar">
+      <div class="habit-toolbar-text">
+        <h3 class="habit-toolbar-title">Habits</h3>
+        <span id="habit-day-summary" class="habit-day-summary"></span>
+      </div>
+      <div class="segmented-control" role="group" aria-label="Habit layout">
+        <button type="button" id="habit-view-compact" class="segment-button" onclick="setHabitView('compact')" aria-pressed="false"><i data-lucide="list-checks" aria-hidden="true"></i><span>Condensed</span></button>
+        <button type="button" id="habit-view-expanded" class="segment-button" onclick="setHabitView('expanded')" aria-pressed="false"><i data-lucide="layout-grid" aria-hidden="true"></i><span>Expanded</span></button>
+      </div>
+    </div>
     <span id="habit-order-status" class="sr-only" role="status" aria-live="polite"></span>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" id="today-habit-cards-container">    </div>
+    <div class="habit-cards" id="today-habit-cards-container"></div>
 
     <!-- Reflection Section: daily always + weekly/monthly extra -->
     <div class="card" id="reflection-container">
@@ -220,34 +230,31 @@
       <div id="review-period-selector" class="period-control" role="group" aria-label="Tracking period"></div>
     </div>
 
-    <!-- Goal vs Actual Metrics (weekly/monthly only) -->
-    <div class="card" id="review-metrics-section">
-      <div class="card-header text-green">Goal vs Actual</div>
-      <p class="text-xs text-text-dim mb-3">Targets vs progress for this period.</p>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="review-metrics-container"></div>
+    <!-- Period summary (weekly/monthly only) -->
+    <div id="review-summary" class="review-summary" aria-live="polite"></div>
+
+    <!-- Habits + Day panel (weekly/monthly only) -->
+    <div class="review-period-layout" id="review-calendar-section">
+      <div class="card" id="review-metrics-section">
+        <div class="review-card-head">
+          <h3 class="review-card-title">Habits</h3>
+          <span class="review-legend"><span class="matrix-dot is-done"></span>Done<span class="matrix-dot"></span>Missed<span class="matrix-dot is-future"></span>Upcoming</span>
+        </div>
+        <div id="review-metrics-container" class="habit-matrix"></div>
+      </div>
+      <div class="card review-day-card">
+        <div id="review-weekday-labels" class="review-mini-weekdays"></div>
+        <div class="review-mini-calendar" id="review-calendar-days-container"></div>
+        <div id="review-selected-day-details" class="review-day-details"></div>
+      </div>
     </div>
 
     <!-- Cascade Impact (cascade tab only) -->
-    <div class="card hidden" id="review-cascade-card">
-      <div class="card-header text-blue"><i data-lucide="layers" class="w-3.5 h-3.5 inline mr-1"></i>Cascade Impact</div>
-      <p class="text-xs text-text-dim mb-3">Your goal cascade across all levels for the selected period.</p>
-      <div id="review-cascade-container" class="space-y-6"></div>
+    <div class="hidden" id="review-cascade-card">
+      <div id="review-cascade-container"></div>
     </div>
 
-    <!-- Calendar + Details (weekly/monthly only) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="review-calendar-section">
-      <div class="lg:col-span-2 card">
-        <div id="review-weekday-labels" class="grid grid-cols-7 text-center text-caption font-bold text-text-dim uppercase tracking-wider mb-3">
-          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-        </div>
-        <div class="calendar-grid" id="review-calendar-days-container"></div>
-      </div>
-      <div class="card" id="review-selected-day-details">
-        <div class="card-header">Day Details</div>
-        <p class="text-xs text-text-dim">Pick a day to view logged data.</p>
-      </div>
-    </div>
-    <div id="period-reflection" class="card"></div>
+    <details id="period-reflection" class="card review-reflection"></details>
   </section>
 
   <!-- ==================== TAB: CONSTITUTION ==================== -->
@@ -567,14 +574,14 @@ create policy "TelOS update" on public.life_os_sync
 <script src="js/config.js?v=22"></script>
 <script src="js/state.js?v=22"></script>
 <script src="js/utils.js?v=21"></script>
-<script src="js/tabs/execution.js?v=26"></script>
-<script src="js/tabs/progress.js?v=22"></script>
+<script src="js/tabs/execution.js?v=27"></script>
+<script src="js/tabs/progress.js?v=24"></script>
 <script src="js/tabs/blueprint.js?v=22"></script>
 <script src="js/tabs/system.js?v=22"></script>
 <script src="js/tabs/constitution.js?v=22"></script>
 <script src="js/ai-goal-prompt.js?v=21"></script>
 <script src="js/ai-goals.js?v=22"></script>
-<script src="js/desktop.js?v=23"></script>
+<script src="js/desktop.js?v=24"></script>
 <script src="app.js?v=23"></script>
 </body>
 </html>
