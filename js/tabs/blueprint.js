@@ -7,14 +7,11 @@
 
 let careerEditMode = false;
 
-const cascadeLevels = [
-  { key: "northStar",  label: "North Star",            icon: "star",     color: "blue",   isCardGrid: true },
-  { key: "sixMonth",   label: "6-Month Checkpoints",   icon: "calendar",  color: "amber",  isCardGrid: false },
-  { key: "threeMonth", label: "3-Month Checkpoints",   icon: "target",    color: "green",  isCardGrid: false },
-  { key: "oneMonth",   label: "1-Month Checkpoints",   icon: "flag",   color: "purple", isCardGrid: false },
+const checkpointLevels = [
+  { key: "sixMonth",   label: "6-Month",  icon: "calendar", color: "amber" },
+  { key: "threeMonth", label: "3-Month",  icon: "target",   color: "green" },
+  { key: "oneMonth",   label: "1-Month",  icon: "flag",     color: "purple" },
 ];
-
-const levelColors = { northStar: "blue", sixMonth: "amber", threeMonth: "green", oneMonth: "purple" };
 
 function toggleCareerEdit() {
   careerEditMode = !careerEditMode;
@@ -24,133 +21,97 @@ function toggleCareerEdit() {
 function renderGoalsHub() {
   const container = document.getElementById("cascade-container");
   if (!container) return;
+  container.classList.toggle("bp-editing", careerEditMode);
 
-  let html = "";
+  container.innerHTML = `
+    <section class="bp-section" aria-labelledby="bp-ns-title">
+      <header class="bp-section-head">
+        <h3 id="bp-ns-title" class="bp-section-title"><i data-lucide="star" class="text-blue"></i>North Stars<span class="bp-count">${appState.goals.northStar.length}</span></h3>
+        ${careerEditMode ? `<button type="button" class="btn btn-outline" onclick="addNorthStar()"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add North Star</button>` : ""}
+      </header>
+      <div class="bp-ns-grid" id="northstar-list"></div>
+    </section>
 
-  // North Star (full width)
-  html += renderLevelCard(cascadeLevels[0], 0);
+    <section class="bp-section" aria-labelledby="bp-cp-title">
+      <header class="bp-section-head">
+        <h3 id="bp-cp-title" class="bp-section-title"><i data-lucide="milestone" class="text-text-dim"></i>Checkpoints</h3>
+      </header>
+      <div class="bp-checkpoint-grid">
+        ${checkpointLevels.map(level => `
+          <div class="bp-column">
+            <div class="bp-column-head">
+              <span class="bp-column-title text-${level.color}"><i data-lucide="${level.icon}"></i>${level.label}</span>
+              <span class="bp-count">${(appState.goals[level.key] || []).length}</span>
+            </div>
+            <div class="bp-goal-list" id="goals-${level.key}-list"></div>
+            ${careerEditMode ? `<button type="button" class="bp-add-row" onclick="openAddGoal('${level.key}')"><i data-lucide="plus"></i>Add ${level.label.toLowerCase()} checkpoint</button>` : ""}
+          </div>`).join("")}
+      </div>
+    </section>
 
-  // Divider
-  html += `<div class="border-t border-border"></div>`;
+    <section class="bp-section" aria-labelledby="bp-habit-title">
+      <header class="bp-section-head">
+        <h3 id="bp-habit-title" class="bp-section-title"><i data-lucide="activity" class="text-green"></i>Daily habits</h3>
+        <button type="button" class="btn btn-outline" onclick="openHabitEditor()"><i data-lucide="plus" class="w-3.5 h-3.5"></i> Add habit</button>
+      </header>
+      <div id="linked-habits-list" class="bp-habit-grid"></div>
+    </section>`;
 
-  // Give the checkpoint columns more room and move habits below them.
-  html += `<div class="career-blueprint-grid">`;
-  for (let i = 1; i < cascadeLevels.length; i++) {
-    html += renderLevelCard(cascadeLevels[i], i);
-  }
-  html += `<div class="career-blueprint-habits">`;
-  html += renderLinkedHabits();
-  html += `</div>`;
-  html += `</div>`;
-
-  container.innerHTML = html;
-
-  // Now populate the dynamic containers
   renderNorthStar();
-  renderGoalList("goals-sixMonth-list", appState.goals.sixMonth, "sixMonth");
-  renderGoalList("goals-threeMonth-list", appState.goals.threeMonth, "threeMonth");
-  renderGoalList("goals-oneMonth-list", appState.goals.oneMonth, "oneMonth");
+  checkpointLevels.forEach(level => renderGoalList(`goals-${level.key}-list`, appState.goals[level.key] || [], level.key));
   renderLinkedHabitsList();
 
-  // Edit button (hide if nothing exists to edit)
   const btn = document.getElementById("career-edit-btn");
-  const hasContent = appState.goals.northStar.length > 0
-    || appState.goals.sixMonth.length > 0
-    || appState.goals.threeMonth.length > 0
-    || appState.goals.oneMonth.length > 0
-    || appState.goals.linkedHabits.length > 0;
   if (btn) {
     btn.style.display = "";
-    if (careerEditMode) {
-      btn.className = "btn btn-primary";
-      document.getElementById("career-edit-label").textContent = "Done Editing";
-      const iconEl = document.querySelector("#career-edit-btn i");
-      if (iconEl) iconEl.setAttribute("data-lucide", "check");
-    } else {
-      btn.className = "btn btn-outline";
-      document.getElementById("career-edit-label").textContent = "Edit";
-      const iconEl = document.querySelector("#career-edit-btn i");
-      if (iconEl) iconEl.setAttribute("data-lucide", "pencil");
-    }
+    btn.className = careerEditMode ? "btn btn-primary shrink-0" : "btn btn-outline shrink-0";
+    const label = document.getElementById("career-edit-label");
+    if (label) label.textContent = careerEditMode ? "Done editing" : "Edit";
+    const iconEl = btn.querySelector("i, svg");
+    if (iconEl) iconEl.outerHTML = `<i data-lucide="${careerEditMode ? "check" : "pencil"}" class="w-3.5 h-3.5" id="career-edit-icon"></i>`;
   }
 
   if (typeof renderEmptyStateBanner === "function") renderEmptyStateBanner();
   lucide.createIcons();
 }
 
-function renderLevelCard(level, idx) {
-  const color = levelColors[level.key] || "text-dim";
-  const addBtn = careerEditMode && level.key !== "northStar" ? `<button aria-label="Add checkpoint" class="cascade-add-btn" onclick="openAddGoal('${level.key}')"><i data-lucide="plus" class="w-3 h-3"></i></button>` : "";
-
-  if (level.isCardGrid) {
-    return `
-      <div class="cascade-card">
-        <div class="cascade-card-header">
-          <div class="cascade-card-title"><i data-lucide="${level.icon}" class="w-4 h-4 text-${color}"></i><span class="text-${color}">${level.label}</span></div>
-          ${addBtn}
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3" id="northstar-list"></div>
-      </div>`;
-  }
-
-  return `
-    <div class="cascade-card">
-      <div class="cascade-card-header">
-        <div class="cascade-card-title"><i data-lucide="${level.icon}" class="w-4 h-4 text-${color}"></i><span class="text-${color}">${level.label}</span></div>
-        ${addBtn}
-      </div>
-      <div class="space-y-2" id="goals-${level.key}-list"></div>
-    </div>`;
-}
-
 // ─── North Star ───────────────────────────────────────────
-
-const northStarIcons = {
-  dream_role: "target", visual_cap: "palette",
-  brand_channel: "youtube", identity: "user"
-};
 
 function renderNorthStar() {
   const list = document.getElementById("northstar-list");
   if (!list) return;
-  list.innerHTML = "";
 
-  appState.goals.northStar.forEach((item, idx) => {
-    const card = document.createElement("div");
-    if (careerEditMode) {
-      card.className = "northstar-card editing";
-      card.innerHTML = `
-        <div class="flex items-center justify-between gap-2">
-          <input aria-label="North Star title" type="text" value="${escapeHtml(item.title)}" onchange="updateNorthStar(${idx},'title',this.value)" class="text-xs font-bold bg-transparent text-text border-b border-transparent focus:border-blue py-0.5 flex-1 min-w-0">
-          <button aria-label="Close or remove" onclick="deleteNorthStar(${idx})" class="icon-button text-red"><i data-lucide="x" class="w-3 h-3"></i></button>
-        </div>
-        <textarea aria-label="North Star description" rows="2" onchange="updateNorthStar(${idx},'description',this.value)" class="text-caption bg-transparent text-text-dim w-full min-w-0 resize-none border border-transparent focus:border-blue rounded px-1 py-0.5 mt-1">${escapeHtml(item.description)}</textarea>
-      `;
-    } else {
-      const done = item.completed;
-      card.className = "northstar-card" + (done ? " completed" : "");
-      card.innerHTML = `
-        <span class="item-heading text-xs font-bold ${done ? 'text-green' : 'text-text'}">${escapeHtml(item.title)}</span>
-        <p class="text-caption text-text-dim mt-0.5">${escapeHtml(item.description)}</p>
-      `;
-    }
-    list.appendChild(card);
-  });
-
-  if (careerEditMode) {
-    const addBtn = document.createElement("button");
-    addBtn.className = "northstar-card add-new";
-    addBtn.innerHTML = '<span class="text-caption text-text-dim font-bold">+ Add Pillar</span>';
-    addBtn.onclick = addNorthStar;
-    list.appendChild(addBtn);
+  if (appState.goals.northStar.length === 0) {
+    list.innerHTML = `<p class="bp-empty">No North Stars yet. ${careerEditMode ? "Add one to start your cascade." : "Tap Edit to add one, or use Plan with ChatGPT."}</p>`;
+    return;
   }
-  lucide.createIcons();
+
+  list.innerHTML = appState.goals.northStar.map((item, idx) => {
+    const checkpoints = checkpointLevels.reduce((n, l) => n + (appState.goals[l.key] || []).filter(g => g.northStarId === item.id).length, 0);
+    const habits = appState.goals.linkedHabits.filter(l => l.northStarId === item.id).length;
+    if (careerEditMode) {
+      return `<div class="bp-ns-card is-editing">
+        <div class="bp-field-row">
+          <label class="bp-field bp-grow"><span>Title</span><input type="text" value="${escapeHtml(item.title)}" onchange="updateNorthStar(${idx},'title',this.value)"></label>
+          <button type="button" aria-label="Delete ${escapeHtml(item.title)}" onclick="deleteNorthStar(${idx})" class="icon-button text-red bp-delete"><i data-lucide="trash-2"></i></button>
+        </div>
+        <label class="bp-field"><span>Description</span><textarea rows="3" onchange="updateNorthStar(${idx},'description',this.value)">${escapeHtml(item.description || "")}</textarea></label>
+      </div>`;
+    }
+    return `<article class="bp-ns-card${item.completed ? " is-complete" : ""}">
+      <h4 class="bp-ns-title">${item.completed ? '<i data-lucide="check-circle-2" class="text-green"></i>' : ""}${escapeHtml(item.title)}</h4>
+      ${item.description ? `<p class="bp-ns-desc">${escapeHtml(item.description)}</p>` : ""}
+      <p class="bp-ns-meta">${checkpoints} checkpoint${checkpoints === 1 ? "" : "s"} · ${habits} habit${habits === 1 ? "" : "s"}</p>
+    </article>`;
+  }).join("");
 }
 
 function addNorthStar() {
-  appState.goals.northStar.push({ id: "ns_" + Date.now(), title: "New Pillar", description: "Describe this vision pillar", completed: false });
+  appState.goals.northStar.push({ id: "ns_" + Date.now(), title: "New North Star", description: "", completed: false });
   persistState();
   renderGoalsHub();
+  const inputs = document.querySelectorAll("#northstar-list input[type=text]");
+  inputs[inputs.length - 1]?.select();
 }
 
 function updateNorthStar(idx, field, val) {
@@ -170,161 +131,91 @@ function deleteNorthStar(idx) {
   renderGoalsHub();
 }
 
-// ─── Goal Lists (Yearly / 6-Month / 3-Month) ─────────────
+// ─── Checkpoint lists ─────────────────────────────────────
 
 function renderGoalList(containerId, goals, type) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  container.innerHTML = "";
 
-  if (goals.length === 0 && !careerEditMode) {
-    container.innerHTML = '<p class="text-caption text-text-dim italic py-2">No checkpoints set yet. Tap Edit to add one.</p>';
+  if (goals.length === 0) {
+    container.innerHTML = `<p class="bp-empty">No checkpoints yet.${careerEditMode ? "" : " Tap Edit to add one."}</p>`;
     return;
   }
 
-  goals.forEach((goal, idx) => {
-    const daysLeft = calculateDaysRemaining(goal.deadline);
-    const overdue = daysLeft.startsWith("Overdue");
-
+  container.innerHTML = goals.map((goal, idx) => {
     const ns = appState.goals.northStar.find(n => n.id === goal.northStarId);
-
-    const item = document.createElement("div");
-    item.className = "cascade-goal-item";
-
+    const pct = goal.completed ? 100 : goal.target > 0 ? Math.min(Math.round(goal.progress / goal.target * 100), 100) : 0;
     if (careerEditMode) {
-      item.innerHTML = `
-        <div class="career-edit-row career-edit-row-top">
-          <input aria-label="Checkpoint name" type="text" value="${escapeHtml(goal.name)}" onchange="updateGoalName(${idx},'${type}',this.value)" class="career-edit-name text-xs font-bold bg-transparent text-text border-b border-transparent focus:border-blue py-0.5">
-          <button aria-label="Delete" onclick="deleteGoal(${idx},'${type}')" class="icon-button text-red"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+      return `<div class="bp-goal is-editing">
+        <div class="bp-field-row">
+          <label class="bp-field bp-grow"><span>Checkpoint</span><textarea rows="2" class="bp-name-input" onchange="updateGoalName(${idx},'${type}',this.value)">${escapeHtml(goal.name)}</textarea></label>
+          <button type="button" aria-label="Delete ${escapeHtml(goal.name)}" onclick="deleteGoal(${idx},'${type}')" class="icon-button text-red bp-delete"><i data-lucide="trash-2"></i></button>
         </div>
-        <div class="career-edit-grid mb-2 text-caption">
-          <select aria-label="Checkpoint North Star" onchange="updateGoalNorthStar(${idx},'${type}',this.value)" class="career-edit-select bg-transparent text-text-dim border border-border rounded py-1 px-1">
-            <option value="">— North Star —</option>
-            ${appState.goals.northStar.map(n => `<option value="${n.id}" ${n.id === goal.northStarId ? 'selected' : ''}>${escapeHtml(n.title)}</option>`).join("")}
-          </select>
-          <input aria-label="Checkpoint deadline" type="date" value="${escapeHtml(goal.deadline || '')}" onchange="updateGoalDeadline(${idx},'${type}',this.value)" class="career-edit-date bg-transparent text-text-dim border border-border rounded py-1 px-1" style="color-scheme:dark">
+        <label class="bp-field"><span>North Star</span><select onchange="updateGoalNorthStar(${idx},'${type}',this.value)">
+          <option value="">Not linked</option>
+          ${appState.goals.northStar.map(n => `<option value="${n.id}" ${n.id === goal.northStarId ? "selected" : ""}>${escapeHtml(n.title)}</option>`).join("")}
+        </select></label>
+        <div class="bp-field-grid">
+          <label class="bp-field"><span>Deadline</span><input type="date" value="${escapeHtml(goal.deadline || "")}" onchange="updateGoalDeadline(${idx},'${type}',this.value)"></label>
+          <label class="bp-field"><span>Progress</span><input type="number" min="0" max="${goal.target}" value="${goal.progress}" onchange="updateGoalProgress(${idx},'${type}',this.value)"></label>
+          <label class="bp-field"><span>Target${goal.unit ? ` (${escapeHtml(goal.unit)})` : ""}</span><input type="number" min="1" value="${goal.target}" onchange="updateGoalTarget(${idx},'${type}',this.value)"></label>
         </div>
-        <div class="career-edit-progress text-xs">
-          <span class="text-text-dim font-bold">Progress:</span>
-          <input aria-label="Checkpoint progress" type="number" min="0" max="${goal.target}" value="${goal.progress}" onchange="updateGoalProgress(${idx},'${type}',this.value)" class="career-edit-number text-center font-bold bg-transparent text-text border border-border rounded py-1 px-1">
-          <span class="text-text-dim">/ ${goal.target} ${escapeHtml(goal.unit || '')}</span>
-        </div>`;
-    } else {
-      item.innerHTML = `
-        <div class="flex items-start justify-between gap-2">
-          <div class="min-w-0 flex-1">
-            <span class="text-xs font-bold text-text block break-words leading-relaxed">${escapeHtml(goal.name)}</span>
-            ${ns ? `<span class="text-caption text-blue/70 whitespace-nowrap">★ ${escapeHtml(ns.title)}</span>` : ''}
-          </div>
-          <span class="text-caption font-bold shrink-0 ${overdue ? 'text-red' : 'text-text-dim'}">${daysLeft}</span>
-        </div>`;
+      </div>`;
     }
-    container.appendChild(item);
-  });
+    const daysLeft = calculateDaysRemaining(goal.deadline);
+    const overdue = daysLeft.startsWith("Overdue") && !goal.completed;
+    return `<article class="bp-goal${goal.completed ? " is-complete" : ""}">
+      <div class="bp-goal-top">
+        <h4 class="bp-goal-name">${escapeHtml(goal.name)}</h4>
+        ${goal.completed ? '<span class="bp-chip is-done">Done</span>' : daysLeft ? `<span class="bp-chip${overdue ? " is-overdue" : ""}">${daysLeft}</span>` : ""}
+      </div>
+      ${ns ? `<p class="bp-goal-ns"><i data-lucide="star"></i><span>${escapeHtml(ns.title)}</span></p>` : '<p class="bp-goal-ns is-unlinked">Not linked to a North Star</p>'}
+      <div class="bp-goal-progress"><span class="bp-bar"><span style="width:${pct}%"></span></span><span class="bp-goal-count">${goal.progress}/${goal.target}${goal.unit ? " " + escapeHtml(goal.unit) : ""}</span></div>
+    </article>`;
+  }).join("");
 }
 
 // ─── Linked Habits ────────────────────────────────────────
 
-function renderLinkedHabits() {
-  return `
-    <div class="cascade-card">
-      <div class="cascade-card-header">
-        <div class="cascade-card-title"><i data-lucide="activity" class="w-4 h-4 text-green"></i><span class="text-green">Daily Habits</span></div>
-      </div>
-      <button class="btn btn-outline mb-3" onclick="openHabitEditor()">Add daily habit</button><div id="linked-habits-list" class="space-y-1.5"></div>
-    </div>`;
-}
-
 function renderLinkedHabitsList() {
   const container = document.getElementById("linked-habits-list");
   if (!container) return;
-  container.innerHTML = "";
 
-  const linkedBlocks = appState.goals.linkedHabits.map(l => {
-    const block = appState.settings.scheduleBlocks.find(b => b.id === l.habitId);
-    const ns = appState.goals.northStar.find(n => n.id === l.northStarId);
-    return { ...l, block, ns };
-  }).filter(l => l.block && l.ns);
+  const blocks = appState.settings.scheduleBlocks;
+  const linkOf = id => appState.goals.linkedHabits.find(l => l.habitId === id && appState.goals.northStar.some(n => n.id === l.northStarId));
+  const habitRow = block => {
+    const link = linkOf(block.id);
+    if (!careerEditMode) {
+      return `<li class="bp-habit"><span class="bp-habit-name">${escapeHtml(block.name)}</span>${block.time ? `<span class="bp-habit-time">${escapeHtml(block.time)}</span>` : ""}</li>`;
+    }
+    return `<li class="bp-habit is-editing">
+      <div class="bp-habit-line">
+        <span class="bp-habit-name">${escapeHtml(block.name)}</span>
+        <button type="button" class="icon-button" aria-label="Edit ${escapeHtml(block.name)}" title="Edit habit" onclick="openHabitEditor('${block.id}')"><i data-lucide="pencil"></i></button>
+      </div>
+      <select aria-label="North Star for ${escapeHtml(block.name)}" onchange="linkHabit('${block.id}', this.value);renderGoalsHub()">
+        <option value="">Not linked</option>
+        ${appState.goals.northStar.map(n => `<option value="${n.id}" ${link?.northStarId === n.id ? "selected" : ""}>${escapeHtml(n.title)}</option>`).join("")}
+      </select>
+    </li>`;
+  };
 
-  if (linkedBlocks.length === 0 && !careerEditMode) {
-    container.innerHTML = '<p class="text-caption text-text-dim italic py-2">Link habits to your North Star goals to see them here.</p>';
+  const groups = appState.goals.northStar.map(ns => ({
+    title: ns.title, unlinked: false,
+    habits: blocks.filter(b => linkOf(b.id)?.northStarId === ns.id)
+  }));
+  const unlinked = blocks.filter(b => !linkOf(b.id));
+  if (careerEditMode && unlinked.length) groups.push({ title: "Not linked", unlinked: true, habits: unlinked });
+
+  const visible = groups.filter(g => g.habits.length || careerEditMode);
+  if (!visible.length) {
+    container.innerHTML = '<p class="bp-empty">No habits linked yet. Add a habit and link it to a North Star.</p>';
     return;
   }
-
-  appState.goals.northStar.forEach(ns => {
-    const nsLinked = linkedBlocks.filter(l => l.ns.id === ns.id);
-    if (nsLinked.length === 0 && !careerEditMode) return;
-
-    const section = document.createElement("div");
-    section.className = "mb-3";
-    const header = document.createElement("div");
-    header.className = "flex items-center gap-1.5 mb-1.5";
-    header.innerHTML = `<i data-lucide="star" class="w-3 h-3 text-blue"></i><span class="text-caption font-bold text-blue">${escapeHtml(ns.title)}</span>`;
-    section.appendChild(header);
-
-    if (nsLinked.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "text-caption text-text-dim/50 italic pl-5";
-      empty.textContent = "No habits linked yet.";
-      section.appendChild(empty);
-    } else {
-      const list = document.createElement("div");
-      list.className = "space-y-1";
-      nsLinked.forEach(l => {
-        const row = document.createElement("div");
-        row.className = `career-habit-row py-1 px-2 rounded hover:bg-white/[0.02]${careerEditMode ? ' editing' : ''}`;
-        if (careerEditMode) {
-          const nsOptions = appState.goals.northStar.map(n =>
-            `<option value="${n.id}" ${n.id === l.northStarId ? 'selected' : ''}>${escapeHtml(n.title)}</option>`
-          ).join("");
-          row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${escapeHtml(l.block.name)}</span><button class="btn btn-outline" onclick="openHabitEditor('${l.block.id}')">Edit habit</button></div>
-            <div class="career-habit-controls">
-              <select aria-label="Habit North Star" onchange="linkHabit('${l.block.id}', this.value);renderLinkedHabitsList()" class="career-habit-select text-caption bg-transparent border border-border rounded py-0.5 px-1">
-                <option value="">— Not linked —</option>
-                ${nsOptions}
-              </select>
-            </div>`;
-        } else {
-          row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${escapeHtml(l.block.name)}</span>${l.block.time ? `<span class="text-caption text-text-dim/60">${escapeHtml(l.block.time)}</span>` : ''}</div>`;
-        }
-        list.appendChild(row);
-      });
-      section.appendChild(list);
-    }
-    container.appendChild(section);
-  });
-
-  if (careerEditMode) {
-    const unlinked = appState.settings.scheduleBlocks.filter(b =>
-      !appState.goals.linkedHabits.some(l => l.habitId === b.id)
-    );
-    if (unlinked.length > 0) {
-      const section = document.createElement("div");
-      section.className = "mt-3 pt-2 border-t border-border/50";
-      const header = document.createElement("div");
-      header.className = "flex items-center gap-1.5 mb-1.5";
-      header.innerHTML = `<span class="text-caption font-bold text-text-dim/60">Available Habits</span>`;
-      section.appendChild(header);
-      unlinked.forEach(block => {
-        const row = document.createElement("div");
-        row.className = "career-habit-row py-1.5 px-2 rounded hover:bg-white/[0.02] editing";
-        const nsOptions = appState.goals.northStar.map(n =>
-          `<option value="${n.id}">${escapeHtml(n.title)}</option>`
-        ).join("");
-        row.innerHTML = `<div class="career-habit-meta"><span class="text-xs text-text-dim block">${escapeHtml(block.name)}</span><button class="btn btn-outline" onclick="openHabitEditor('${block.id}')">Edit habit</button></div>
-          <div class="career-habit-controls">
-            <select aria-label="Habit North Star" onchange="linkHabit('${block.id}', this.value);renderLinkedHabitsList()" class="career-habit-select text-caption bg-transparent border border-border rounded py-0.5 px-1">
-              <option value="">— Link to North Star —</option>
-              ${nsOptions}
-            </select>
-          </div>`;
-        section.appendChild(row);
-      });
-      container.appendChild(section);
-    }
-  }
-
-  lucide.createIcons();
+  container.innerHTML = visible.map(g => `<div class="bp-habit-group${g.unlinked ? " is-unlinked" : ""}">
+    <h4 class="bp-habit-group-title">${g.unlinked ? "" : '<i data-lucide="star"></i>'}<span>${escapeHtml(g.title)}</span><span class="bp-count">${g.habits.length}</span></h4>
+    ${g.habits.length ? `<ul class="bp-habit-list">${g.habits.map(habitRow).join("")}</ul>` : '<p class="bp-empty">No habits linked.</p>'}
+  </div>`).join("");
 }
 
 function updateBlockTime(blockId, val) {
@@ -409,6 +300,17 @@ function updateGoalProgress(idx, type, val) {
   goals[idx].completed = goals[idx].target > 0 && goals[idx].progress >= goals[idx].target;
   if (prev < goals[idx].target && goals[idx].progress >= goals[idx].target) celebrate();
   persistState();
+}
+
+function updateGoalTarget(idx, type, val) {
+  const goal = getGoalsByType(type)[idx];
+  const target = Number(val);
+  if (!Number.isFinite(target) || target <= 0) { renderGoalsHub(); return; }
+  goal.target = target;
+  goal.progress = Math.min(goal.progress, target);
+  goal.completed = goal.progress >= target;
+  persistState();
+  renderGoalsHub();
 }
 
 function updateGoalName(idx, type, val) {
