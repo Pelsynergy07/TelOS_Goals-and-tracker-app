@@ -25,20 +25,21 @@ function getCountableDates(dates) {
 function getPeriodStats(dates) {
   const blocks = getLinkedBlocks();
   let done = 0, perfect = 0, moodSum = 0, moodCount = 0, todosDone = 0, todosTotal = 0;
+  let possible = 0;
   dates.forEach(d => {
     const log = appState.logs[d] || {};
-    const dayDone = blocks.filter(b => isBlockCompleted(b, log[b.id])).length;
-    done += dayDone;
-    if (blocks.length && dayDone === blocks.length) perfect++;
+    const tally = getDayTally(d);
+    done += tally.done;
+    possible += tally.expected;
+    if (tally.expected && tally.done === tally.expected) perfect++;
     if (typeof log.feelingScore === "number") { moodSum += log.feelingScore; moodCount++; }
     const todos = getTodos(d).filter(t => !t.movedTo);
     todosTotal += todos.length;
     todosDone += todos.filter(t => t.done).length;
   });
-  const possible = blocks.length * dates.length;
   const habits = blocks.map(b => {
-    const actual = getBlockActual(b.id, dates);
-    return { id: b.id, name: b.name, actual, days: dates.length, pct: dates.length ? Math.round(actual / dates.length * 100) : null, bestStreak: getBestStreakIn(b, dates) };
+    const { actual, days, skipped, pct } = getBlockRate(b.id, dates);
+    return { id: b.id, name: b.name, actual, days, skipped, pct, bestStreak: getBestStreakIn(b, dates) };
   });
   return {
     days: dates.length, done, possible, perfect,
@@ -52,6 +53,7 @@ function getPeriodStats(dates) {
 function getBestStreakIn(block, dates) {
   let best = 0, run = 0;
   dates.forEach(d => {
+    if (isBlockSkipped(block.id, d)) return;
     if (isBlockCompleted(block, appState.logs[d]?.[block.id])) { run++; best = Math.max(best, run); }
     else run = 0;
   });

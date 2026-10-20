@@ -52,18 +52,35 @@ function formatDateLabelShort(dateStr) {
 function getLoggedCompletionRate(dateStr) {
   const dayLog = appState.logs[dateStr];
   if (!dayLog) return 0;
-  let totalItems = 0, completedItems = 0;
-  const blocks = getLinkedBlocks();
-  const checkBlocks = blocks;
-  checkBlocks.forEach(block => {
-    totalItems++;
-    if (isBlockCompleted(block, dayLog[block.id])) completedItems++;
+  const { done, expected } = getDayTally(dateStr);
+  return expected > 0 ? done / expected : 0;
+}
+
+// Habits done vs habits expected on a day; skipped habits are not expected.
+function getDayTally(dateStr) {
+  const dayLog = appState.logs[dateStr] || {};
+  let done = 0, expected = 0, skipped = 0;
+  getLinkedBlocks().forEach(block => {
+    if (dayLog[block.id]?.skipped === true) { skipped++; return; }
+    expected++;
+    if (isBlockCompleted(block, dayLog[block.id])) done++;
   });
-  return totalItems > 0 ? completedItems / totalItems : 0;
+  return { done, expected, skipped };
+}
+
+function isBlockSkipped(blockId, dateStr) {
+  return appState.logs[dateStr]?.[blockId]?.skipped === true;
+}
+
+// Done count and rate for one habit over dates, leaving skipped days out of the total.
+function getBlockRate(blockId, dates) {
+  const days = dates.filter(d => !isBlockSkipped(blockId, d)).length;
+  const actual = getBlockActual(blockId, dates);
+  return { actual, days, skipped: dates.length - days, pct: days ? Math.round(actual / days * 100) : null };
 }
 
 function isBlockCompleted(block, val) {
-  if (!val) return false;
+  if (!val || val.skipped === true) return false;
   if (typeof val.completed === "boolean") return val.completed;
   return block.fields.some(f => {
     if (f.type === "checkbox") return val.completed === true;
@@ -104,12 +121,13 @@ function getBlockStreak(blockId) {
     return isBlockCompleted(block, appState.logs[dateStr]?.[blockId]);
   }
   if (!isBlockLogDone(today)) checkDate = yesterday;
+  // Skipped days neither break nor extend a streak.
   let streak = 0;
-  while (true) {
+  for (let guard = 0; guard < 3660; guard++) {
+    if (isBlockSkipped(blockId, checkDate)) { checkDate = getYesterdayDateString(checkDate); continue; }
     if (!isBlockLogDone(checkDate)) break;
     streak++;
     checkDate = getYesterdayDateString(checkDate);
-    if (streak > 3660) break;
   }
   return streak;
 }
@@ -129,9 +147,13 @@ function calculateWeeklyScore(weekID) {
   if (weekDates.length === 0) return 0;
   let totalScore = 0;
   blocks.forEach(block => {
-    let doneDays = 0;
-    weekDates.forEach(d => { if (isBlockCompleted(block, appState.logs[d]?.[block.id])) doneDays++; });
-    totalScore += Math.min((doneDays / 7) * weightPerBlock, weightPerBlock);
+    let doneDays = 0, skippedDays = 0;
+    weekDates.forEach(d => {
+      if (isBlockSkipped(block.id, d)) skippedDays++;
+      else if (isBlockCompleted(block, appState.logs[d]?.[block.id])) doneDays++;
+    });
+    const target = 7 - skippedDays;
+    totalScore += target > 0 ? Math.min((doneDays / target) * weightPerBlock, weightPerBlock) : weightPerBlock;
   });
   return Math.round(totalScore);
 }

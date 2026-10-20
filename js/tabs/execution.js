@@ -73,8 +73,8 @@ function renderHabitMonthGrids() {
     lucide.createIcons();
     return;
   }
-  const doneCount = blocks.filter(b => isBlockCompleted(b, appState.logs[trackerDate]?.[b.id])).length;
-  if (summary) summary.textContent = `${doneCount} of ${blocks.length} done · ${formatDateLabelShort(trackerDate)}`;
+  const tally = getDayTally(trackerDate);
+  if (summary) summary.textContent = `${tally.done} of ${tally.expected} done${tally.skipped ? ` · ${tally.skipped} skipped` : ""} · ${formatDateLabelShort(trackerDate)}`;
 
   if (compact) {
     blocks.forEach(block => container.appendChild(renderHabitRow(block, container)));
@@ -102,6 +102,7 @@ function renderHabitMonthGrids() {
       const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
       const log = appState.logs[dStr];
       let checked = isBlockCompleted(block, log?.[block.id]);
+      const skipped = isBlockSkipped(block.id, dStr);
       const isToday = dStr === todayStr;
       const isFuture = dStr > todayStr;
 
@@ -109,10 +110,10 @@ function renderHabitMonthGrids() {
       cell.type = "button";
       cell.textContent = i % 5 === 0 ? i : "";
       cell.disabled = isFuture;
-      cell.setAttribute("aria-label", `${block.name}, ${dStr}`);
+      cell.setAttribute("aria-label", `${block.name}, ${dStr}${skipped ? ", skipped" : ""}`);
       cell.setAttribute("aria-pressed", String(checked));
-      cell.className = `habit-month-cell${checked ? ' checked' : ''}${isToday ? ' today' : ''}${isFuture ? ' future' : ''}${dStr === trackerDate && !isToday ? ' tracking' : ''}`;
-      cell.title = isFuture ? `${block.name}: ${dStr} (future dates cannot be marked complete yet)` : `${block.name}: ${dStr}`;
+      cell.className = `habit-month-cell${checked ? ' checked' : ''}${skipped ? ' skipped' : ''}${isToday ? ' today' : ''}${isFuture ? ' future' : ''}${dStr === trackerDate && !isToday ? ' tracking' : ''}`;
+      cell.title = isFuture ? `${block.name}: ${dStr} (future dates cannot be marked complete yet)` : `${block.name}: ${dStr}${skipped ? " (skipped)" : ""}`;
       if (!isFuture) {
         cell.onclick = () => {
           toggleBlockQuickCompletion(dStr, block.id, !checked);
@@ -132,7 +133,7 @@ function renderHabitMonthGrids() {
         <p class="item-heading text-caption font-bold text-text leading-tight">${escapeHtml(block.name)}</p>
         <span class="text-caption text-text-dim">${escapeHtml(block.time || '')}</span>
       </div>
-      <span class="flex items-center gap-1.5 text-sm font-bold" title="Current streak"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span>
+      <span class="habit-card-actions">${makeSkipButtonHtml(block)}<span class="flex items-center gap-1.5 text-sm font-bold" title="Current streak"><i data-lucide="flame" class="w-4 h-4 text-text-dim"></i>${streak}</span></span>
     `;
     card.appendChild(header);
     const handle = makeHabitDragHandle(block);
@@ -168,8 +169,9 @@ function makeHabitDragHandle(block) {
 function renderHabitRow(block, container) {
   const values = appState.logs[trackerDate]?.[block.id] || {};
   const done = isBlockCompleted(block, values);
+  const skipped = values.skipped === true;
   const row = document.createElement("div");
-  row.className = `habit-row habit-sort-card${done ? " is-done" : ""}`;
+  row.className = `habit-row habit-sort-card${done ? " is-done" : ""}${skipped ? " is-skipped" : ""}`;
   row.dataset.habitId = block.id;
 
   const handle = makeHabitDragHandle(block);
@@ -180,12 +182,12 @@ function renderHabitRow(block, container) {
   toggle.className = "habit-row-toggle";
   toggle.setAttribute("role", "checkbox");
   toggle.setAttribute("aria-checked", String(done));
-  toggle.innerHTML = `<span class="habit-row-box" aria-hidden="true"><i data-lucide="check"></i></span>
-    <span class="habit-row-text"><span class="item-heading">${escapeHtml(block.name)}</span>${block.time ? `<span class="habit-row-time">${escapeHtml(block.time)}</span>` : ""}</span>`;
+  toggle.innerHTML = `<span class="habit-row-box" aria-hidden="true"><i data-lucide="${skipped ? "minus" : "check"}"></i></span>
+    <span class="habit-row-text"><span class="item-heading">${escapeHtml(block.name)}</span>${skipped ? `<span class="habit-row-time">Skipped</span>` : block.time ? `<span class="habit-row-time">${escapeHtml(block.time)}</span>` : ""}</span>`;
   toggle.onclick = () => toggleBlockQuickCompletion(trackerDate, block.id, !done);
   row.appendChild(toggle);
 
-  block.fields.filter(f => f.type === "number").forEach(f => {
+  if (!skipped) block.fields.filter(f => f.type === "number").forEach(f => {
     const input = document.createElement("input");
     input.type = "number"; input.min = "0"; input.step = "any";
     input.className = "habit-row-amount";
@@ -195,6 +197,8 @@ function renderHabitRow(block, container) {
     input.onchange = () => saveHabitAmount(trackerDate, block.id, f.id, input.value);
     row.appendChild(input);
   });
+
+  row.insertAdjacentHTML("beforeend", makeSkipButtonHtml(block));
 
   const streak = document.createElement("span");
   streak.className = "habit-row-streak";
@@ -206,6 +210,28 @@ function renderHabitRow(block, container) {
   return row;
 }
 
+// Skip = "not expected today": left out of rates, and streaks carry over it.
+function makeSkipButtonHtml(block) {
+  const skipped = isBlockSkipped(block.id, trackerDate);
+  const day = trackerDate === getLocalDateString() ? "today" : formatDateLabelShort(trackerDate);
+  return `<button type="button" class="habit-skip${skipped ? " is-active" : ""}" aria-pressed="${skipped}" onclick="toggleBlockSkip('${trackerDate}','${block.id}')" title="${skipped ? `Count ${escapeHtml(block.name)} again ${day}` : `Skip ${escapeHtml(block.name)} ${day}. It won't count as missed or break the streak.`}"><i data-lucide="skip-forward" aria-hidden="true"></i><span>${skipped ? "Skipped" : "Skip"}</span></button>`;
+}
+
+function toggleBlockSkip(dateStr, blockId) {
+  if (dateStr > getLocalDateString()) return;
+  const block = appState.settings.scheduleBlocks.find(b => b.id === blockId);
+  if (!block) return;
+  appState.logs[dateStr] ??= {};
+  const entry = appState.logs[dateStr][blockId] ??= {};
+  if (entry.skipped === true) delete entry.skipped;
+  else {
+    entry.skipped = true;
+    entry.completed = false;
+    block.fields.filter(f => f.type === "checkbox").forEach(f => { entry[f.id] = false; });
+  }
+  persistState(); renderAll();
+}
+
 function saveHabitAmount(dateStr, blockId, fieldId, raw) {
   if (dateStr > getLocalDateString()) return;
   const value = raw.trim() === "" ? null : Number(raw);
@@ -214,6 +240,7 @@ function saveHabitAmount(dateStr, blockId, fieldId, raw) {
   appState.logs[dateStr][blockId] ??= {};
   if (value === null) delete appState.logs[dateStr][blockId][fieldId];
   else appState.logs[dateStr][blockId][fieldId] = value;
+  if (value > 0) delete appState.logs[dateStr][blockId].skipped;
   persistState(); renderAll();
 }
 
@@ -330,6 +357,7 @@ function toggleBlockQuickCompletion(dateStr, blockId, checked) {
   if (!block) return;
   appState.logs[dateStr] ??= {};
   appState.logs[dateStr][blockId] ??= {};
+  delete appState.logs[dateStr][blockId].skipped;
   appState.logs[dateStr][blockId].completed = checked;
   block.fields.filter(f => f.type === "checkbox").forEach(f => { appState.logs[dateStr][blockId][f.id] = checked; });
   if (checked) playTapSound();

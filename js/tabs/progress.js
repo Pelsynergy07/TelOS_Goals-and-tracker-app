@@ -209,24 +209,24 @@ function renderReviewMetrics() {
     : "";
 
   container.innerHTML = dayHead + blocks.map(b => {
-    const actual = getBlockActual(b.id, elapsed);
-    const pct = elapsed.length ? Math.round(actual / elapsed.length * 100) : null;
+    const { actual, days, skipped, pct } = getBlockRate(b.id, elapsed);
     const dots = dates.map(d => {
       const done = isBlockCompleted(b, appState.logs[d]?.[b.id]);
-      const state = done ? " is-done" : d > todayStr ? " is-future" : "";
-      return `<span class="matrix-dot${state}${d === selectedReviewDate ? " is-selected" : ""}" title="${formatDateLabelShort(d)}: ${done ? "done" : d > todayStr ? "upcoming" : "missed"}"></span>`;
+      const skip = isBlockSkipped(b.id, d);
+      const state = done ? " is-done" : skip ? " is-skipped" : d > todayStr ? " is-future" : "";
+      return `<span class="matrix-dot${state}${d === selectedReviewDate ? " is-selected" : ""}" title="${formatDateLabelShort(d)}: ${done ? "done" : skip ? "skipped" : d > todayStr ? "upcoming" : "missed"}"></span>`;
     }).join("");
     return `<div class="matrix-row">
       <span class="matrix-name" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
-      <span class="matrix-dots" role="img" aria-label="${escapeHtml(b.name)}: done ${actual} of ${elapsed.length} days so far">${dots}</span>
-      <span class="matrix-score"><strong class="${rateClass(pct)}">${pct === null ? "—" : pct + "%"}</strong><span>${actual}/${elapsed.length}</span>${habitDeltaBadge(b, pct, previous)}</span>
+      <span class="matrix-dots" role="img" aria-label="${escapeHtml(b.name)}: done ${actual} of ${days} days so far${skipped ? `, ${skipped} skipped` : ""}">${dots}</span>
+      <span class="matrix-score"><strong class="${rateClass(pct)}">${pct === null ? "—" : pct + "%"}</strong><span>${actual}/${days}</span>${habitDeltaBadge(b, pct, previous)}</span>
     </div>`;
   }).join("");
 }
 
 function habitDeltaBadge(block, pct, previousDates) {
-  if (pct === null || !previousDates.length) return "";
-  const before = Math.round(getBlockActual(block.id, previousDates) / previousDates.length * 100);
+  const before = getBlockRate(block.id, previousDates).pct;
+  if (pct === null || before === null) return "";
   const delta = pct - before;
   return `<span class="matrix-delta ${delta > 0 ? "text-green" : delta < 0 ? "text-red" : ""}" title="Last ${getPeriodUnit()}: ${before}%">${delta > 0 ? "▲" : delta < 0 ? "▼" : "•"}${Math.abs(delta)}</span>`;
 }
@@ -236,9 +236,13 @@ function habitDeltaBadge(block, pct, previousDates) {
 function getMonthRate(blocks, year, month) {
   const dates = getCountableDates(getMonthDates(year, month));
   if (!dates.length || !blocks.length) return null;
-  let done = 0;
-  dates.forEach(d => { done += blocks.filter(b => isBlockCompleted(b, appState.logs[d]?.[b.id])).length; });
-  return Math.round(done / (dates.length * blocks.length) * 100);
+  let done = 0, expected = 0;
+  dates.forEach(d => blocks.forEach(b => {
+    if (isBlockSkipped(b.id, d)) return;
+    expected++;
+    if (isBlockCompleted(b, appState.logs[d]?.[b.id])) done++;
+  }));
+  return expected ? Math.round(done / expected * 100) : null;
 }
 
 function heatLevel(pct) {
@@ -252,8 +256,7 @@ function renderYearHabitMatrix(container, blocks) {
   container.style.setProperty("--matrix-days", 12);
   const head = `<div class="matrix-row matrix-head" aria-hidden="true"><span></span><span class="matrix-dots">${REVIEW_MONTHS.map(m => `<span class="matrix-day">${m[0]}</span>`).join("")}</span><span></span></div>`;
   container.innerHTML = head + blocks.map(b => {
-    const actual = getBlockActual(b.id, elapsed);
-    const pct = elapsed.length ? Math.round(actual / elapsed.length * 100) : null;
+    const { actual, days, pct } = getBlockRate(b.id, elapsed);
     const cells = REVIEW_MONTHS.map((m, i) => {
       const rate = getMonthRate([b], reviewYear, i);
       return `<span class="matrix-dot year-cell${heatLevel(rate)}${rate === null ? " is-future" : ""}" title="${m}: ${rate === null ? "not tracked" : rate + "%"}"></span>`;
@@ -261,7 +264,7 @@ function renderYearHabitMatrix(container, blocks) {
     return `<div class="matrix-row">
       <span class="matrix-name" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
       <span class="matrix-dots" role="img" aria-label="${escapeHtml(b.name)}: ${pct === null ? "no data" : pct + "% of tracked days"} in ${reviewYear}">${cells}</span>
-      <span class="matrix-score"><strong class="${rateClass(pct)}">${pct === null ? "—" : pct + "%"}</strong><span>${actual}/${elapsed.length}</span>${habitDeltaBadge(b, pct, previous)}</span>
+      <span class="matrix-score"><strong class="${rateClass(pct)}">${pct === null ? "—" : pct + "%"}</strong><span>${actual}/${days}</span>${habitDeltaBadge(b, pct, previous)}</span>
     </div>`;
   }).join("");
 }
@@ -528,9 +531,8 @@ function renderCascadeImpact() {
       linkedHabits.forEach(lh => {
         const block = appState.settings.scheduleBlocks.find(b => b.id === lh.habitId);
         if (!block) return;
-        const completed = getHabitCompletionInPeriod(lh.habitId, elapsed);
-        const pct = elapsed.length ? Math.round(completed / elapsed.length * 100) : null;
-        html += `<div class="cascade-habit"><span>${escapeHtml(block.name)}</span><span class="${rateClass(pct)}">${completed}/${elapsed.length}</span></div>`;
+        const { actual, days, pct } = getBlockRate(lh.habitId, elapsed);
+        html += `<div class="cascade-habit"><span>${escapeHtml(block.name)}</span><span class="${rateClass(pct)}">${actual}/${days}</span></div>`;
       });
       html += `</div>`;
     }
@@ -553,12 +555,13 @@ function renderReviewDayDetails(dateStr) {
   const deadlines = getDeadlinesForDate(dateStr);
   const blocks = getLinkedBlocks();
   const isFuture = dateStr > getLocalDateString();
-  const doneCount = blocks.filter(b => isBlockCompleted(b, log[b.id])).length;
+  const tally = getDayTally(dateStr);
   const moodLabel = {5:"Great",4:"Good",3:"Okay",2:"Rough",1:"Tough"};
 
   const rows = blocks.map(b => {
     const logData = log[b.id] || {};
     const ok = isBlockCompleted(b, logData);
+    if (logData.skipped === true) return `<li class="day-habit is-skipped"><i data-lucide="minus-circle" aria-hidden="true"></i><span>${escapeHtml(b.name)}</span><span class="day-habit-amount">Skipped</span></li>`;
     const amounts = b.fields.filter(f => f.type === "number" && logData[f.id] !== undefined && logData[f.id] !== "").map(f => `${logData[f.id]} ${escapeHtml(f.label || f.id)}`).join(", ");
     return `<li class="day-habit${ok ? " is-done" : ""}"><i data-lucide="${ok ? "check-circle-2" : "circle"}" aria-hidden="true"></i><span>${escapeHtml(b.name)}</span>${amounts ? `<span class="day-habit-amount">${amounts}</span>` : ""}</li>`;
   }).join("");
@@ -575,7 +578,7 @@ function renderReviewDayDetails(dateStr) {
 
   container.innerHTML = `
     <div class="day-details-head">
-      <div><h4>${formattedDayLabel(dateStr)}</h4><span>${isFuture ? "Upcoming" : blocks.length ? `${doneCount} of ${blocks.length} habits done` : ""}</span></div>
+      <div><h4>${formattedDayLabel(dateStr)}</h4><span>${isFuture ? "Upcoming" : blocks.length ? `${tally.done} of ${tally.expected} habits done${tally.skipped ? ` · ${tally.skipped} skipped` : ""}` : ""}</span></div>
       ${isFuture ? "" : `<button onclick="editExecutionDate('${dateStr}')" class="btn btn-outline"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Edit</button>`}
     </div>
     ${blocks.length ? `<ul class="day-habit-list">${rows}</ul>` : '<p class="text-caption text-text-dim">No habits linked yet.</p>'}

@@ -15,7 +15,7 @@ function setup(today = '2026-10-20') {
     localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
     document: { getElementById: () => null },
     lucide: { createIcons() {} }, renderAll() {}, renderTodos() {}, playTapSound() {} });
-  for (const file of ['mockData.js', 'js/config.js', 'js/state.js', 'js/utils.js', 'js/insights.js', 'js/tabs/todos.js', 'js/ai-goal-prompt.js', 'js/ai-goals.js', 'js/desktop.js']) {
+  for (const file of ['mockData.js', 'js/config.js', 'js/state.js', 'js/utils.js', 'js/insights.js', 'js/tabs/todos.js', 'js/tabs/execution.js', 'js/ai-goal-prompt.js', 'js/ai-goals.js', 'js/desktop.js']) {
     vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), ctx);
   }
   vm.runInContext('loadLocalData()', ctx);
@@ -99,4 +99,33 @@ test('backups keep to-dos and reject malformed ones', () => {
   run(`appState.todos = { '2026-10-20': [{ id: 'x', text: 'Keep me', done: true }] }`);
   assert.equal(run(`normalizeBackup(JSON.parse(JSON.stringify(appState))).todos['2026-10-20'][0].text`), 'Keep me');
   assert.throws(() => run(`normalizeBackup({ ...JSON.parse(JSON.stringify(appState)), todos: { '2026-10-20': 'nope' } })`), /todos/);
+});
+
+test('skipped habits leave the total, keep streaks, and allow perfect days', () => {
+  const { run } = setup();
+  // Gym-or-run style: walk on the 18th and 20th, read on the 19th, the other one skipped.
+  run(`appState.logs = {
+    '2026-10-18': { walk: { completed: true }, read: { skipped: true, completed: false } },
+    '2026-10-19': { walk: { skipped: true, completed: false }, read: { completed: true } },
+    '2026-10-20': { walk: { completed: true }, read: { skipped: true, completed: false } } }`);
+  const dates = JSON.stringify(['2026-10-18', '2026-10-19', '2026-10-20']);
+  const stats = JSON.parse(run(`JSON.stringify(getPeriodStats(${dates}))`));
+  assert.equal(stats.overall, 100);
+  assert.equal(stats.perfect, 3);
+  assert.deepEqual(stats.habits.map(h => [h.id, h.actual, h.days, h.pct]), [['walk', 2, 2, 100], ['read', 1, 1, 100]]);
+  assert.equal(run(`getBlockStreak('walk')`), 2, 'skipped day is bridged, not counted');
+  assert.equal(run(`getLoggedCompletionRate('2026-10-19')`), 1);
+  assert.equal(run(`isBlockCompleted(appState.settings.scheduleBlocks[0], { completed: true, skipped: true })`), false);
+});
+
+test('skip toggles on and off, and completing a skipped habit clears the skip', () => {
+  const { run } = setup();
+  run(`toggleBlockSkip('2026-10-20', 'walk')`);
+  assert.equal(run(`isBlockSkipped('walk', '2026-10-20')`), true);
+  run(`toggleBlockQuickCompletion('2026-10-20', 'walk', true)`);
+  assert.equal(run(`isBlockSkipped('walk', '2026-10-20')`), false);
+  assert.equal(run(`getDayTally('2026-10-20').done`), 1);
+  run(`toggleBlockSkip('2026-10-20', 'read'); toggleBlockSkip('2026-10-20', 'read')`);
+  assert.equal(run(`isBlockSkipped('read', '2026-10-20')`), false);
+  assert.equal(run(`toggleBlockSkip('2026-10-21', 'read'); isBlockSkipped('read', '2026-10-21')`), false, 'no skipping future days');
 });
