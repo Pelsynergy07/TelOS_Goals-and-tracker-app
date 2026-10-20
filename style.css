@@ -1503,10 +1503,11 @@ button:focus-visible,summary:focus-visible,a:focus-visible { outline:2px solid v
 }
 
 /* ─── Reorder mode ───────────────────────────────────────── */
-.habit-toolbar-actions { display:flex; align-items:center; gap:8px; }
-.habit-reorder-btn[hidden] { display:none; }
-.habit-reorder-btn { min-height:calc(var(--control-height) + 8px); gap:6px; }
-.habit-reorder-btn.is-active { border-color:rgba(34,211,160,.4); background:rgba(34,211,160,.12); color:var(--green); }
+.habit-reorder-link { display:block; margin:-14px 0 0 auto !important; padding:6px 4px; border:0; background:transparent; color:var(--text-dim); font:inherit; font-size:var(--type-caption); opacity:.7; cursor:pointer; }
+.habit-reorder-link:hover, .habit-reorder-link:focus-visible { opacity:1; color:var(--text); text-decoration:underline; }
+.habit-reorder-link[hidden], .habit-reorder-bar[hidden] { display:none; }
+.habit-reorder-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:6px 6px 6px 14px; border:1px solid rgba(34,211,160,.3); border-radius:var(--control-radius); background:rgba(34,211,160,.06); font-size:var(--type-small); color:var(--text); }
+.habit-reorder-bar .btn { min-height:36px; padding:6px 12px; color:var(--green); border-color:rgba(34,211,160,.4); }
 .habit-cards:not(.is-reordering) .habit-drag-handle { display:none; }
 .habit-cards:not(.is-reordering) .habit-row { padding-left:8px; }
 .habit-cards.is-reordering .habit-sort-card { outline:1px dashed var(--border-hover); outline-offset:-1px; }
@@ -1517,7 +1518,4 @@ button:focus-visible,summary:focus-visible,a:focus-visible { outline:2px solid v
 .habit-cards.is-reordering .habit-details { pointer-events:none; opacity:.55; }
 .habit-sort-card { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
 .habit-sort-card input { -webkit-user-select:text; user-select:text; }
-@media (max-width:480px) {
- .habit-toolbar-actions { width:100%; }
- .habit-toolbar-actions .segmented-control { flex:1; }
-}
+

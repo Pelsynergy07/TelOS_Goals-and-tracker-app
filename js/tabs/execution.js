@@ -157,8 +157,8 @@ function renderHabitMonthGrids() {
 }
 
 // ─── Reorder mode ────────────────────────────────────────
-// Drag handles only show while reordering: the Reorder button toggles it,
-// a long press on a habit starts it on touch screens, and Esc ends it.
+// Drag handles only show while reordering: the "Reorder habits" link under the
+// list or a long press on any habit starts it; Done or Esc ends it.
 
 let habitReorderMode = false;
 const HABIT_LONG_PRESS_MS = 500;
@@ -173,14 +173,11 @@ function setHabitReorder(on) {
 }
 
 function updateReorderButton() {
-  const btn = document.getElementById("habit-reorder-btn");
-  if (!btn) return;
-  btn.classList.toggle("is-active", habitReorderMode);
-  btn.setAttribute("aria-pressed", String(habitReorderMode));
-  btn.hidden = getLinkedBlocks().length < 2;
-  btn.innerHTML = habitReorderMode
-    ? '<i data-lucide="check" aria-hidden="true"></i><span>Done</span>'
-    : '<i data-lucide="arrow-up-down" aria-hidden="true"></i><span>Reorder</span>';
+  const canReorder = getLinkedBlocks().length >= 2;
+  const bar = document.getElementById("habit-reorder-bar");
+  const link = document.getElementById("habit-reorder-link");
+  if (bar) bar.hidden = !(habitReorderMode && canReorder);
+  if (link) link.hidden = habitReorderMode || !canReorder;
 }
 
 // Bound once to the persistent container; rows are re-rendered underneath it.
@@ -190,7 +187,7 @@ function bindHabitLongPress(container) {
   let press = null, swallowClick = false;
   const cancel = () => { if (press) { clearTimeout(press.timer); press = null; } };
   container.addEventListener("pointerdown", event => {
-    if (habitReorderMode || event.pointerType === "mouse" || !event.isPrimary) return;
+    if (habitReorderMode || !event.isPrimary || (event.pointerType === "mouse" && event.button !== 0)) return;
     if (!event.target.closest(".habit-sort-card") || event.target.closest("input, details, summary")) return;
     press = { x: event.clientX, y: event.clientY, timer: setTimeout(() => {
       press = null;
