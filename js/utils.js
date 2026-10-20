@@ -102,9 +102,13 @@ function calculateStreaks() {
   if (sortedDates.length === 0) { updateStreakUI(0); return; }
   const today = getLocalDateString();
   const yesterday = getYesterdayDateString(today);
+  // A day where every habit was skipped carries the streak over without adding to it.
+  const isRestDay = d => { const t = getDayTally(d); return t.expected === 0 && t.skipped > 0; };
   let overallStreak = 0;
-  let checkDate = hadAnyCompletion(today) ? today : yesterday;
-  while (hadAnyCompletion(checkDate)) {
+  let checkDate = hadAnyCompletion(today) || isRestDay(today) ? today : yesterday;
+  for (let guard = 0; guard < 3660; guard++) {
+    if (isRestDay(checkDate)) { checkDate = getYesterdayDateString(checkDate); continue; }
+    if (!hadAnyCompletion(checkDate)) break;
     overallStreak++;
     checkDate = getYesterdayDateString(checkDate);
   }

@@ -129,3 +129,13 @@ test('skip toggles on and off, and completing a skipped habit clears the skip', 
   assert.equal(run(`isBlockSkipped('read', '2026-10-20')`), false);
   assert.equal(run(`toggleBlockSkip('2026-10-21', 'read'); isBlockSkipped('read', '2026-10-21')`), false, 'no skipping future days');
 });
+
+test('a day with every habit skipped keeps the overall day streak alive', () => {
+  const { run } = setup();
+  run(`appState.logs = {
+    '2026-10-18': { walk: { completed: true } },
+    '2026-10-19': { walk: { skipped: true }, read: { skipped: true } },
+    '2026-10-20': { read: { completed: true } } };
+    var shown = null; updateStreakUI = n => { shown = n; }; calculateStreaks();`);
+  assert.equal(run('shown'), 2);
+});
