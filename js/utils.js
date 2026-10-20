@@ -109,7 +109,7 @@ function getBlockStreak(blockId) {
     if (!isBlockLogDone(checkDate)) break;
     streak++;
     checkDate = getYesterdayDateString(checkDate);
-    if (streak > 365) break;
+    if (streak > 3660) break;
   }
   return streak;
 }

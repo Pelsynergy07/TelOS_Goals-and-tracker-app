@@ -12,6 +12,7 @@ function renderToday() {
   if (todayButton) todayButton.hidden = trackerDate === getLocalDateString();
   updateTodayDateHeader();
   calculateStreaks();
+  renderTodos();
   renderHabitMonthGrids();
   renderTodayDeadlines();
   renderAllGoalsCountdown();

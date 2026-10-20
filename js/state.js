@@ -7,6 +7,7 @@
 
 let appState = {
   logs: {},
+  todos: {},
   weeklyReviews: {},
   monthlyReviews: {},
   identityStatement: { title: "Who I Am Becoming", description: "" },
@@ -62,6 +63,7 @@ function loadLocalData() {
       if (!appState.goals.oneMonth) appState.goals.oneMonth = [];
       if (!appState.goals.linkedHabits) appState.goals.linkedHabits = [];
       if (!appState.monthlyReviews) appState.monthlyReviews = {};
+      if (!appState.todos || typeof appState.todos !== "object" || Array.isArray(appState.todos)) appState.todos = {};
       ["yearly", "sixMonth", "threeMonth", "oneMonth"].forEach(level => {
         (appState.goals[level] || []).forEach(goal => {
           if (goal.completed === undefined) goal.completed = false;

@@ -40,6 +40,8 @@ function normalizeBackup(source) {
     next[key] ??= [];
     if (!Array.isArray(next[key]) || next[key].some(v => !record(v))) throw new Error(`Invalid backup: ${key} must be an array of objects.`);
   }
+  next.todos ??= {};
+  if (!record(next.todos) || Object.values(next.todos).some(list => !Array.isArray(list) || list.some(t => !record(t) || typeof t.text !== "string"))) throw new Error("Invalid backup: todos must map dates to task lists.");
   next.identityStatement ??= { title: "Who I Am Becoming", description: "" };
   if (!record(next.identityStatement) || Object.values(next.logs).some(v => !record(v))) throw new Error("Invalid backup content.");
   return next;

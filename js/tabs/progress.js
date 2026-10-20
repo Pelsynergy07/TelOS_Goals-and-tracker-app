@@ -9,8 +9,8 @@ const REVIEW_MONTHS = ["January","February","March","April","May","June","July",
 
 function setReviewTab(tab) {
   reviewTab = tab;
-  if (tab === "weekly" || tab === "monthly") reviewMode = tab;
-  ["weekly", "monthly", "cascade"].forEach(t => {
+  if (tab === "weekly" || tab === "monthly" || tab === "yearly") reviewMode = tab;
+  ["weekly", "monthly", "yearly", "cascade"].forEach(t => {
     const btn = document.getElementById("review-tab-" + t);
     if (btn) {
       btn.className = `segment-button${t === tab ? " is-active" : ""}`;
@@ -38,12 +38,22 @@ function shiftReviewMonth(dir) {
   renderReview();
 }
 
+function shiftReviewYear(dir) {
+  reviewYear += dir;
+  renderReview();
+}
+
 function getPeriodLabel() {
   if (reviewMode === "weekly") {
     const start = getWeekStartDate(reviewWeekId);
     return `${formatDateLabelShort(start)} – ${formatDateLabelShort(getWeekDates(start)[6])}`;
   }
+  if (reviewMode === "yearly") return String(reviewYear);
   return `${REVIEW_MONTHS[reviewMonth]} ${reviewYear}`;
+}
+
+function getPeriodUnit() {
+  return reviewMode === "weekly" ? "week" : reviewMode === "monthly" ? "month" : "year";
 }
 
 // Rate colour: judged against days that have actually elapsed, not the whole period.
@@ -56,26 +66,35 @@ function renderReview() {
   const periodSelector = document.getElementById("review-period-selector");
   if (!periodSelector) return;
 
-  const isPeriodView = reviewTab === "weekly" || reviewTab === "monthly";
-  const shift = reviewMode === "weekly" ? "shiftReviewWeek" : "shiftReviewMonth";
+  const isPeriodView = reviewTab !== "cascade";
+  const shift = reviewMode === "weekly" ? "shiftReviewWeek" : reviewMode === "monthly" ? "shiftReviewMonth" : "shiftReviewYear";
   periodSelector.innerHTML = `
     <button aria-label="Previous period" onclick="${shift}(-1)" class="icon-button"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
     <span class="period-label">${getPeriodLabel()}</span>
     <button aria-label="Next period" onclick="${shift}(1)" class="icon-button"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>`;
 
-  ["review-summary", "review-calendar-section", "period-reflection"].forEach(id => {
+  ["review-summary", "review-insights", "review-calendar-section"].forEach(id => {
     document.getElementById(id)?.classList.toggle("hidden", !isPeriodView);
   });
+  document.getElementById("period-reflection")?.classList.toggle("hidden", !isPeriodView || reviewMode === "yearly");
+  document.getElementById("review-year-card")?.classList.toggle("hidden", !isPeriodView || reviewMode !== "yearly");
+  document.querySelector("#review-metrics-section .review-legend")?.classList.toggle("hidden", reviewMode === "yearly");
   document.getElementById("review-cascade-card")?.classList.toggle("hidden", isPeriodView);
 
   if (isPeriodView) {
     const period = getPeriodDates();
     if (!period.includes(selectedReviewDate)) selectedReviewDate = period.includes(getLocalDateString()) ? getLocalDateString() : period[0];
     renderReviewSummary();
+    renderReviewInsights();
     renderReviewMetrics();
-    renderReviewCalendar();
-    renderReviewDayDetails(selectedReviewDate);
-    renderPeriodReflection();
+    if (reviewMode === "yearly") {
+      renderYearMonths();
+      renderYearHeatmap();
+    } else {
+      renderReviewCalendar();
+      renderReviewDayDetails(selectedReviewDate);
+      renderPeriodReflection();
+    }
   } else {
     renderCascadeImpact();
   }
@@ -83,8 +102,27 @@ function renderReview() {
 }
 
 function getElapsedPeriodDates() {
-  const todayStr = getLocalDateString();
-  return getPeriodDates().filter(d => d <= todayStr);
+  return getCountableDates(getPeriodDates());
+}
+
+function getPreviousPeriodDates() {
+  const dates = getPeriodDates();
+  if (reviewMode === "weekly") return getWeekDates(addDateDays(dates[0], -7));
+  if (reviewMode === "yearly") return getYearDates(reviewYear - 1);
+  const year = reviewMonth === 0 ? reviewYear - 1 : reviewYear;
+  const month = reviewMonth === 0 ? 11 : reviewMonth - 1;
+  return getMonthDates(year, month);
+}
+
+// Stats for the shown period and the one before it (null when nothing was tracked then).
+function getPeriodComparison() {
+  const currentDates = getElapsedPeriodDates();
+  const previousDates = getCountableDates(getPreviousPeriodDates());
+  return {
+    currentDates,
+    current: getPeriodStats(currentDates),
+    previous: previousDates.length ? getPeriodStats(previousDates) : null
+  };
 }
 
 function renderReviewSummary() {
@@ -93,25 +131,53 @@ function renderReviewSummary() {
   const blocks = getLinkedBlocks();
   if (blocks.length === 0) { container.innerHTML = ""; container.classList.add("hidden"); return; }
 
-  const elapsed = getElapsedPeriodDates();
-  const possible = blocks.length * elapsed.length;
-  let done = 0, perfect = 0;
-  elapsed.forEach(d => {
-    const dayDone = blocks.filter(b => isBlockCompleted(b, appState.logs[d]?.[b.id])).length;
-    done += dayDone;
-    if (dayDone === blocks.length) perfect++;
-  });
-  const rates = blocks.map(b => ({ name: b.name, pct: elapsed.length ? Math.round(getBlockActual(b.id, elapsed) / elapsed.length * 100) : null }));
-  const ranked = rates.filter(r => r.pct !== null).sort((a, b) => b.pct - a.pct);
-  const overall = possible ? Math.round(done / possible * 100) : null;
+  const { current, previous } = getPeriodComparison();
+  const unit = getPeriodUnit();
+  const ranked = current.habits.filter(r => r.pct !== null).sort((a, b) => b.pct - a.pct);
+  const vs = (now, before) => previous && now !== null && before !== null ? `<span class="${now > before ? "text-green" : now < before ? "text-red" : ""}">${formatDelta(now - before)}</span> vs last ${unit}` : "";
+  const todoPct = current.todosTotal ? Math.round(current.todosDone / current.todosTotal * 100) : null;
 
   const tile = (label, value, sub, cls = "") => `<div class="summary-tile"><span class="summary-label">${label}</span><span class="summary-value ${cls}">${value}</span><span class="summary-sub">${sub}</span></div>`;
   container.innerHTML = [
-    tile("Completion", overall === null ? "—" : overall + "%", overall === null ? "Period hasn't started" : `${done} of ${possible} check-ins`, rateClass(overall)),
-    tile("Perfect days", elapsed.length ? `${perfect}/${elapsed.length}` : "—", "All habits done"),
+    tile("Completion", current.overall === null ? "—" : current.overall + "%", current.overall === null ? "Period hasn't started" : vs(current.overall, previous?.overall ?? null) || `${current.done} of ${current.possible} check-ins`, rateClass(current.overall)),
+    tile("Perfect days", current.days ? `${current.perfect}/${current.days}` : "—", previous ? `${formatDelta(current.perfect - previous.perfect, "")} vs last ${unit}` : "All habits done"),
     tile("Strongest", ranked[0] ? escapeHtml(ranked[0].name) : "—", ranked[0] ? `${ranked[0].pct}% of days` : "No data yet"),
-    tile("Needs focus", ranked.length > 1 ? escapeHtml(ranked.at(-1).name) : "—", ranked.length > 1 ? `${ranked.at(-1).pct}% of days` : "No data yet", ranked.length > 1 ? rateClass(ranked.at(-1).pct) : "")
+    tile("Needs focus", ranked.length > 1 ? escapeHtml(ranked.at(-1).name) : "—", ranked.length > 1 ? `${ranked.at(-1).pct}% of days` : "No data yet", ranked.length > 1 ? rateClass(ranked.at(-1).pct) : ""),
+    tile("To-dos", current.todosTotal ? `${current.todosDone}/${current.todosTotal}` : "—", todoPct === null ? "None added" : previous?.todosTotal ? `${todoPct}% done · ${formatDelta(todoPct - Math.round(previous.todosDone / previous.todosTotal * 100))}` : `${todoPct}% done`),
+    tile("Avg mood", moodLabel(current.mood), current.moodCount ? (previous?.mood != null ? (Math.abs(current.mood - previous.mood) < 0.25 ? `Steady vs last ${unit}` : moodLabel(current.mood) === moodLabel(previous.mood) ? `Slightly ${current.mood > previous.mood ? "higher" : "lower"} than last ${unit}` : `${current.mood > previous.mood ? "Up" : "Down"} from ${moodLabel(previous.mood)}`) : `${current.moodCount} days logged`) : "Not logged")
   ].join("");
+}
+
+function renderReviewInsights() {
+  const container = document.getElementById("review-insights");
+  if (!container) return;
+  if (getLinkedBlocks().length === 0) { container.innerHTML = ""; container.classList.add("hidden"); return; }
+  const { current, previous, currentDates } = getPeriodComparison();
+  const unit = getPeriodUnit();
+  const todayStr = getLocalDateString();
+  // Weekly views are too short for weekday patterns, so look back four weeks.
+  const patternDates = reviewMode === "weekly"
+    ? getCountableDates(Array.from({ length: 28 }, (_, i) => addDateDays(currentDates.at(-1) || todayStr, -i)))
+    : currentDates;
+  const { working, focus } = current.days ? buildInsights({ current, previous, unit, patternDates, todayStr }) : { working: [], focus: [] };
+
+  const item = i => `<li><i data-lucide="${i.icon}" aria-hidden="true"></i><span>${escapeHtml(i.text)}</span></li>`;
+  const wins = currentDates.filter(d => appState.logs[d]?.biggestWin || appState.logs[d]?.biggestLearning);
+  const notes = wins.map(d => {
+    const log = appState.logs[d];
+    return `<li><span class="insight-note-date">${formattedDayLabel(d)}</span>${log.biggestWin ? `<span><strong>Win</strong> ${escapeHtml(log.biggestWin)}</span>` : ""}${log.biggestLearning ? `<span><strong>Learned</strong> ${escapeHtml(log.biggestLearning)}</span>` : ""}</li>`;
+  }).reverse().join("");
+
+  container.innerHTML = `
+    <div class="review-card-head">
+      <h3 class="review-card-title">Insights</h3>
+      <span class="text-caption text-text-dim">${!previous ? `No data for last ${unit} yet` : current.days < MIN_TREND_DAYS ? `Trends vs last ${unit} appear after ${MIN_TREND_DAYS} days` : `Compared with last ${unit}`}</span>
+    </div>
+    ${current.days ? `<div class="insight-columns">
+      <section><h4 class="insight-heading text-green">What's working</h4>${working.length ? `<ul class="insight-list">${working.map(item).join("")}</ul>` : `<p class="insight-empty">Keep logging. Wins will show up here.</p>`}</section>
+      <section><h4 class="insight-heading text-amber">Focus next</h4>${focus.length ? `<ul class="insight-list">${focus.map(item).join("")}</ul>` : `<p class="insight-empty">Nothing is slipping. Keep the rhythm going.</p>`}</section>
+    </div>` : `<p class="insight-empty">This ${unit} hasn't started yet.</p>`}
+    ${notes ? `<details class="insight-notes"><summary>Wins & learnings this ${unit} <span class="text-text-dim">(${wins.length})</span><i data-lucide="chevron-down" aria-hidden="true"></i></summary><ul>${notes}</ul></details>` : ""}`;
 }
 
 // Habit × day matrix: replaces the old "Goal vs Actual" tiles.
@@ -129,9 +195,11 @@ function renderReviewMetrics() {
     return;
   }
 
+  if (reviewMode === "yearly") { renderYearHabitMatrix(container, blocks); return; }
   const todayStr = getLocalDateString();
   const dates = getPeriodDates();
-  const elapsed = dates.filter(d => d <= todayStr);
+  const elapsed = getElapsedPeriodDates();
+  const previous = getCountableDates(getPreviousPeriodDates());
   const weekly = reviewMode === "weekly";
   container.classList.toggle("is-monthly", !weekly);
   container.style.setProperty("--matrix-days", dates.length);
@@ -151,9 +219,110 @@ function renderReviewMetrics() {
     return `<div class="matrix-row">
       <span class="matrix-name" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
       <span class="matrix-dots" role="img" aria-label="${escapeHtml(b.name)}: done ${actual} of ${elapsed.length} days so far">${dots}</span>
-      <span class="matrix-score"><strong class="${rateClass(pct)}">${pct === null ? "—" : pct + "%"}</strong><span>${actual}/${elapsed.length}</span></span>
+      <span class="matrix-score"><strong class="${rateClass(pct)}">${pct === null ? "—" : pct + "%"}</strong><span>${actual}/${elapsed.length}</span>${habitDeltaBadge(b, pct, previous)}</span>
     </div>`;
   }).join("");
+}
+
+function habitDeltaBadge(block, pct, previousDates) {
+  if (pct === null || !previousDates.length) return "";
+  const before = Math.round(getBlockActual(block.id, previousDates) / previousDates.length * 100);
+  const delta = pct - before;
+  return `<span class="matrix-delta ${delta > 0 ? "text-green" : delta < 0 ? "text-red" : ""}" title="Last ${getPeriodUnit()}: ${before}%">${delta > 0 ? "▲" : delta < 0 ? "▼" : "•"}${Math.abs(delta)}</span>`;
+}
+
+// ─── Year view ───────────────────────────────────────────
+
+function getMonthRate(blocks, year, month) {
+  const dates = getCountableDates(getMonthDates(year, month));
+  if (!dates.length || !blocks.length) return null;
+  let done = 0;
+  dates.forEach(d => { done += blocks.filter(b => isBlockCompleted(b, appState.logs[d]?.[b.id])).length; });
+  return Math.round(done / (dates.length * blocks.length) * 100);
+}
+
+function heatLevel(pct) {
+  return pct === null ? "" : pct >= 80 ? " heat-3" : pct >= 50 ? " heat-2" : pct > 0 ? " heat-1" : " heat-0";
+}
+
+function renderYearHabitMatrix(container, blocks) {
+  const elapsed = getElapsedPeriodDates();
+  const previous = getCountableDates(getPreviousPeriodDates());
+  container.classList.add("is-monthly");
+  container.style.setProperty("--matrix-days", 12);
+  const head = `<div class="matrix-row matrix-head" aria-hidden="true"><span></span><span class="matrix-dots">${REVIEW_MONTHS.map(m => `<span class="matrix-day">${m[0]}</span>`).join("")}</span><span></span></div>`;
+  container.innerHTML = head + blocks.map(b => {
+    const actual = getBlockActual(b.id, elapsed);
+    const pct = elapsed.length ? Math.round(actual / elapsed.length * 100) : null;
+    const cells = REVIEW_MONTHS.map((m, i) => {
+      const rate = getMonthRate([b], reviewYear, i);
+      return `<span class="matrix-dot year-cell${heatLevel(rate)}${rate === null ? " is-future" : ""}" title="${m}: ${rate === null ? "not tracked" : rate + "%"}"></span>`;
+    }).join("");
+    return `<div class="matrix-row">
+      <span class="matrix-name" title="${escapeHtml(b.name)}">${escapeHtml(b.name)}</span>
+      <span class="matrix-dots" role="img" aria-label="${escapeHtml(b.name)}: ${pct === null ? "no data" : pct + "% of tracked days"} in ${reviewYear}">${cells}</span>
+      <span class="matrix-score"><strong class="${rateClass(pct)}">${pct === null ? "—" : pct + "%"}</strong><span>${actual}/${elapsed.length}</span>${habitDeltaBadge(b, pct, previous)}</span>
+    </div>`;
+  }).join("");
+}
+
+function renderYearMonths() {
+  const weekdays = document.getElementById("review-weekday-labels");
+  const container = document.getElementById("review-calendar-days-container");
+  const details = document.getElementById("review-selected-day-details");
+  if (weekdays) weekdays.innerHTML = "";
+  if (details) details.innerHTML = "";
+  if (!container) return;
+  container.classList.add("is-year");
+  const blocks = getLinkedBlocks();
+  const thisMonth = getLocalDateString().slice(0, 7);
+  container.innerHTML = `<h3 class="review-card-title year-months-title">Months</h3>` + REVIEW_MONTHS.map((m, i) => {
+    const rate = getMonthRate(blocks, reviewYear, i);
+    const key = `${reviewYear}-${String(i + 1).padStart(2, "0")}`;
+    return `<button type="button" class="year-month${key === thisMonth ? " is-today" : ""}" onclick="openReviewMonth(${i})" ${rate === null ? "disabled" : ""}>
+      <span class="year-month-name">${m.slice(0, 3)}</span>
+      <span class="year-month-bar"><span style="width:${rate || 0}%"></span></span>
+      <span class="year-month-pct ${rateClass(rate)}">${rate === null ? "—" : rate + "%"}</span>
+    </button>`;
+  }).join("");
+}
+
+function openReviewMonth(month) {
+  reviewMonth = month;
+  reviewWeekId = getWeekID(`${reviewYear}-${String(month + 1).padStart(2, "0")}-01`);
+  setReviewTab("monthly");
+}
+
+// GitHub-style grid: one column per week, Monday at the top.
+function renderYearHeatmap() {
+  const container = document.getElementById("review-year-heatmap");
+  if (!container) return;
+  const todayStr = getLocalDateString();
+  const dates = getYearDates(reviewYear);
+  const lead = (parseLocalDate(dates[0]).getDay() + 6) % 7;
+  let cells = Array.from({ length: lead }, () => `<span class="year-day is-blank"></span>`).join("");
+  cells += dates.map(d => {
+    const counted = getCountableDates([d]).length > 0;
+    const rate = counted ? Math.round(getLoggedCompletionRate(d) * 100) : null;
+    const todos = getCountedTodos(d);
+    const label = `${formattedDayLabel(d)}: ${rate === null ? (d > todayStr ? "upcoming" : "not tracked") : rate + "% of habits"}${todos.length ? `, ${todos.filter(t => t.done).length}/${todos.length} to-dos` : ""}`;
+    return `<button type="button" class="year-day${heatLevel(rate)}${d === todayStr ? " is-today" : ""}" title="${label}" aria-label="${label}" ${rate === null ? "disabled" : ""} onclick="openReviewDay('${d}')"></button>`;
+  }).join("");
+  const monthLabels = REVIEW_MONTHS.map((m, i) => {
+    const first = `${reviewYear}-${String(i + 1).padStart(2, "0")}-01`;
+    const col = Math.floor((lead + dates.indexOf(first)) / 7) + 1;
+    return `<span style="grid-column:${col}">${m.slice(0, 3)}</span>`;
+  }).join("");
+  container.innerHTML = `<div class="year-heatmap-scroll"><div class="year-heatmap-months" aria-hidden="true">${monthLabels}</div><div class="year-heatmap-grid">${cells}</div></div>`;
+}
+
+function openReviewDay(dateStr) {
+  const d = parseLocalDate(dateStr);
+  reviewWeekId = getWeekID(dateStr);
+  reviewMonth = d.getMonth();
+  reviewYear = d.getFullYear();
+  selectedReviewDate = dateStr;
+  setReviewTab("weekly");
 }
 
 function renderReviewCalendar() {
@@ -164,6 +333,7 @@ function renderReviewCalendar() {
   const weekly = reviewMode === "weekly";
   const labels = weekly ? ["M","T","W","T","F","S","S"] : ["S","M","T","W","T","F","S"];
   if (weekdays) weekdays.innerHTML = labels.map(d => `<span>${d}</span>`).join("");
+  container.classList.remove("is-year");
 
   let html = "";
   if (!weekly) {
@@ -189,12 +359,17 @@ function selectReviewDay(dateStr) {
 
 function getPeriodDates() {
   if (reviewMode === "weekly") return getWeekDates(getWeekStartDate(reviewWeekId));
-  const daysInMonth = new Date(reviewYear, reviewMonth + 1, 0).getDate();
-  const dates = [];
-  for (let i = 1; i <= daysInMonth; i++) {
-    dates.push(`${reviewYear}-${String(reviewMonth + 1).padStart(2,'0')}-${String(i).padStart(2,'0')}`);
-  }
-  return dates;
+  if (reviewMode === "yearly") return getYearDates(reviewYear);
+  return getMonthDates(reviewYear, reviewMonth);
+}
+
+function getMonthDates(year, month) {
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  return Array.from({ length: daysInMonth }, (_, i) => `${year}-${String(month + 1).padStart(2,'0')}-${String(i + 1).padStart(2,'0')}`);
+}
+
+function getYearDates(year) {
+  return Array.from({ length: 12 }, (_, m) => getMonthDates(year, m)).flat();
 }
 
 function getHabitCompletionInPeriod(blockId, dates) {
@@ -388,6 +563,10 @@ function renderReviewDayDetails(dateStr) {
     return `<li class="day-habit${ok ? " is-done" : ""}"><i data-lucide="${ok ? "check-circle-2" : "circle"}" aria-hidden="true"></i><span>${escapeHtml(b.name)}</span>${amounts ? `<span class="day-habit-amount">${amounts}</span>` : ""}</li>`;
   }).join("");
 
+  const todos = getTodos(dateStr);
+  const todoRows = todos.map(t => `<li class="day-habit${t.done ? " is-done" : ""}"><i data-lucide="${t.movedTo ? "arrow-right" : t.done ? "check-square" : "square"}" aria-hidden="true"></i><span>${escapeHtml(t.text)}</span>${t.movedTo ? `<span class="day-habit-amount">Moved to ${formatDateLabelShort(t.movedTo)}</span>` : ""}</li>`).join("");
+  const counted = todos.filter(t => !t.movedTo);
+
   const notes = [
     log.feelingScore ? `<div><dt>Mood</dt><dd>${moodLabel[log.feelingScore] || log.feelingScore}</dd></div>` : "",
     log.biggestWin ? `<div><dt>Win</dt><dd>${escapeHtml(log.biggestWin)}</dd></div>` : "",
@@ -400,6 +579,7 @@ function renderReviewDayDetails(dateStr) {
       ${isFuture ? "" : `<button onclick="editExecutionDate('${dateStr}')" class="btn btn-outline"><i data-lucide="pencil" class="w-3.5 h-3.5"></i> Edit</button>`}
     </div>
     ${blocks.length ? `<ul class="day-habit-list">${rows}</ul>` : '<p class="text-caption text-text-dim">No habits linked yet.</p>'}
+    ${todos.length ? `<div class="day-todos"><span class="cascade-section-label">To-dos · ${counted.filter(t => t.done).length} of ${counted.length} done</span><ul class="day-habit-list">${todoRows}</ul></div>` : ""}
     ${notes ? `<dl class="day-notes">${notes}</dl>` : ""}
     ${deadlines.length ? `<div class="day-deadlines"><span class="cascade-section-label text-red">Checkpoints due</span><ul>${deadlines.map(d => `<li>${escapeHtml(d.name)} (${d.target} ${escapeHtml(d.unit || "")})</li>`).join("")}</ul></div>` : ""}`;
 }

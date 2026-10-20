@@ -3,6 +3,7 @@
 
 const initialMockData = {
   logs: {},
+  todos: {},
   weeklyReviews: {},
   monthlyReviews: {},
 

@@ -15,6 +15,18 @@ function renderSettings() {
   } else {
     updateSyncStatusBadge(!!dbClient && hasCreds && !syncError, syncError ? (syncConflict ? "Conflict" : "Sync failed") : undefined);
   }
+  renderDataHistory();
+}
+
+// History is never pruned; show how much is kept so long-term review feels safe.
+function renderDataHistory() {
+  const el = document.getElementById("data-history");
+  if (!el) return;
+  const start = getTrackingStart();
+  if (!start) { el.textContent = "Your history is kept indefinitely. Nothing is deleted unless you reset it."; return; }
+  const days = Object.keys(appState.logs).length;
+  const kb = Math.max(1, Math.round(JSON.stringify(appState).length / 1024));
+  el.textContent = `History since ${formatDateLabelShort(start)}, ${parseLocalDate(start).getFullYear()}: ${days} logged ${days === 1 ? "day" : "days"}, about ${kb} KB. Nothing is deleted automatically; export a JSON backup now and then for safekeeping.`;
 }
 
 // ─── Supabase Connection ──────────────────────────────────

@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=23">
+  <link rel="stylesheet" href="style.css?v=24">
 </head>
 <body>
 
@@ -138,6 +138,20 @@
       </div>
     </details>
 
+    <!-- Daily to-dos -->
+    <div class="card todo-card" id="today-todos">
+      <div class="todo-head">
+        <h3 class="habit-toolbar-title">To-do</h3>
+        <span id="todo-summary" class="habit-day-summary"></span>
+      </div>
+      <div id="todo-carry" class="todo-carry" hidden></div>
+      <ul id="todo-list" class="todo-list" hidden></ul>
+      <form class="todo-form" onsubmit="submitTodo(event)">
+        <input id="todo-input" type="text" maxlength="200" autocomplete="off" placeholder="Add a task for today…" aria-label="New to-do">
+        <button type="submit" class="btn btn-outline" aria-label="Add to-do"><i data-lucide="plus" aria-hidden="true"></i><span>Add</span></button>
+      </form>
+    </div>
+
     <!-- Habit month grids -->
     <div class="habit-toolbar">
       <div class="habit-toolbar-text">
@@ -224,6 +238,7 @@
       <div class="segmented-control" role="group" aria-label="Progress view">
         <button onclick="setReviewTab('weekly')" id="review-tab-weekly" class="segment-button is-active" aria-pressed="true">Weekly</button>
         <button onclick="setReviewTab('monthly')" id="review-tab-monthly" class="segment-button" aria-pressed="false">Monthly</button>
+        <button onclick="setReviewTab('yearly')" id="review-tab-yearly" class="segment-button" aria-pressed="false">Year</button>
         <button onclick="setReviewTab('cascade')" id="review-tab-cascade" class="segment-button" aria-pressed="false">Cascade</button>
       </div>
       <!-- Period selector (shown for weekly/monthly) -->
@@ -232,6 +247,9 @@
 
     <!-- Period summary (weekly/monthly only) -->
     <div id="review-summary" class="review-summary" aria-live="polite"></div>
+
+    <!-- Insights: trends vs last period and what to focus on -->
+    <div id="review-insights" class="card insights-card"></div>
 
     <!-- Habits + Day panel (weekly/monthly only) -->
     <div class="review-period-layout" id="review-calendar-section">
@@ -247,6 +265,15 @@
         <div class="review-mini-calendar" id="review-calendar-days-container"></div>
         <div id="review-selected-day-details" class="review-day-details"></div>
       </div>
+    </div>
+
+    <!-- Year at a glance (year tab only) -->
+    <div class="card hidden" id="review-year-card">
+      <div class="review-card-head">
+        <h3 class="review-card-title">Year at a glance</h3>
+        <span class="review-legend">Less<span class="year-day heat-1"></span><span class="year-day heat-2"></span><span class="year-day heat-3"></span>More</span>
+      </div>
+      <div id="review-year-heatmap"></div>
     </div>
 
     <!-- Cascade Impact (cascade tab only) -->
@@ -327,6 +354,7 @@
       <div class="space-y-6">
         <div class="card">
           <div class="card-header">Backup</div>
+          <p id="data-history" class="text-xs text-text-dim leading-relaxed mb-3"></p>
           <div class="space-y-2">
             <button onclick="exportDataJSON()" class="btn btn-outline w-full justify-between">
               <span class="flex items-center gap-2"><i data-lucide="file-json" class="w-4 h-4 text-blue"></i> Export JSON</span>
@@ -570,18 +598,20 @@ create policy "TelOS update" on public.life_os_sync
   </div>
 </div>
 
-<script src="mockData.js?v=21"></script>
+<script src="mockData.js?v=22"></script>
 <script src="js/config.js?v=22"></script>
-<script src="js/state.js?v=22"></script>
-<script src="js/utils.js?v=21"></script>
-<script src="js/tabs/execution.js?v=27"></script>
-<script src="js/tabs/progress.js?v=24"></script>
+<script src="js/state.js?v=23"></script>
+<script src="js/utils.js?v=22"></script>
+<script src="js/insights.js?v=2"></script>
+<script src="js/tabs/execution.js?v=28"></script>
+<script src="js/tabs/todos.js?v=2"></script>
+<script src="js/tabs/progress.js?v=26"></script>
 <script src="js/tabs/blueprint.js?v=24"></script>
-<script src="js/tabs/system.js?v=22"></script>
+<script src="js/tabs/system.js?v=23"></script>
 <script src="js/tabs/constitution.js?v=22"></script>
 <script src="js/ai-goal-prompt.js?v=21"></script>
 <script src="js/ai-goals.js?v=22"></script>
-<script src="js/desktop.js?v=24"></script>
+<script src="js/desktop.js?v=25"></script>
 <script src="app.js?v=23"></script>
 </body>
 </html>
