@@ -32,7 +32,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=26">
+  <link rel="stylesheet" href="style.css?v=27">
 </head>
 <body>
 
@@ -158,9 +158,12 @@
         <h3 class="habit-toolbar-title">Habits</h3>
         <span id="habit-day-summary" class="habit-day-summary"></span>
       </div>
+      <div class="habit-toolbar-actions">
+      <button type="button" id="habit-reorder-btn" class="btn btn-outline habit-reorder-btn" onclick="setHabitReorder(!habitReorderMode)" aria-pressed="false" title="Reorder habits (on a phone, you can also press and hold a habit)"><i data-lucide="arrow-up-down" aria-hidden="true"></i><span>Reorder</span></button>
       <div class="segmented-control" role="group" aria-label="Habit layout">
         <button type="button" id="habit-view-compact" class="segment-button" onclick="setHabitView('compact')" aria-pressed="false"><i data-lucide="list-checks" aria-hidden="true"></i><span>Condensed</span></button>
         <button type="button" id="habit-view-expanded" class="segment-button" onclick="setHabitView('expanded')" aria-pressed="false"><i data-lucide="layout-grid" aria-hidden="true"></i><span>Expanded</span></button>
+      </div>
       </div>
     </div>
     <span id="habit-order-status" class="sr-only" role="status" aria-live="polite"></span>
@@ -603,7 +606,7 @@ create policy "TelOS update" on public.life_os_sync
 <script src="js/state.js?v=23"></script>
 <script src="js/utils.js?v=24"></script>
 <script src="js/insights.js?v=3"></script>
-<script src="js/tabs/execution.js?v=30"></script>
+<script src="js/tabs/execution.js?v=31"></script>
 <script src="js/tabs/todos.js?v=2"></script>
 <script src="js/tabs/progress.js?v=27"></script>
 <script src="js/tabs/blueprint.js?v=24"></script>
@@ -612,6 +615,6 @@ create policy "TelOS update" on public.life_os_sync
 <script src="js/ai-goal-prompt.js?v=21"></script>
 <script src="js/ai-goals.js?v=22"></script>
 <script src="js/desktop.js?v=25"></script>
-<script src="app.js?v=23"></script>
+<script src="app.js?v=24"></script>
 </body>
 </html>

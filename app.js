@@ -84,6 +84,7 @@ function applyPageCopy() {
 
 function switchTab(tabName) {
   activeTab = tabName;
+  if (tabName !== "today") habitReorderMode = false;
   const tabs = ["today", "review", "constitution", "career", "settings"];
   tabs.forEach(t => {
     const sec = document.getElementById(`tab-${t}`);

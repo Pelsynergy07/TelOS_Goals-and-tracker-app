@@ -51,7 +51,9 @@ function renderHabitMonthGrids() {
   const today = parseLocalDate(trackerDate || todayStr);
   const view = getHabitView();
   const compact = view === "compact";
-  container.className = `habit-cards ${compact ? "is-compact" : "is-expanded"}`;
+  container.className = `habit-cards ${compact ? "is-compact" : "is-expanded"}${habitReorderMode ? " is-reordering" : ""}`;
+  bindHabitLongPress(container);
+  updateReorderButton();
   ["compact", "expanded"].forEach(v => {
     const btn = document.getElementById(`habit-view-${v}`);
     if (btn) { btn.classList.toggle("is-active", v === view); btn.setAttribute("aria-pressed", String(v === view)); }
@@ -153,6 +155,69 @@ function renderHabitMonthGrids() {
   });
   lucide.createIcons();
 }
+
+// ─── Reorder mode ────────────────────────────────────────
+// Drag handles only show while reordering: the Reorder button toggles it,
+// a long press on a habit starts it on touch screens, and Esc ends it.
+
+let habitReorderMode = false;
+const HABIT_LONG_PRESS_MS = 500;
+
+function setHabitReorder(on) {
+  if (habitReorderMode === on) return;
+  habitReorderMode = on;
+  const status = document.getElementById("habit-order-status");
+  if (status) status.textContent = on ? "Reorder mode on. Drag the handles, then press Done." : "Reorder mode off.";
+  renderHabitMonthGrids();
+  if (on) document.querySelector("#today-habit-cards-container .habit-drag-handle")?.focus({ preventScroll: true });
+}
+
+function updateReorderButton() {
+  const btn = document.getElementById("habit-reorder-btn");
+  if (!btn) return;
+  btn.classList.toggle("is-active", habitReorderMode);
+  btn.setAttribute("aria-pressed", String(habitReorderMode));
+  btn.hidden = getLinkedBlocks().length < 2;
+  btn.innerHTML = habitReorderMode
+    ? '<i data-lucide="check" aria-hidden="true"></i><span>Done</span>'
+    : '<i data-lucide="arrow-up-down" aria-hidden="true"></i><span>Reorder</span>';
+}
+
+// Bound once to the persistent container; rows are re-rendered underneath it.
+function bindHabitLongPress(container) {
+  if (container.dataset.longPressBound) return;
+  container.dataset.longPressBound = "true";
+  let press = null, swallowClick = false;
+  const cancel = () => { if (press) { clearTimeout(press.timer); press = null; } };
+  container.addEventListener("pointerdown", event => {
+    if (habitReorderMode || event.pointerType === "mouse" || !event.isPrimary) return;
+    if (!event.target.closest(".habit-sort-card") || event.target.closest("input, details, summary")) return;
+    press = { x: event.clientX, y: event.clientY, timer: setTimeout(() => {
+      press = null;
+      swallowClick = true;
+      navigator.vibrate?.(15);
+      setHabitReorder(true);
+    }, HABIT_LONG_PRESS_MS) };
+  });
+  container.addEventListener("pointermove", event => {
+    if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > 8) cancel();
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(type => container.addEventListener(type, cancel));
+  // Some browsers send no click after a long press; don't let the flag eat a later tap.
+  container.addEventListener("pointerup", () => { if (swallowClick) setTimeout(() => { swallowClick = false; }, 400); });
+  // The finger lifting after a long press must not also toggle the habit.
+  container.addEventListener("click", event => {
+    if (!swallowClick) return;
+    swallowClick = false;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+  container.addEventListener("contextmenu", event => { if (event.target.closest(".habit-sort-card")) event.preventDefault(); });
+}
+
+document.addEventListener?.("keydown", event => {
+  if (event.key === "Escape" && habitReorderMode && !document.body.classList.contains("habit-dragging")) setHabitReorder(false);
+});
 
 function makeHabitDragHandle(block) {
   const handle = document.createElement("button");

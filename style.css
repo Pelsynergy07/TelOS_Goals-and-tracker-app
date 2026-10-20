@@ -1501,3 +1501,23 @@ button:focus-visible,summary:focus-visible,a:focus-visible { outline:2px solid v
  .habit-row-streak { min-width:30px; }
  .habit-row-toggle { gap:10px; }
 }
+
+/* ─── Reorder mode ───────────────────────────────────────── */
+.habit-toolbar-actions { display:flex; align-items:center; gap:8px; }
+.habit-reorder-btn[hidden] { display:none; }
+.habit-reorder-btn { min-height:calc(var(--control-height) + 8px); gap:6px; }
+.habit-reorder-btn.is-active { border-color:rgba(34,211,160,.4); background:rgba(34,211,160,.12); color:var(--green); }
+.habit-cards:not(.is-reordering) .habit-drag-handle { display:none; }
+.habit-cards:not(.is-reordering) .habit-row { padding-left:8px; }
+.habit-cards.is-reordering .habit-sort-card { outline:1px dashed var(--border-hover); outline-offset:-1px; }
+.habit-cards.is-reordering .habit-row-toggle,
+.habit-cards.is-reordering .habit-skip,
+.habit-cards.is-reordering .habit-row-amount,
+.habit-cards.is-reordering .habit-month-cell,
+.habit-cards.is-reordering .habit-details { pointer-events:none; opacity:.55; }
+.habit-sort-card { -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
+.habit-sort-card input { -webkit-user-select:text; user-select:text; }
+@media (max-width:480px) {
+ .habit-toolbar-actions { width:100%; }
+ .habit-toolbar-actions .segmented-control { flex:1; }
+}
